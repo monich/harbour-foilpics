@@ -3,7 +3,7 @@
 ![icon](icons/86x86/harbour-foilpics.png)
 
 **Foil Pics** allows you to encrypt some pictures from the gallery
-with a password stronger then the lock code. Strictly speaking, each
+with a password stronger than the lock code. Strictly speaking, each
 picture is encrypted with a unique random 256-bit AES key which in
 turn is encrypted with an RSA key which in turn is encrypted with
 your password. If the bad guys get your encrypted pictures, they
