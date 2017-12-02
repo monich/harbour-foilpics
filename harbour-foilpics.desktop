@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Foil Pics
+X-Nemo-Application-Type=silica-qt5
+Icon=harbour-foilpics
+Exec=harbour-foilpics
