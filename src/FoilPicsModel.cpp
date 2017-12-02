@@ -1673,8 +1673,14 @@ void FoilPicsModel::Private::insertModelData(ModelData* aModelData)
     iData.insert(pos, aModelData);
     HDEBUG(iData.count() << aModelData->iDateTime.
         toString(Qt::SystemLocaleShortDate) << "at" << pos);    
+
+    // And this tells the app that we better not generate a new key:
+    if (!iMayHaveEncryptedPictures) {
+        iMayHaveEncryptedPictures = true;
+        queueSignal(SignalMayHaveEncryptedPicturesChanged);
+    }
     model->endInsertRows();
-    Q_EMIT model->countChanged();
+    queueSignal(SignalCountChanged);
 }
 
 void FoilPicsModel::Private::destroyItemAt(int aIndex)
@@ -1689,6 +1695,11 @@ void FoilPicsModel::Private::destroyItemAt(int aIndex)
         model->beginRemoveRows(QModelIndex(), aIndex, aIndex);
         iData.removeAt(aIndex);
         delete data;
+        // We no longer have any decryptable pictures:
+        if (iMayHaveEncryptedPictures) {
+            iMayHaveEncryptedPictures = false;
+            queueSignal(SignalMayHaveEncryptedPicturesChanged);
+        }
         model->endRemoveRows();
         queueSignal(SignalCountChanged);
     }
@@ -1722,6 +1733,11 @@ void FoilPicsModel::Private::clearModel()
         model->beginRemoveRows(QModelIndex(), 0, n-1);
         qDeleteAll(iData);
         iData.clear();
+        // We no longer have any decryptable pictures:
+        if (iMayHaveEncryptedPictures) {
+            iMayHaveEncryptedPictures = false;
+            queueSignal(SignalMayHaveEncryptedPicturesChanged);
+        }
         model->endRemoveRows();
         queueSignal(SignalCountChanged);
     }
