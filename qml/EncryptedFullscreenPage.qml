@@ -62,16 +62,17 @@ Page {
                 id: header
                 height: page.isPortrait ? portraitHeader.height : landscapeHeader.height
                 width: parent.width
+                readonly property string title: currentImageItem ? currentImageItem.title : ""
                 PageHeader {
                     id: portraitHeader
-                    title: currentImageItem.title
+                    title: header.title
                     rightMargin: Theme.horizontalPageMargin
                     description: currentImageItem ? currentImageItem.imageWidth + "×" + currentImageItem.imageHeight : ""
                     visible: page.isPortrait
                 }
                 PageHeader {
                     id: landscapeHeader
-                    title: currentImageItem.title
+                    title: header.title
                     rightMargin: Theme.paddingLarge
                     visible: !page.isPortrait
                 }

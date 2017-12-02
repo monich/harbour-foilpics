@@ -118,7 +118,7 @@
         <translation>Подождите...</translation>
     </message>
     <message id="foilpics-enter_password_view-label-enter_password">
-        <source>Secret pictures are locked. Please enter the password to unlock them</source>
+        <source>Secret pictures are locked. Please enter your password</source>
         <extracomment>Password prompt label</extracomment>
         <translation>Заблокировано. Введите пароль</translation>
     </message>

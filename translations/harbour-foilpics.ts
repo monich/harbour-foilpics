@@ -117,9 +117,9 @@
         <translation>Generating...</translation>
     </message>
     <message id="foilpics-enter_password_view-label-enter_password">
-        <source>Secret pictures are locked. Please enter the password to unlock them</source>
+        <source>Secret pictures are locked. Please enter your password</source>
         <extracomment>Password prompt label</extracomment>
-        <translation>Secret pictures are locked. Please enter the password to unlock them</translation>
+        <translation>Secret pictures are locked. Please enter your password</translation>
     </message>
     <message id="foilpics-enter_password_view-button-unlocking">
         <source>Unlocking...</source>

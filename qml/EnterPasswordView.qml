@@ -61,7 +61,7 @@ SilicaFlickable {
         InfoLabel {
             height: implicitHeight
             //: Password prompt label
-            //% "Secret pictures are locked. Please enter the password to unlock them"
+            //% "Secret pictures are locked. Please enter your password"
             text: qsTrId("foilpics-enter_password_view-label-enter_password")
         }
         PasswordInputField {
