@@ -33,16 +33,16 @@ Page {
             PullDownMenu {
                 MenuItem {
                     //: Generic menu item
+                    //% "Delete"
+                    text: qsTrId("foilpics-menu-delete")
+                    onClicked: page.deleteItem(page.currentIndex)
+                }
+                MenuItem {
+                    //: Generic menu item
                     //% "Encrypt"
                     text: qsTrId("foilpics-menu-encrypt")
                     visible: foilModel.keyAvailable
                     onClicked: page.encryptItem(page.currentIndex)
-                }
-                MenuItem {
-                    //: Generic menu item
-                    //% "Delete"
-                    text: qsTrId("foilpics-menu-delete")
-                    onClicked: page.deleteItem(page.currentIndex)
                 }
             }
 

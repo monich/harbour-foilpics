@@ -38,15 +38,15 @@ Page {
             visible: drawer.open
             MenuItem {
                 //: Generic menu item
-                //% "Decrypt"
-                text: qsTrId("foilpics-menu-decrypt")
-                onClicked: page.decryptItem(page.currentIndex)
-            }
-            MenuItem {
-                //: Generic menu item
                 //% "Delete"
                 text: qsTrId("foilpics-menu-delete")
                 onClicked: page.deleteItem(page.currentIndex)
+            }
+            MenuItem {
+                //: Generic menu item
+                //% "Decrypt"
+                text: qsTrId("foilpics-menu-decrypt")
+                onClicked: page.decryptItem(page.currentIndex)
             }
         }
 

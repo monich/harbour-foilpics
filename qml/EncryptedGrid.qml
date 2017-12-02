@@ -182,15 +182,15 @@ ImageGridView {
 
         MenuItem {
             //: Generic menu item
-            //% "Delete"
-            text: qsTrId("foilpics-menu-delete")
-            onClicked: grid.expandItem.remove()
-        }
-        MenuItem {
-            //: Generic menu item
             //% "Decrypt"
             text: qsTrId("foilpics-menu-decrypt")
             onClicked: grid.expandItem.decrypt()
+        }
+        MenuItem {
+            //: Generic menu item
+            //% "Delete"
+            text: qsTrId("foilpics-menu-delete")
+            onClicked: grid.expandItem.remove()
         }
     }
 
