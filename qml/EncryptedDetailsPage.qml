@@ -5,6 +5,18 @@ Page {
     allowedOrientations: Orientation.All
     property var details
 
+    // These are used from the native code:
+    //% "%n B"
+    readonly property string _formatB: qsTrId("foilpics-file_size-bytes")
+    //% "%1 kB"
+    readonly property string _formatKB: qsTrId("foilpics-file_size-kilobytes")
+    //% "%1 MB"
+    readonly property string _formatMB: qsTrId("foilpics-file_size-megabytes")
+    //% "%1 GB"
+    readonly property string _formatGB: qsTrId("foilpics-file_size-gigabytes")
+    //% "%1 TB"
+    readonly property string _formatTB: qsTrId("foilpics-file_size-terabytes")
+
     SilicaFlickable {
         anchors.fill: parent
         contentHeight: column.height + Theme.paddingLarge
@@ -30,7 +42,7 @@ Page {
                 //% "Original file size"
                 label: qsTrId("foilpics-details-original_file_size-label")
                 value: ("originalFileSize" in details && details.originalFileSize) ?
-                    Format.formatFileSize(details.originalFileSize) : ""
+                    FileUtil.formatFileSize(details.originalFileSize) : ""
                 visible: value.length > 0
             }
             DetailItem {
@@ -38,7 +50,7 @@ Page {
                 //% "Encrypted file size"
                 label: qsTrId("foilpics-details-encrypted_file_size-label")
                 value: ("encryptedFileSize" in details && details.encryptedFileSize) ?
-                    Format.formatFileSize(details.encryptedFileSize) : ""
+                    FileUtil.formatFileSize(details.encryptedFileSize) : ""
                 visible: value.length > 0
             }
             DetailItem {

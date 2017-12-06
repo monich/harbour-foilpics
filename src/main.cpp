@@ -36,7 +36,7 @@
 #include "FoilPicsHints.h"
 #include "FoilPicsModel.h"
 #include "FoilPicsThumbnailerPlugin.h"
-#include "FileRemover.h"
+#include "FoilPicsFileUtil.h"
 
 #include "HarbourDebug.h"
 #include "HarbourLib.h"
@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
     // Initialize the view and the global properties
     view->setTitle(qtTrId("foilpics-app_name"));
     context->setContextProperty("MaximumHintCount", 1);
-    context->setContextProperty("FileRemover", new FileRemover(app));
+    context->setContextProperty("FileUtil", new FoilPicsFileUtil(app));
     //context->setContextProperty("AppSettings", new AppSettings(app));
 
     view->setSource(SailfishApp::pathTo("qml/main.qml"));

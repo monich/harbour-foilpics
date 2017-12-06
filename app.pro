@@ -66,8 +66,8 @@ INCLUDEPATH += \
     $${HARBOUR_LIB_DIR}/include
 
 HEADERS += \
-    src/FileRemover.h \
     src/FoilPicsDefs.h \
+    src/FoilPicsFileUtil.h \
     src/FoilPicsGalleryPlugin.h \
     src/FoilPicsHints.h \
     src/FoilPicsImageProvider.h \
@@ -78,7 +78,7 @@ HEADERS += \
     src/FoilPicsThumbnailProvider.h
 
 SOURCES += \
-    src/FileRemover.cpp \
+    src/FoilPicsFileUtil.cpp \
     src/FoilPicsGalleryPlugin.cpp \
     src/FoilPicsHints.cpp \
     src/FoilPicsImageProvider.cpp \

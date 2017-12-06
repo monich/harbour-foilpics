@@ -22,7 +22,7 @@ Page {
         onStatusChanged: {
             if (status === DocumentGalleryItem.Finished) {
                 fileNameItem.value = galleryItem.metaData.fileName
-                fileSizeItem.value = Format.formatFileSize(galleryItem.metaData.fileSize)
+                fileSizeItem.value = FileUtil.formatFileSize(galleryItem.metaData.fileSize)
                 mimeTypeItem.value = galleryItem.metaData.mimeType
                 widthItem.value = galleryItem.metaData.width
                 heightItem.value = galleryItem.metaData.height

@@ -31,7 +31,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "FileRemover.h"
+#include "FoilPicsFileUtil.h"
 
 #include "HarbourDebug.h"
 
@@ -48,19 +48,19 @@
 #define TRACKER_PATH "/org/freedesktop/Tracker1/Resources"
 #define TRACKER_INTERFACE "org.freedesktop.Tracker1.Resources"
 
-FileRemover* FileRemover::gInstance = NULL;
+FoilPicsFileUtil* FoilPicsFileUtil::gInstance = NULL;
 
-FileRemover* FileRemover::instance()
+FoilPicsFileUtil* FoilPicsFileUtil::instance()
 {
     HASSERT(gInstance);
     return gInstance;
 }
 
 // ==========================================================================
-// FileRemover::TrackerProxy
+// FoilPicsFileUtil::TrackerProxy
 // ==========================================================================
 
-class FileRemover::TrackerProxy: public QDBusAbstractInterface
+class FoilPicsFileUtil::TrackerProxy: public QDBusAbstractInterface
 {
     Q_OBJECT
 
@@ -75,10 +75,10 @@ public Q_SLOTS: // METHODS
 };
 
 // ==========================================================================
-// FileRemover::Private
+// FoilPicsFileUtil::Private
 // ==========================================================================
 
-FileRemover::FileRemover(QObject* aParent) :
+FoilPicsFileUtil::FoilPicsFileUtil(QObject* aParent) :
     QObject(aParent),
     iTrackerProxy(NULL)
 {
@@ -100,32 +100,60 @@ FileRemover::FileRemover(QObject* aParent) :
     }
 }
 
-FileRemover::~FileRemover()
+FoilPicsFileUtil::~FoilPicsFileUtil()
 {
     HASSERT(this == gInstance);
     gInstance = NULL;
 }
 
-void FileRemover::onTrackerRegistered()
+void FoilPicsFileUtil::onTrackerRegistered()
 {
     HDEBUG("Tracker is here");
     delete iTrackerProxy;
     iTrackerProxy = new TrackerProxy(this);
 }
 
-void FileRemover::onTrackerUnregistered()
+void FoilPicsFileUtil::onTrackerUnregistered()
 {
     HDEBUG("Tracker gone");
     delete iTrackerProxy;
     iTrackerProxy = NULL;
 }
 
-void FileRemover::mediaDeleted(QString aFilename)
+void FoilPicsFileUtil::mediaDeleted(QString aFilename)
 {
     mediaDeleted(QUrl::fromLocalFile(aFilename));
 }
 
-void FileRemover::mediaDeleted(QUrl aUrl)
+QString FoilPicsFileUtil::formatFileSize(qlonglong aBytes)
+{
+    const qlonglong kB = Q_INT64_C(1024);
+    const qlonglong MB = kB*1024;
+    const qlonglong GB = MB*1024;
+    const qlonglong TB = GB*1024;
+    if (aBytes < 0) {
+        return QString::number(aBytes);
+    } else if (aBytes < kB) {
+        return qtTrId("foilpics-file_size-bytes", aBytes);
+    } else if (aBytes < 1000*kB) {
+        const int precision = (aBytes < 10*kB) ? 2 : 1;
+        return qtTrId("foilpics-file_size-kilobytes").
+            arg(iLocale.toString((float)aBytes/kB, 'f', precision));
+    } else if (aBytes < 1000*MB) {
+        const int precision = (aBytes < 10*MB) ? 2 : 1;
+        return qtTrId("foilpics-file_size-megabytes").
+            arg(iLocale.toString((float)aBytes/MB, 'f', precision));
+    } else if (aBytes < 1000*GB) {
+        const int precision = (aBytes < 10*GB) ? 2 : 1;
+        return qtTrId("foilpics-file_size-gigabytes").
+            arg(iLocale.toString((float)aBytes/GB, 'f', precision));
+    } else {
+        return qtTrId("foilpics-file_size-terabytes").
+            arg(iLocale.toString((float)aBytes/TB, 'f', 1));
+    }
+}
+
+void FoilPicsFileUtil::mediaDeleted(QUrl aUrl)
 {
     if (iTrackerProxy) {
         QString url(aUrl.toString());
@@ -146,7 +174,7 @@ void FileRemover::mediaDeleted(QUrl aUrl)
     }
 }
 
-bool FileRemover::deleteMedia(QUrl aUrl)
+bool FoilPicsFileUtil::deleteMedia(QUrl aUrl)
 {
     if (aUrl.isLocalFile()) {
         QString path(aUrl.toLocalFile());
@@ -162,7 +190,7 @@ bool FileRemover::deleteMedia(QUrl aUrl)
     return false;
 }
 
-bool FileRemover::deleteFile(QString aPath)
+bool FoilPicsFileUtil::deleteFile(QString aPath)
 {
     if (QFile::remove(aPath)) {
         HDEBUG(aPath);
@@ -173,4 +201,4 @@ bool FileRemover::deleteFile(QString aPath)
     }
 }
 
-#include "FileRemover.moc"
+#include "FoilPicsFileUtil.moc"

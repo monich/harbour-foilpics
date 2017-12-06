@@ -48,6 +48,26 @@
         <extracomment>Decrypting all pictures in 5 seconds</extracomment>
         <translation>Decrypting all pictures</translation>
     </message>
+    <message id="foilpics-file_size-bytes">
+        <source>%n B</source>
+        <translation>%n B</translation>
+    </message>
+    <message id="foilpics-file_size-kilobytes">
+        <source>%1 kB</source>
+        <translation>%1 kB</translation>
+    </message>
+    <message id="foilpics-file_size-megabytes">
+        <source>%1 MB</source>
+        <translation>%1 MB</translation>
+    </message>
+    <message id="foilpics-file_size-gigabytes">
+        <source>%1 GB</source>
+        <translation>%1 GB</translation>
+    </message>
+    <message id="foilpics-file_size-terabytes">
+        <source>%1 TB</source>
+        <translation>%1 TB</translation>
+    </message>
     <message id="foilpics-notification-generated_key">
         <source>Generated new key</source>
         <extracomment>Pop-up notification</extracomment>

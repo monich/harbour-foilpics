@@ -35,7 +35,7 @@
 #include "FoilPicsTask.h"
 #include "FoilPicsThumbnailProvider.h"
 #include "FoilPicsImageProvider.h"
-#include "FileRemover.h"
+#include "FoilPicsFileUtil.h"
 
 #include "foil_private_key.h"
 #include "foil_output.h"
@@ -2060,7 +2060,7 @@ void FoilPicsModel::Private::onEncryptTaskDone()
         task->iData = NULL;
         saveInfo();
     }
-    FileRemover::instance()->mediaDeleted(task->iSourceFile);
+    FoilPicsFileUtil::instance()->mediaDeleted(task->iSourceFile);
     task->release(this);
     if (busy() != wasBusy) {
         queueSignal(SignalBusyChanged);

@@ -66,7 +66,7 @@ ImageGridView {
         }
 
         function remove() {
-            requestDelete(delegate, function() { FileRemover.deleteMedia(delegate.mediaUrl) })
+            requestDelete(delegate, function() { FileUtil.deleteMedia(delegate.mediaUrl) })
         }
 
         onClicked: {

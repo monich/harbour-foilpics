@@ -31,24 +31,26 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef FILE_REMOVER_H
-#define FILE_REMOVER_H
+#ifndef FOILPICS_FILE_UTIL_H
+#define FOILPICS_FILE_UTIL_H
 
 #include <QObject>
+#include <QLocale>
 #include <QUrl>
 
-class FileRemover : public QObject {
+class FoilPicsFileUtil : public QObject {
     Q_OBJECT
-    static FileRemover* gInstance;
+    static FoilPicsFileUtil* gInstance;
 
 public:
-    FileRemover(QObject* aParent);
-    ~FileRemover();
+    FoilPicsFileUtil(QObject* aParent);
+    ~FoilPicsFileUtil();
 
-    static FileRemover* instance();
+    static FoilPicsFileUtil* instance();
 
     Q_INVOKABLE bool deleteFile(QString aPath);
     Q_INVOKABLE bool deleteMedia(QUrl aUrl);
+    Q_INVOKABLE QString formatFileSize(qlonglong aBytes);
     void mediaDeleted(QString aFilename);
     void mediaDeleted(QUrl aUrl);
 
@@ -59,6 +61,7 @@ public Q_SLOTS:
 private:
     class TrackerProxy;
     TrackerProxy* iTrackerProxy;
+    QLocale iLocale;
 };
 
-#endif // FILE_REMOVER_H
+#endif // FOILPICS_FILE_UTIL_H
