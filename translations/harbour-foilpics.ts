@@ -266,6 +266,16 @@
         <extracomment>Details label</extracomment>
         <translation>File size</translation>
     </message>
+    <message id="foilpics-details-original_file_size-label">
+        <source>Original file size</source>
+        <extracomment>Details label</extracomment>
+        <translation>Original file size</translation>
+    </message>
+    <message id="foilpics-details-encrypted_file_size-label">
+        <source>Encrypted file size</source>
+        <extracomment>Details label</extracomment>
+        <translation>Encrypted file size</translation>
+    </message>
     <message id="foilpics-details-mime_type-label">
         <source>Type</source>
         <extracomment>Details label</extracomment>

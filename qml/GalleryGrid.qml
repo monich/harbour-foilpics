@@ -13,7 +13,7 @@ ImageGridView {
     property Item expandItem
     property real expandHeight: contextMenu.height
     property int minOffsetIndex: expandItem != null ?
-                                    expandItem.modelIndex + columnCount - (expandItem.modelIndex % columnCount) : 0
+        expandItem.modelIndex + columnCount - (expandItem.modelIndex % columnCount) : 0
 
     function encryptItem(index) {
         pageStack.pop()
@@ -54,7 +54,12 @@ ImageGridView {
         enabled: isItemExpanded || !grid.contextMenu.active
 
         function encrypt() {
-            foilModel.encryptFile(delegate.mediaUrl, model.orientation)
+            foilModel.encryptFile(delegate.mediaUrl, {
+                orientation: model.orientation,
+                imageDate: model.dateTaken,
+                cameraManufacturer: model.cameraManufacturer,
+                cameraModel: model.cameraModel
+            })
             // Count this as a hint:
             if (hints.letsEncryptSomething < MaximumHintCount) hints.letsEncryptSomething++
             rightSwipeToEncryptedHintLoader.armed = true

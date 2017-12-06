@@ -11,7 +11,10 @@ SilicaFlickable {
     DocumentGalleryModel {
         id: galleryModel
         rootType: DocumentGallery.Image
-        properties: ["url", "mimeType", "title", "orientation", "dateTaken", "width", "height" ]
+        properties: [
+            "url", "mimeType", "title", "orientation", "dateTaken",
+            "width", "height", "cameraManufacturer", "cameraModel"
+        ]
         sortProperties: ["-dateTaken"]
         autoUpdate: true
         filter: GalleryStartsWithFilter { property: "filePath"; value: StandardPaths.music; negated: true }

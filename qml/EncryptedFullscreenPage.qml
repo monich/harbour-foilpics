@@ -38,6 +38,14 @@ Page {
             visible: drawer.open
             MenuItem {
                 //: Generic menu item
+                //% "Image details"
+                text: qsTrId("foilpics-menu-details")
+                onClicked: pageStack.push(Qt.resolvedUrl("EncryptedDetailsPage.qml"), {
+                    details: currentImageItem
+                })
+            }
+            MenuItem {
+                //: Generic menu item
                 //% "Delete"
                 text: qsTrId("foilpics-menu-delete")
                 onClicked: page.deleteItem(page.currentIndex)

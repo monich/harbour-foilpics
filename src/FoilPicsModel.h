@@ -98,11 +98,17 @@ public:
     Q_INVOKABLE bool changePassword(QString aOld, QString aNew);
     Q_INVOKABLE void lock(bool aTimeout);
     Q_INVOKABLE bool unlock(QString aPassword);
-    Q_INVOKABLE bool encryptFile(QUrl aUrl, int aOrientation);
+    Q_INVOKABLE bool encryptFile(QUrl aUrl, QVariantMap aMetaData);
     Q_INVOKABLE void decryptAt(int aIndex);
     Q_INVOKABLE void decryptAll();
     Q_INVOKABLE void removeAt(int aIndex);
     Q_INVOKABLE QVariantMap get(int aIndex) const;
+
+    // Keys for metadata passed to encryptFile:
+    static const QString MetaOrientation;       // "orientation" -> int
+    static const QString MetaImageDate;         // "imageDate" -> QDateTime
+    static const QString MetaCameraManufacturer;// "cameraManufacturer" -> QString
+    static const QString MetaCameraModel;       // "cameraModel" -> QString
 
 private Q_SLOTS:
     void imageRequest(QString aPath, FoilPicsImageRequest aRequest);

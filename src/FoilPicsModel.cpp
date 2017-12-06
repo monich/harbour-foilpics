@@ -53,9 +53,13 @@
 #define ENCRYPT_KEY_TYPE FOILMSG_KEY_AES_256
 
 #define HEADER_ORIGINAL_PATH        "Original-Path"
+#define HEADER_ORIGINAL_SIZE        "Original-Size"
 #define HEADER_MODIFICATION_TIME    "Modification-Time"
 #define HEADER_ACCESS_TIME          "Access-Time"
 #define HEADER_ORIENTATION          "Orientation"
+#define HEADER_CAMERA_MANUFACTURER  "Camera-Manufacturer"
+#define HEADER_CAMERA_MODEL         "Camera-Model"
+#define HEADER_IMAGE_DATE           "Image-Date"
 #define HEADER_TITLE                "Title"
 
 /* Thumbnail specific headers */
@@ -69,15 +73,27 @@
 #define INFO_ORDER_DELIMITER_S ","
 #define INFO_ORDER_THUMB_DELIMITER ':'
 
-#define ROLE_URL "url"
-#define ROLE_THUMBNAIL "thumbnail"
-#define ROLE_DECRYPTED_DATA "decryptedData"
-#define ROLE_ORIENTATION "orientation"
-#define ROLE_MIME_TYPE "mimeType"
-#define ROLE_FILE_NAME "fileName"
-#define ROLE_TITLE "title"
-#define ROLE_IMAGE_WIDTH "imageWidth"
-#define ROLE_IMAGE_HEIGHT "imageHeight"
+// Keys for metadata passed to encryptFile:
+const QString FoilPicsModel::MetaOrientation("orientation"); // int
+const QString FoilPicsModel::MetaImageDate("imageDate");     // QDateTime
+const QString FoilPicsModel::MetaCameraManufacturer("cameraManufacturer"); // QString
+const QString FoilPicsModel::MetaCameraModel("cameraModel"); // QString
+
+// Role names
+#define FOILPICS_ROLES(role) \
+    role(Url, url) \
+    role(OriginalFileSize, originalFileSize) \
+    role(EncryptedFileSize, encryptedFileSize) \
+    role(Thumbnail, thumbnail) \
+    role(Orientation, orientation) \
+    role(CameraManufacturer, cameraManufacturer) \
+    role(CameraModel, cameraModel) \
+    role(ImageDate, imageDate) \
+    role(MimeType, mimeType) \
+    role(FileName, fileName) \
+    role(Title, title) \
+    role(ImageWidth, imageWidth) \
+    role(ImageHeight, imageHeight)
 
 // ==========================================================================
 // FoilPicsModel::ModelData
@@ -86,15 +102,11 @@
 class FoilPicsModel::ModelData {
 public:
     enum Role {
-        UrlRole = Qt::UserRole,
-        ThumbnailRole,
-        DecryptedDataRole,
-        OrientationRole,
-        MimeTypeRole,
-        TitleRole,
-        FileNameRole,
-        ImageWidthRole,
-        ImageHeightRole
+        FirstRole = Qt::UserRole,
+#define ROLE(X,x) X##Role,
+        FOILPICS_ROLES(ROLE)
+#undef ROLE
+        LastRole
     };
 
     struct FormatMap {
@@ -102,9 +114,11 @@ public:
         const char* imageFormat;
     };
 
-    ModelData(QString aOriginalPath, QString aPath, QSize aFullSize,
-        QString aThumbFile, QImage aThumbImage, QString aTitle,
-        const char* aContentType, int aOrientation, QDateTime aDateTime);
+    ModelData(QString aOriginalPath, int aOriginalSize, QSize aFullDimensions,
+        QString aPath, QString aThumbFile, QImage aThumbImage,
+        QString aTitle, const char* aContentType, QDateTime aSortTime,
+        int aOrientation, QString aCameraManufacturer, QString aCameraModel,
+        QDateTime aImageDate);
     ~ModelData();
 
     QVariant get(Role aRole) const;
@@ -120,27 +134,36 @@ public:
     QString iFileName;
     QString iThumbFile; // Without path
     QString iTitle;
-    QSize iFullSize;
+    QSize iFullDimensions;
     QImage iThumbnail;
     QString iThumbSource;
     QString iImageSource;
     QString iContentType;
+    QDateTime iSortTime;
+    int iEncryptedSize;
+    int iOriginalSize;
     int iOrientation;
-    QDateTime iDateTime;
+    QString iCameraManufacturer;
+    QString iCameraModel;
+    QDateTime iImageDate;
     QByteArray iBytes;
     FoilPicsTask* iDecryptTask;
 };
 
-FoilPicsModel::ModelData::ModelData(QString aOriginalPath, QString aPath,
-    QSize aFullSize, QString aThumbFile, QImage aThumbImage,
-    QString aTitle, const char* aContentType, int aOrientation,
-    QDateTime aDateTime) :
+FoilPicsModel::ModelData::ModelData(QString aOriginalPath, int aOriginalSize,
+    QSize aFullDimensions, QString aPath, QString aThumbFile,
+    QImage aThumbImage, QString aTitle, const char* aContentType,
+    QDateTime aSortTime, int aOrientation, QString aCameraManufacturer,
+    QString aCameraModel, QDateTime aImageDate) :
     iPath(aPath), iThumbFile(aThumbFile), iTitle(aTitle),
-    iFullSize(aFullSize), iThumbnail(aThumbImage),
-    iOrientation(aOrientation), iDateTime(aDateTime), iDecryptTask(NULL)
+    iFullDimensions(aFullDimensions), iThumbnail(aThumbImage),
+    iSortTime(aSortTime), iOriginalSize(aOriginalSize),
+    iOrientation(aOrientation), iCameraManufacturer(aCameraManufacturer),
+    iCameraModel(aCameraModel), iImageDate(aImageDate), iDecryptTask(NULL)
 {
     QFileInfo fileInfo(aOriginalPath);
     iFileName = fileInfo.fileName();
+    iEncryptedSize = QFileInfo(aPath).size();
     if (iTitle.isEmpty()) iTitle = defaultTitle(fileInfo);
     if (aContentType) iContentType = QLatin1String(aContentType);
     HDEBUG(iFileName << iOrientation);
@@ -155,14 +178,26 @@ QVariant FoilPicsModel::ModelData::get(Role aRole) const
 {
     switch (aRole) {
     case ModelData::UrlRole: return iImageSource;
+    case ModelData::OriginalFileSizeRole: return iOriginalSize ?
+            QVariant::fromValue(iOriginalSize) : QVariant();
+    case ModelData::EncryptedFileSizeRole: return iEncryptedSize ?
+            QVariant::fromValue(iEncryptedSize) : QVariant();
     case ModelData::ThumbnailRole: return iThumbSource;
-    case ModelData::DecryptedDataRole: return iBytes;
     case ModelData::OrientationRole: return iOrientation;
+    case ModelData::CameraManufacturerRole: return iCameraManufacturer;
+    case ModelData::CameraModelRole: return iCameraModel;
+    case ModelData::ImageDateRole: return iImageDate.isValid() ?
+            QVariant::fromValue(iImageDate) : QVariant();
     case ModelData::MimeTypeRole: return iContentType;
     case ModelData::TitleRole: return iTitle;
     case ModelData::FileNameRole: return iFileName;
-    case ModelData::ImageWidthRole: return iFullSize.width();
-    case ModelData::ImageHeightRole: return iFullSize.height();
+    case ModelData::ImageWidthRole: return iFullDimensions.width();
+    case ModelData::ImageHeightRole: return iFullDimensions.height();
+    // No default to make sure that we get "warning: enumeration value
+    // not handled in switch" if we forget to handle a real role.
+    case ModelData::FirstRole:
+    case ModelData::LastRole:
+        break;
     }
     return QVariant();
 }
@@ -205,7 +240,7 @@ QImage FoilPicsModel::ModelData::thumbnail(const QImage aImage, QSize aSize,
 bool FoilPicsModel::ModelData::lessThan(ModelData* aData1, ModelData* aData2)
 {
     // Most recent first
-    return aData1->iDateTime > aData2->iDateTime;
+    return aData1->iSortTime > aData2->iSortTime;
 }
 
 const char* FoilPicsModel::ModelData::format(const char* aContentType)
@@ -405,7 +440,7 @@ public:
 
     static QString headerString(const FoilMsg* aMsg, const char* aKey);
     static QDateTime headerTime(const FoilMsg* aMsg, const char* aKey);
-    static QDateTime headerModTime(const FoilMsg* aMsg);
+    static QDateTime headerSortTime(const FoilMsg* aMsg);
     static int headerInt(const FoilMsg* aMsg, const char* aKey, int aDef = 0);
     static QImage toImage(const FoilMsg* aMsg);
     static FoilOutput* createFoilFile(QString aDestDir, GString* aOutPath);
@@ -493,9 +528,10 @@ QDateTime FoilPicsModel::BaseTask::headerTime(const FoilMsg* aMsg,
     return value ? QDateTime::fromString(value, Qt::ISODate) : QDateTime();
 }
 
-QDateTime FoilPicsModel::BaseTask::headerModTime(const FoilMsg* aMsg)
+QDateTime FoilPicsModel::BaseTask::headerSortTime(const FoilMsg* aMsg)
 {
-    return headerTime(aMsg, HEADER_MODIFICATION_TIME);
+    QDateTime time = headerTime(aMsg, HEADER_IMAGE_DATE);
+    return time.isValid() ? time : headerTime(aMsg, HEADER_MODIFICATION_TIME);
 }
 
 QImage FoilPicsModel::BaseTask::toImage(const FoilMsg* aMsg)
@@ -560,10 +596,14 @@ QString FoilPicsModel::BaseTask::writeThumb(QImage aImage,
     if (!aThumb.isNull()) {
         static const char* keys[] = {
             HEADER_ORIGINAL_PATH,
-            HEADER_TITLE,
+            HEADER_ORIGINAL_SIZE,
             HEADER_MODIFICATION_TIME,
+            HEADER_ACCESS_TIME,
             HEADER_ORIENTATION,
-            HEADER_ACCESS_TIME
+            HEADER_CAMERA_MANUFACTURER,
+            HEADER_CAMERA_MODEL,
+            HEADER_IMAGE_DATE,
+            HEADER_TITLE
         };
 
         FoilMsgHeaders headers;
@@ -679,26 +719,29 @@ class FoilPicsModel::EncryptTask : public BaseTask {
 
 public:
     EncryptTask(QThreadPool* aPool, QString aSourceFile, QString aDestDir,
-        FoilPrivateKey* aPrivateKey, FoilKey* aPublicKey, int aOrientation,
-        QSize aThumbSize);
+        FoilPrivateKey* aPrivateKey, FoilKey* aPublicKey, QSize aThumbSize,
+        QVariantMap aMetaData);
 
     virtual void performTask();
 
 public:
     QString iSourceFile;
     QString iDestDir;
-    int iOrientation;
     QSize iThumbSize;
+    QVariantMap iMetaData;
     ModelData* iData;
 };
 
 FoilPicsModel::EncryptTask::EncryptTask(QThreadPool* aPool, QString aSourceFile,
     QString aDestDir, FoilPrivateKey* aPrivateKey, FoilKey* aPublicKey,
-    int aOrientation, QSize aThumbSize) :
+    QSize aThumbSize, QVariantMap aMetaData) :
     BaseTask(aPool, aPrivateKey, aPublicKey), iSourceFile(aSourceFile),
-    iDestDir(aDestDir), iOrientation(aOrientation), iThumbSize(aThumbSize),
+    iDestDir(aDestDir),
+    iThumbSize(aThumbSize),
+    iMetaData(aMetaData),
     iData(NULL)
 {
+    HDEBUG("Encrypting" << qPrintable(aSourceFile) << aMetaData);
 }
 
 void FoilPicsModel::EncryptTask::performTask()
@@ -730,16 +773,19 @@ void FoilPicsModel::EncryptTask::performTask()
             if (!image.isNull()) {
                 char* mtime = NULL;
                 char* atime = NULL;
-                QDateTime time;
+                char* ttime = NULL;
+                QDateTime sortTime, dateTaken;
                 QString title(ModelData::defaultTitle(iSourceFile));
                 const QByteArray titleBytes(title.toUtf8());
+                QString cameraMaker, cameraModel;
+                QByteArray cameraMakerBytes, cameraModelBytes;
 
                 FoilMsgEncryptOptions opt;
                 memset(&opt, 0, sizeof(opt));
                 opt.key_type = ENCRYPT_KEY_TYPE;
 
                 FoilMsgHeaders headers;
-                FoilMsgHeader header[5];
+                FoilMsgHeader header[9];
 
                 headers.header = header;
                 headers.count = 0;
@@ -748,14 +794,14 @@ void FoilPicsModel::EncryptTask::performTask()
                 header[headers.count].value = fname;
                 headers.count++;
 
-                header[headers.count].name = HEADER_TITLE;
-                header[headers.count].value = titleBytes.constData();
+                char fsize[16];
+                snprintf(fsize, sizeof(fsize), "%lu", (gulong)bytes.len);
+                header[headers.count].name = HEADER_ORIGINAL_SIZE;
+                header[headers.count].value = fsize;
                 headers.count++;
 
-                char degrees[16];
-                snprintf(degrees, sizeof(degrees), "%d", iOrientation);
-                header[headers.count].name = HEADER_ORIENTATION;
-                header[headers.count].value = degrees;
+                header[headers.count].name = HEADER_TITLE;
+                header[headers.count].value = titleBytes.constData();
                 headers.count++;
 
                 struct stat st;
@@ -768,7 +814,7 @@ void FoilPicsModel::EncryptTask::performTask()
                     header[headers.count].value = mtime;
                     headers.count++;
 
-                    time.setMSecsSinceEpoch(((qint64)tv.tv_sec) * 1000 +
+                    sortTime.setMSecsSinceEpoch(((qint64)tv.tv_sec) * 1000 +
                         st.st_mtim.tv_nsec/1000000);
 
                     tv.tv_sec = st.st_atim.tv_sec;
@@ -776,6 +822,53 @@ void FoilPicsModel::EncryptTask::performTask()
                     atime = g_time_val_to_iso8601(&tv);
                     header[headers.count].name = HEADER_ACCESS_TIME;
                     header[headers.count].value = atime;
+                    headers.count++;
+                }
+
+                // Metadata
+                char degrees[16];
+                int orientation = 0;
+                QVariant var(iMetaData.value(MetaOrientation));
+                if (var.isValid()) {
+                    orientation = var.toInt();
+                    snprintf(degrees, sizeof(degrees), "%d", orientation);
+                    header[headers.count].name = HEADER_ORIENTATION;
+                    header[headers.count].value = degrees;
+                    headers.count++;
+                }
+
+                var = iMetaData.value(MetaImageDate);
+                if (var.isValid()) {
+                    QDateTime dateTime(var.toDateTime());
+                    if (dateTime.isValid()) {
+                        GTimeVal tv;
+                        qint64 msec = dateTime.toMSecsSinceEpoch();
+                        tv.tv_sec = (glong)(msec/1000);
+                        tv.tv_usec = (glong)(msec%1000) * 1000;
+                        ttime = g_time_val_to_iso8601(&tv);
+                        header[headers.count].name = HEADER_IMAGE_DATE;
+                        header[headers.count].value = ttime;
+                        headers.count++;
+                        sortTime = dateTime;
+                        dateTaken = dateTime;
+                    }
+                }
+
+                var = iMetaData.value(MetaCameraManufacturer);
+                if (var.isValid()) {
+                    cameraMaker = var.toString();
+                    cameraMakerBytes = cameraMaker.toUtf8();
+                    header[headers.count].name = HEADER_CAMERA_MANUFACTURER;
+                    header[headers.count].value = cameraMakerBytes.constData();
+                    headers.count++;
+                }
+
+                var = iMetaData.value(MetaCameraModel);
+                if (var.isValid()) {
+                    cameraModel = var.toString();
+                    cameraModelBytes = cameraModel.toUtf8();
+                    header[headers.count].name = HEADER_CAMERA_MODEL;
+                    header[headers.count].value = cameraModelBytes.constData();
                     headers.count++;
                 }
 
@@ -799,15 +892,17 @@ void FoilPicsModel::EncryptTask::performTask()
                     }
 
                     QImage thumb = ModelData::thumbnail(image, iThumbSize,
-                        iOrientation);
+                        orientation);
                     QString thumbName = writeThumb(image, &headers,
                         content_type, thumb, iDestDir);
-                    iData = new ModelData(iSourceFile, dest->str,
-                        image.size(), thumbName, thumb, title,
-                        content_type, iOrientation, time);
+                    iData = new ModelData(iSourceFile, bytes.len, image.size(),
+                        dest->str, thumbName, thumb, title, content_type,
+                        sortTime, orientation, cameraMaker, cameraModel,
+                        dateTaken);
                 }
                 g_free(mtime);
                 g_free(atime);
+                g_free(ttime);
             }
 
             foil_output_unref(out);
@@ -987,9 +1082,14 @@ FoilPicsModel::DecryptPicsTask::decryptImage(QString aImagePath)
                     degrees);
                 QString thumbName = writeThumb(image, &msg->headers,
                     msg->content_type, thumb, iDir);
-                data = new ModelData(origPath, aImagePath, image.size(),
-                    thumbName, thumb, headerString(msg, HEADER_TITLE),
-                    msg->content_type, degrees, headerModTime(msg));
+                data = new ModelData(origPath,
+                    headerInt(msg, HEADER_ORIGINAL_SIZE), image.size(),
+                    aImagePath, thumbName, thumb,
+                    headerString(msg, HEADER_TITLE), msg->content_type,
+                    headerSortTime(msg), degrees,
+                    headerString(msg, HEADER_CAMERA_MANUFACTURER),
+                    headerString(msg, HEADER_CAMERA_MODEL),
+                    headerTime(msg, HEADER_IMAGE_DATE));
             }
         }
         foilmsg_free(msg);
@@ -1016,10 +1116,14 @@ FoilPicsModel::DecryptPicsTask::decryptThumb(QString aImagePath,
             if (!thumbImage.isNull() && thumbImage.size() == iThumbSize) {
                 // This thumb is good to go
                 HDEBUG("Loaded thumbnail from" << qPrintable(aThumbPath));
-                data = new ModelData(origPath, aImagePath, QSize(w, h),
-                    thumbName, thumbImage, headerString(msg, HEADER_TITLE),
-                    msg->content_type, headerInt(msg, HEADER_ORIENTATION),
-                    headerModTime(msg));
+                data = new ModelData(origPath,
+                    headerInt(msg, HEADER_ORIGINAL_SIZE), QSize(w, h),
+                    aImagePath, thumbName, thumbImage,
+                    headerString(msg, HEADER_TITLE), msg->content_type,
+                    headerSortTime(msg), headerInt(msg, HEADER_ORIENTATION),
+                    headerString(msg, HEADER_CAMERA_MANUFACTURER),
+                    headerString(msg, HEADER_CAMERA_MODEL),
+                    headerTime(msg, HEADER_IMAGE_DATE));
             }
         }
         foilmsg_free(msg);
@@ -1310,6 +1414,10 @@ public:
         SignalCount
     };
 
+#define ROLE(X,x) static const QString Role##X;
+    FOILPICS_ROLES(ROLE)
+#undef ROLE
+
     Private(FoilPicsModel* aParent);
     ~Private();
 
@@ -1343,13 +1451,12 @@ public:
     void generate(int aBits, QString aPassword);
     void lock(bool aTimeout);
     bool unlock(QString aPassword);
-    bool encrypt(QUrl aUrl, int aOrientation);
+    bool encrypt(QUrl aUrl, QVariantMap aMetaData);
     void decryptAt(int aIndex);
     void decryptAll();
     void decryptTaskDone(DecryptTask* aTask, bool aLast);
     void imageRequest(QString aPath, FoilPicsImageRequest aRequest);
     int findPath(QString aPath);
-    void decryptedDataChanged(int aIndex);
     bool dropDecryptedData(int aDontTouch);
     bool tooMuchDataDecrypted();
     bool busy() const;
@@ -1377,6 +1484,10 @@ public:
     QList<EncryptTask*> iEncryptTasks;
     QList<ImageRequestTask*> iImageRequestTasks;
 };
+
+#define ROLE(X,x) const QString FoilPicsModel::Private::Role##X(#x);
+FOILPICS_ROLES(ROLE)
+#undef ROLE
 
 FoilPicsModel::Private::Private(FoilPicsModel* aParent) :
     QObject(aParent),
@@ -1671,7 +1782,7 @@ void FoilPicsModel::Private::insertModelData(ModelData* aModelData)
     int pos = it - iData.begin();
     model->beginInsertRows(QModelIndex(), pos, pos);
     iData.insert(pos, aModelData);
-    HDEBUG(iData.count() << aModelData->iDateTime.
+    HDEBUG(iData.count() << aModelData->iSortTime.
         toString(Qt::SystemLocaleShortDate) << "at" << pos);    
 
     // And this tells the app that we better not generate a new key:
@@ -1922,14 +2033,12 @@ bool FoilPicsModel::Private::unlock(QString aPassword)
     return ok;
 }
 
-bool FoilPicsModel::Private::encrypt(QUrl aUrl, int aOrientation)
+bool FoilPicsModel::Private::encrypt(QUrl aUrl, QVariantMap aMetaData)
 {
     if (iPrivateKey && aUrl.isLocalFile()) {
         const bool wasBusy = busy();
-        QString path(aUrl.toLocalFile());
-        HDEBUG("Encrypting" << qPrintable(path) << aOrientation);
-        EncryptTask* task = new EncryptTask(iThreadPool, path, iFoilPicsDir,
-            iPrivateKey, iPublicKey, aOrientation, iThumbSize);
+        EncryptTask* task = new EncryptTask(iThreadPool, aUrl.toLocalFile(),
+            iFoilPicsDir, iPrivateKey, iPublicKey, iThumbSize, aMetaData);
         iEncryptTasks.append(task);
         task->submit(this, SLOT(onEncryptTaskDone()));
         if (busy() != wasBusy) {
@@ -2138,15 +2247,6 @@ int FoilPicsModel::Private::findPath(QString aPath)
     return -1;
 }
 
-void FoilPicsModel::Private::decryptedDataChanged(int aIndex)
-{
-    FoilPicsModel* model = parentModel();
-    QModelIndex index(model->createIndex(aIndex, 0));
-    QVector<int> roles;
-    roles.append(ModelData::DecryptedDataRole);
-    Q_EMIT model->dataChanged(index, index, roles);
-}
-
 bool FoilPicsModel::Private::dropDecryptedData(int aDontTouch)
 {
     int indexToDrop = -1;
@@ -2169,7 +2269,6 @@ bool FoilPicsModel::Private::dropDecryptedData(int aDontTouch)
         ModelData* data = iData.at(indexToDrop);
         HDEBUG("Dropping"<< qPrintable(data->iPath) << "at" << indexToDrop );
         data->iBytes = QByteArray();
-        decryptedDataChanged(indexToDrop);
         return true;
     } else {
         return false;
@@ -2244,15 +2343,9 @@ QSize FoilPicsModel::thumbnailSize() const
 QHash<int,QByteArray> FoilPicsModel::roleNames() const
 {
     QHash<int,QByteArray> roles;
-    roles.insert(ModelData::UrlRole, ROLE_URL);
-    roles.insert(ModelData::ThumbnailRole, ROLE_THUMBNAIL);
-    roles.insert(ModelData::DecryptedDataRole, ROLE_DECRYPTED_DATA);
-    roles.insert(ModelData::OrientationRole, ROLE_ORIENTATION);
-    roles.insert(ModelData::MimeTypeRole, ROLE_MIME_TYPE);
-    roles.insert(ModelData::TitleRole, ROLE_TITLE);
-    roles.insert(ModelData::FileNameRole, ROLE_FILE_NAME);
-    roles.insert(ModelData::ImageWidthRole, ROLE_IMAGE_WIDTH);
-    roles.insert(ModelData::ImageHeightRole, ROLE_IMAGE_HEIGHT);
+#define ROLE(X,x) roles.insert(ModelData::X##Role, #x);
+FOILPICS_ROLES(ROLE)
+#undef ROLE
     return roles;
 }
 
@@ -2290,15 +2383,9 @@ QVariantMap FoilPicsModel::get(int aIndex) const
     QVariantMap map;
     ModelData* data = iPrivate->dataAt(aIndex);
     if (data) {
-        map.insert(ROLE_URL, data->get(ModelData::UrlRole));
-        map.insert(ROLE_THUMBNAIL, data->get(ModelData::ThumbnailRole));
-        map.insert(ROLE_DECRYPTED_DATA, data->get(ModelData::DecryptedDataRole));
-        map.insert(ROLE_ORIENTATION, data->get(ModelData::OrientationRole));
-        map.insert(ROLE_MIME_TYPE, data->get(ModelData::MimeTypeRole));
-        map.insert(ROLE_TITLE, data->get(ModelData::TitleRole));
-        map.insert(ROLE_FILE_NAME, data->get(ModelData::FileNameRole));
-        map.insert(ROLE_IMAGE_WIDTH, data->get(ModelData::ImageWidthRole));
-        map.insert(ROLE_IMAGE_HEIGHT, data->get(ModelData::ImageHeightRole));
+#define ROLE(X,x) map.insert(Private::Role##X, data->get(ModelData::X##Role));
+FOILPICS_ROLES(ROLE)
+#undef ROLE
     }
     return map;
 }
@@ -2317,9 +2404,9 @@ void FoilPicsModel::decryptAll()
     iPrivate->emitQueuedSignals();
 }
 
-bool FoilPicsModel::encryptFile(QUrl aUrl, int aOrientation)
+bool FoilPicsModel::encryptFile(QUrl aUrl, QVariantMap aMetaData)
 {
-    const bool ok = iPrivate->encrypt(aUrl, aOrientation);
+    const bool ok = iPrivate->encrypt(aUrl, aMetaData);
     iPrivate->emitQueuedSignals();
     return ok;
 }
