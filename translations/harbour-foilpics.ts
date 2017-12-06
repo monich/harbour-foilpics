@@ -8,6 +8,11 @@
         <extracomment>Application title</extracomment>
         <translation>Foil Pics</translation>
     </message>
+    <message id="foilpics-menu-details">
+        <source>Image details</source>
+        <extracomment>Generic menu item</extracomment>
+        <translation>Image details</translation>
+    </message>
     <message id="foilpics-menu-encrypt">
         <source>Encrypt</source>
         <extracomment>Generic menu item</extracomment>
@@ -245,6 +250,61 @@
         <source>Confirm</source>
         <extracomment>Button label (confirm password)</extracomment>
         <translation>Confirm</translation>
+    </message>
+    <message id="foilpics-details-header">
+        <source>Details</source>
+        <extracomment>Page header</extracomment>
+        <translation>Details</translation>
+    </message>
+    <message id="foilpics-details-file_name-label">
+        <source>File name</source>
+        <extracomment>Details label</extracomment>
+        <translation>File name</translation>
+    </message>
+    <message id="foilpics-details-file_size-label">
+        <source>File size</source>
+        <extracomment>Details label</extracomment>
+        <translation>File size</translation>
+    </message>
+    <message id="foilpics-details-mime_type-label">
+        <source>Type</source>
+        <extracomment>Details label</extracomment>
+        <translation>Type</translation>
+    </message>
+    <message id="foilpics-details-width-label">
+        <source>Width</source>
+        <extracomment>Details label</extracomment>
+        <translation>Width</translation>
+    </message>
+    <message id="foilpics-details-height-label">
+        <source>Height</source>
+        <extracomment>Details label</extracomment>
+        <translation>Height</translation>
+    </message>
+    <message id="foilpics-details-date-label">
+        <source>Date</source>
+        <extracomment>Details label</extracomment>
+        <translation>Date</translation>
+    </message>
+    <message id="foilpics-details-camera_manufacturer-label">
+        <source>Camera manufacturer</source>
+        <extracomment>Details label</extracomment>
+        <translation>Camera manufacturer</translation>
+    </message>
+    <message id="foilpics-details-camera_model-label">
+        <source>Camera model</source>
+        <extracomment>Details label</extracomment>
+        <translation>Camera model</translation>
+    </message>
+    <message id="foilpics-details-coordinates-label">
+        <source>Coordinates</source>
+        <extracomment>Details label</extracomment>
+        <translation>Coordinates</translation>
+    </message>
+    <message id="foilpics-details-coordinates-value">
+        <source>Latitude %1, Longitude %2, Altitude %3</source>
+        <extracomment>Coordinates</extracomment>
+        <translation>Latitude %1, Longitude %2, Altitude %3</translation>
     </message>
 </context>
 </TS>

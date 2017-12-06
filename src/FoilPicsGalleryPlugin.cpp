@@ -50,6 +50,7 @@ FoilPicsGalleryPlugin::registerTypes(
     int aMinor)
 {
     reRegisterType("DocumentGallery", aModule, aMajor, aMinor);
+    reRegisterType("DocumentGalleryItem", aModule, aMajor, aMinor);
     reRegisterType("DocumentGalleryModel", aModule, aMajor, aMinor);
     reRegisterType("GalleryStartsWithFilter", aModule, aMajor, aMinor);
 }

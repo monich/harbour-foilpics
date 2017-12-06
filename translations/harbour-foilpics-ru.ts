@@ -8,6 +8,11 @@
         <extracomment>Application title</extracomment>
         <translation>Foil Pics</translation>
     </message>
+    <message id="foilpics-menu-details">
+        <source>Image details</source>
+        <extracomment>Generic menu item</extracomment>
+        <translation>Информация о картинке</translation>
+    </message>
     <message id="foilpics-menu-encrypt">
         <source>Encrypt</source>
         <extracomment>Generic menu item</extracomment>
@@ -246,6 +251,61 @@
         <source>Confirm</source>
         <extracomment>Button label (confirm password)</extracomment>
         <translation>Подтвердить</translation>
+    </message>
+    <message id="foilpics-details-header">
+        <source>Details</source>
+        <extracomment>Page header</extracomment>
+        <translation>Информация</translation>
+    </message>
+    <message id="foilpics-details-file_name-label">
+        <source>File name</source>
+        <extracomment>Details label</extracomment>
+        <translation>Имя файла</translation>
+    </message>
+    <message id="foilpics-details-file_size-label">
+        <source>File size</source>
+        <extracomment>Details label</extracomment>
+        <translation>Размер файла</translation>
+    </message>
+    <message id="foilpics-details-mime_type-label">
+        <source>Type</source>
+        <extracomment>Details label</extracomment>
+        <translation>Формат</translation>
+    </message>
+    <message id="foilpics-details-width-label">
+        <source>Width</source>
+        <extracomment>Details label</extracomment>
+        <translation>Ширина</translation>
+    </message>
+    <message id="foilpics-details-height-label">
+        <source>Height</source>
+        <extracomment>Details label</extracomment>
+        <translation>Высота</translation>
+    </message>
+    <message id="foilpics-details-date-label">
+        <source>Date</source>
+        <extracomment>Details label</extracomment>
+        <translation>Дата</translation>
+    </message>
+    <message id="foilpics-details-camera_manufacturer-label">
+        <source>Camera manufacturer</source>
+        <extracomment>Details label</extracomment>
+        <translation>Производитель камеры</translation>
+    </message>
+    <message id="foilpics-details-camera_model-label">
+        <source>Camera model</source>
+        <extracomment>Details label</extracomment>
+        <translation>Модель камеры</translation>
+    </message>
+    <message id="foilpics-details-coordinates-label">
+        <source>Coordinates</source>
+        <extracomment>Details label</extracomment>
+        <translation>Координаты</translation>
+    </message>
+    <message id="foilpics-details-coordinates-value">
+        <source>Latitude %1, Longitude %2, Altitude %3</source>
+        <extracomment>Coordinates</extracomment>
+        <translation>Широта %1, Долгота %2, Высота %3</translation>
     </message>
 </context>
 </TS>
