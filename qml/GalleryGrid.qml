@@ -58,7 +58,10 @@ ImageGridView {
                 orientation: model.orientation,
                 imageDate: model.dateTaken,
                 cameraManufacturer: model.cameraManufacturer,
-                cameraModel: model.cameraModel
+                cameraModel: model.cameraModel,
+                latitude: model.latitude,
+                longitude: model.longitude,
+                altitude: model.altitude
             })
             // Count this as a hint:
             if (hints.letsEncryptSomething < MaximumHintCount) hints.letsEncryptSomething++

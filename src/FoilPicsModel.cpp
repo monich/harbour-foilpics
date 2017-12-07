@@ -60,6 +60,9 @@
 #define HEADER_CAMERA_MANUFACTURER  "Camera-Manufacturer"
 #define HEADER_CAMERA_MODEL         "Camera-Model"
 #define HEADER_IMAGE_DATE           "Image-Date"
+#define HEADER_LATITUDE             "Latitude"
+#define HEADER_LONGITUDE            "Longitude"
+#define HEADER_ALTITUDE             "Altitude"
 #define HEADER_TITLE                "Title"
 
 /* Thumbnail specific headers */
@@ -78,6 +81,9 @@ const QString FoilPicsModel::MetaOrientation("orientation"); // int
 const QString FoilPicsModel::MetaImageDate("imageDate");     // QDateTime
 const QString FoilPicsModel::MetaCameraManufacturer("cameraManufacturer"); // QString
 const QString FoilPicsModel::MetaCameraModel("cameraModel"); // QString
+const QString FoilPicsModel::MetaLatitude("latitude");       // double
+const QString FoilPicsModel::MetaLongitude("longitude");     // double
+const QString FoilPicsModel::MetaAltitude("altitude");       // double
 
 // Role names
 #define FOILPICS_ROLES(role) \
@@ -88,6 +94,9 @@ const QString FoilPicsModel::MetaCameraModel("cameraModel"); // QString
     role(Orientation, orientation) \
     role(CameraManufacturer, cameraManufacturer) \
     role(CameraModel, cameraModel) \
+    role(Latitude, latitude) \
+    role(Longitude, longitude) \
+    role(Altitude, altitude) \
     role(ImageDate, imageDate) \
     role(MimeType, mimeType) \
     role(FileName, fileName) \
@@ -118,16 +127,28 @@ public:
         QString aPath, QString aThumbFile, QImage aThumbImage,
         QString aTitle, const char* aContentType, QDateTime aSortTime,
         int aOrientation, QString aCameraManufacturer, QString aCameraModel,
+        const char* aLatitude, const char* aLongitude, const char* aAltitude,
         QDateTime aImageDate);
     ~ModelData();
 
     QVariant get(Role aRole) const;
+
     static QString defaultTitle(QString aPath);
     static QString defaultTitle(QFileInfo aFileInfo);
     static QImage thumbnail(const QImage aImage, QSize aSize, int aRotate);
     static const char* format(const char* aContentType);
     static bool lessThan(ModelData* aData1, ModelData* aData2);
     static int compareFormatMap(const void* aElem1, const void* aElem2);
+
+    static double* toDouble(const char* aString);
+    static QString headerString(const FoilMsg* aMsg, const char* aKey);
+    static QDateTime headerTime(const FoilMsg* aMsg, const char* aKey);
+    static QDateTime headerSortTime(const FoilMsg* aMsg);
+    static int headerInt(const FoilMsg* aMsg, const char* aKey, int aDef = 0);
+
+    static ModelData* fromFoilMsg(FoilMsg* aFoilMsg, QString aOriginalPath,
+        QSize aFullDimensions, QString aPath, QString aThumbFile,
+        QImage aThumbImage, const char* aContentType, int aOrientation);
 
 public:
     QString iPath;
@@ -148,18 +169,24 @@ public:
     QDateTime iImageDate;
     QByteArray iBytes;
     FoilPicsTask* iDecryptTask;
+    double* iLatitude;
+    double* iLongitude;
+    double* iAltitude;
 };
 
 FoilPicsModel::ModelData::ModelData(QString aOriginalPath, int aOriginalSize,
     QSize aFullDimensions, QString aPath, QString aThumbFile,
     QImage aThumbImage, QString aTitle, const char* aContentType,
     QDateTime aSortTime, int aOrientation, QString aCameraManufacturer,
-    QString aCameraModel, QDateTime aImageDate) :
+    QString aCameraModel, const char* aLatitude, const char* aLongitude,
+    const char* aAltitude, QDateTime aImageDate) :
     iPath(aPath), iThumbFile(aThumbFile), iTitle(aTitle),
     iFullDimensions(aFullDimensions), iThumbnail(aThumbImage),
     iSortTime(aSortTime), iOriginalSize(aOriginalSize),
     iOrientation(aOrientation), iCameraManufacturer(aCameraManufacturer),
-    iCameraModel(aCameraModel), iImageDate(aImageDate), iDecryptTask(NULL)
+    iCameraModel(aCameraModel), iImageDate(aImageDate), iDecryptTask(NULL),
+    iLatitude(toDouble(aLatitude)), iLongitude(toDouble(aLongitude)),
+    iAltitude(toDouble(aAltitude))
 {
     QFileInfo fileInfo(aOriginalPath);
     iFileName = fileInfo.fileName();
@@ -172,6 +199,27 @@ FoilPicsModel::ModelData::ModelData(QString aOriginalPath, int aOriginalSize,
 FoilPicsModel::ModelData::~ModelData()
 {
     if (iDecryptTask) iDecryptTask->release();
+    delete iLatitude;
+    delete iLongitude;
+    delete iAltitude;
+}
+
+FoilPicsModel::ModelData* FoilPicsModel::ModelData::fromFoilMsg(FoilMsg* aMsg,
+    QString aOriginalPath, QSize aFullDimensions, QString aPath,
+    QString aThumbFile, QImage aThumbImage, const char* aContentType,
+    int aOrientation)
+{
+    return new ModelData(aOriginalPath,
+        headerInt(aMsg, HEADER_ORIGINAL_SIZE), aFullDimensions,
+        aPath, aThumbFile, aThumbImage,
+        headerString(aMsg, HEADER_TITLE), aContentType,
+        headerSortTime(aMsg), aOrientation,
+        headerString(aMsg, HEADER_CAMERA_MANUFACTURER),
+        headerString(aMsg, HEADER_CAMERA_MODEL),
+        foilmsg_get_value(aMsg, HEADER_LATITUDE),
+        foilmsg_get_value(aMsg, HEADER_LONGITUDE),
+        foilmsg_get_value(aMsg, HEADER_ALTITUDE),
+        headerTime(aMsg, HEADER_IMAGE_DATE));
 }
 
 QVariant FoilPicsModel::ModelData::get(Role aRole) const
@@ -186,6 +234,12 @@ QVariant FoilPicsModel::ModelData::get(Role aRole) const
     case ModelData::OrientationRole: return iOrientation;
     case ModelData::CameraManufacturerRole: return iCameraManufacturer;
     case ModelData::CameraModelRole: return iCameraModel;
+    case ModelData::LatitudeRole: return iLatitude ?
+            QVariant::fromValue(*iLatitude) : QVariant();
+    case ModelData::LongitudeRole: return iLongitude ?
+            QVariant::fromValue(*iLongitude) : QVariant();
+    case ModelData::AltitudeRole: return iAltitude ?
+            QVariant::fromValue(*iAltitude) : QVariant();
     case ModelData::ImageDateRole: return iImageDate.isValid() ?
             QVariant::fromValue(iImageDate) : QVariant();
     case ModelData::MimeTypeRole: return iContentType;
@@ -200,6 +254,17 @@ QVariant FoilPicsModel::ModelData::get(Role aRole) const
         break;
     }
     return QVariant();
+}
+
+double* FoilPicsModel::ModelData::toDouble(const char* aString)
+{
+    if (aString && aString[0]) {
+        double q = g_ascii_strtod(aString, NULL);
+        if (!errno) {
+            return new double(q);
+        }
+    }
+    return NULL;
 }
 
 QString FoilPicsModel::ModelData::defaultTitle(QString aPath)
@@ -282,6 +347,47 @@ int FoilPicsModel::ModelData::compareFormatMap(const void* aElem1,
 {
     return strcmp(((const FormatMap*)aElem1)->contentType,
         ((const FormatMap*)aElem2)->contentType);
+}
+
+int FoilPicsModel::ModelData::headerInt(const FoilMsg* aMsg,
+    const char* aKey, int aDefaultValue)
+{
+    int result = aDefaultValue;
+    const char* str = foilmsg_get_value(aMsg, aKey);
+    if (str && str[0]) {
+        gboolean ok;
+        char *str2 = g_strstrip(g_strdup(str));
+        char *end = str2;
+        long l;
+        errno = 0;
+        l = strtol(str2, &end, 0);
+        ok = !*end && errno != ERANGE && l >= INT_MIN && l <= INT_MAX;
+        if (ok) {
+            result = (int)l;
+        }
+        g_free(str2);
+    }
+    return result;
+}
+
+QString FoilPicsModel::ModelData::headerString(const FoilMsg* aMsg,
+    const char* aKey)
+{
+    const char* value = foilmsg_get_value(aMsg, aKey);
+    return (value && value[0]) ? QString(value) : QString();
+}
+
+QDateTime FoilPicsModel::ModelData::headerTime(const FoilMsg* aMsg,
+    const char* aKey)
+{
+    const char* value = foilmsg_get_value(aMsg, aKey);
+    return value ? QDateTime::fromString(value, Qt::ISODate) : QDateTime();
+}
+
+QDateTime FoilPicsModel::ModelData::headerSortTime(const FoilMsg* aMsg)
+{
+    QDateTime time = headerTime(aMsg, HEADER_IMAGE_DATE);
+    return time.isValid() ? time : headerTime(aMsg, HEADER_MODIFICATION_TIME);
 }
 
 // ==========================================================================
@@ -438,10 +544,6 @@ public:
     QString writeThumb(QImage aImage, const FoilMsgHeaders* aHeaders,
         const char* aContentType, QImage aThumb, QString aDestDir);
 
-    static QString headerString(const FoilMsg* aMsg, const char* aKey);
-    static QDateTime headerTime(const FoilMsg* aMsg, const char* aKey);
-    static QDateTime headerSortTime(const FoilMsg* aMsg);
-    static int headerInt(const FoilMsg* aMsg, const char* aKey, int aDef = 0);
     static QImage toImage(const FoilMsg* aMsg);
     static FoilOutput* createFoilFile(QString aDestDir, GString* aOutPath);
     static bool addHeader(FoilMsgHeader* aHeader,
@@ -491,47 +593,6 @@ FoilMsg* FoilPicsModel::BaseTask::decryptAndVerify(const char* aFileName)
         }
     }
     return NULL;
-}
-
-int FoilPicsModel::BaseTask::headerInt(const FoilMsg* aMsg,
-    const char* aKey, int aDefaultValue)
-{
-    int result = aDefaultValue;
-    const char* str = foilmsg_get_value(aMsg, aKey);
-    if (str && str[0]) {
-        gboolean ok;
-        char *str2 = g_strstrip(g_strdup(str));
-        char *end = str2;
-        long l;
-        errno = 0;
-        l = strtol(str2, &end, 0);
-        ok = !*end && errno != ERANGE && l >= INT_MIN && l <= INT_MAX;
-        if (ok) {
-            result = (int)l;
-        }
-        g_free(str2);
-    }
-    return result;
-}
-
-QString FoilPicsModel::BaseTask::headerString(const FoilMsg* aMsg,
-    const char* aKey)
-{
-    const char* value = foilmsg_get_value(aMsg, aKey);
-    return value ? QString(value) : QString();
-}
-
-QDateTime FoilPicsModel::BaseTask::headerTime(const FoilMsg* aMsg,
-    const char* aKey)
-{
-    const char* value = foilmsg_get_value(aMsg, aKey);
-    return value ? QDateTime::fromString(value, Qt::ISODate) : QDateTime();
-}
-
-QDateTime FoilPicsModel::BaseTask::headerSortTime(const FoilMsg* aMsg)
-{
-    QDateTime time = headerTime(aMsg, HEADER_IMAGE_DATE);
-    return time.isValid() ? time : headerTime(aMsg, HEADER_MODIFICATION_TIME);
 }
 
 QImage FoilPicsModel::BaseTask::toImage(const FoilMsg* aMsg)
@@ -602,6 +663,9 @@ QString FoilPicsModel::BaseTask::writeThumb(QImage aImage,
             HEADER_ORIENTATION,
             HEADER_CAMERA_MANUFACTURER,
             HEADER_CAMERA_MODEL,
+            HEADER_LATITUDE,
+            HEADER_LONGITUDE,
+            HEADER_ALTITUDE,
             HEADER_IMAGE_DATE,
             HEADER_TITLE
         };
@@ -723,6 +787,8 @@ public:
         QVariantMap aMetaData);
 
     virtual void performTask();
+    static bool addDoubleHeader(QVariant aValue, FoilMsgHeader* aHeader,
+        const char* aName, char* aBuffer);
 
 public:
     QString iSourceFile;
@@ -742,6 +808,23 @@ FoilPicsModel::EncryptTask::EncryptTask(QThreadPool* aPool, QString aSourceFile,
     iData(NULL)
 {
     HDEBUG("Encrypting" << qPrintable(aSourceFile) << aMetaData);
+}
+
+bool FoilPicsModel::EncryptTask::addDoubleHeader(QVariant aValue,
+    FoilMsgHeader* aHeader, const char* aName, char* aBuffer)
+{
+    if (aValue.isValid()) {
+        bool ok = false;
+        double d = aValue.toDouble(&ok);
+        if (ok) {
+            g_ascii_dtostr(aBuffer, G_ASCII_DTOSTR_BUF_SIZE, d);
+            aHeader->name = aName;
+            aHeader->value = aBuffer;
+            return true;
+        }
+    }
+    aBuffer[0] = 0;
+    return false;
 }
 
 void FoilPicsModel::EncryptTask::performTask()
@@ -785,7 +868,7 @@ void FoilPicsModel::EncryptTask::performTask()
                 opt.key_type = ENCRYPT_KEY_TYPE;
 
                 FoilMsgHeaders headers;
-                FoilMsgHeader header[9];
+                FoilMsgHeader header[12];
 
                 headers.header = header;
                 headers.count = 0;
@@ -872,6 +955,24 @@ void FoilPicsModel::EncryptTask::performTask()
                     headers.count++;
                 }
 
+                char latitude[G_ASCII_DTOSTR_BUF_SIZE];
+                if (addDoubleHeader(iMetaData.value(MetaLatitude),
+                    header + headers.count, HEADER_LATITUDE, latitude)) {
+                    headers.count++;
+                }
+
+                char longitude[G_ASCII_DTOSTR_BUF_SIZE];
+                if (addDoubleHeader(iMetaData.value(MetaLongitude),
+                    header + headers.count, HEADER_LONGITUDE, longitude)) {
+                    headers.count++;
+                }
+
+                char altitude[G_ASCII_DTOSTR_BUF_SIZE];
+                if (addDoubleHeader(iMetaData.value(MetaAltitude),
+                    header + headers.count, HEADER_ALTITUDE, altitude)) {
+                    headers.count++;
+                }
+
                 HDEBUG("Writing" << dest->str);
                 if (foilmsg_encrypt(out, &bytes, content_type, &headers,
                     iPrivateKey, iPublicKey, &opt, NULL)) {
@@ -898,7 +999,7 @@ void FoilPicsModel::EncryptTask::performTask()
                     iData = new ModelData(iSourceFile, bytes.len, image.size(),
                         dest->str, thumbName, thumb, title, content_type,
                         sortTime, orientation, cameraMaker, cameraModel,
-                        dateTaken);
+                        latitude, longitude, altitude, dateTaken);
                 }
                 g_free(mtime);
                 g_free(atime);
@@ -1072,24 +1173,17 @@ FoilPicsModel::DecryptPicsTask::decryptImage(QString aImagePath)
     FoilPicsModel::ModelData* data = NULL;
     FoilMsg* msg = decryptAndVerify(aImagePath);
     if (msg) {
-        QString origPath = headerString(msg, HEADER_ORIGINAL_PATH);
+        QString origPath = ModelData::headerString(msg, HEADER_ORIGINAL_PATH);
         if (!origPath.isEmpty()) {
             QImage image = toImage(msg);
             if (!image.isNull()) {
                 HDEBUG("Loaded image from" << qPrintable(aImagePath));
-                const int degrees = headerInt(msg, HEADER_ORIENTATION);
-                QImage thumb = ModelData::thumbnail(image, iThumbSize,
-                    degrees);
+                int deg = ModelData::headerInt(msg, HEADER_ORIENTATION);
+                QImage thumb = ModelData::thumbnail(image, iThumbSize, deg);
                 QString thumbName = writeThumb(image, &msg->headers,
                     msg->content_type, thumb, iDir);
-                data = new ModelData(origPath,
-                    headerInt(msg, HEADER_ORIGINAL_SIZE), image.size(),
-                    aImagePath, thumbName, thumb,
-                    headerString(msg, HEADER_TITLE), msg->content_type,
-                    headerSortTime(msg), degrees,
-                    headerString(msg, HEADER_CAMERA_MANUFACTURER),
-                    headerString(msg, HEADER_CAMERA_MODEL),
-                    headerTime(msg, HEADER_IMAGE_DATE));
+                data = ModelData::fromFoilMsg(msg, origPath, image.size(),
+                    aImagePath, thumbName, thumb, msg->content_type, deg);
             }
         }
         foilmsg_free(msg);
@@ -1105,9 +1199,9 @@ FoilPicsModel::DecryptPicsTask::decryptThumb(QString aImagePath,
     FoilMsg* msg = decryptAndVerify(aThumbPath);
     if (msg) {
         // Thumbnail absolutely must have these:
-        const int w = headerInt(msg, HEADER_THUMB_FULL_WIDTH);
-        const int h = headerInt(msg, HEADER_THUMB_FULL_HEIGHT);
-        QString origPath = headerString(msg, HEADER_ORIGINAL_PATH);
+        const int w = ModelData::headerInt(msg, HEADER_THUMB_FULL_WIDTH);
+        const int h = ModelData::headerInt(msg, HEADER_THUMB_FULL_HEIGHT);
+        QString origPath = ModelData::headerString(msg, HEADER_ORIGINAL_PATH);
         if (w > 0 && h > 0 && !origPath.isEmpty()) {
             // Make sure that the size is right
             QImage thumbImage = toImage(msg);
@@ -1116,14 +1210,9 @@ FoilPicsModel::DecryptPicsTask::decryptThumb(QString aImagePath,
             if (!thumbImage.isNull() && thumbImage.size() == iThumbSize) {
                 // This thumb is good to go
                 HDEBUG("Loaded thumbnail from" << qPrintable(aThumbPath));
-                data = new ModelData(origPath,
-                    headerInt(msg, HEADER_ORIGINAL_SIZE), QSize(w, h),
-                    aImagePath, thumbName, thumbImage,
-                    headerString(msg, HEADER_TITLE), msg->content_type,
-                    headerSortTime(msg), headerInt(msg, HEADER_ORIENTATION),
-                    headerString(msg, HEADER_CAMERA_MANUFACTURER),
-                    headerString(msg, HEADER_CAMERA_MODEL),
-                    headerTime(msg, HEADER_IMAGE_DATE));
+                data = ModelData::fromFoilMsg(msg, origPath, QSize(w, h),
+                    aImagePath, thumbName, thumbImage, msg->content_type,
+                    ModelData::headerInt(msg, HEADER_ORIENTATION));
             }
         }
         foilmsg_free(msg);

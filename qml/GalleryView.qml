@@ -13,7 +13,8 @@ SilicaFlickable {
         rootType: DocumentGallery.Image
         properties: [
             "url", "mimeType", "title", "orientation", "dateTaken",
-            "width", "height", "cameraManufacturer", "cameraModel"
+            "width", "height", "cameraManufacturer", "cameraModel",
+            "latitude", "longitude", "altitude"
         ]
         sortProperties: ["-dateTaken"]
         autoUpdate: true

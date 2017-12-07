@@ -96,6 +96,18 @@ Page {
                 value: ("cameraModel" in details) ? details.cameraModel : ""
                 visible: value.length > 0
             }
+            DetailItem {
+                //: Details label
+                //% "Coordinates"
+                label: qsTrId("foilpics-details-coordinates-label")
+                value: ("latitude" in details && "longitude" in details && "altitude" in details &&
+                    details.latitude !== undefined && details.longitude !== undefined && details.altitude !== undefined) ?
+                    //: Coordinates
+                    //% "Latitude %1, Longitude %2, Altitude %3"
+                    qsTrId("foilpics-details-coordinates-value").arg(details.latitude).arg(details.longitude).arg(details.altitude) :
+                    ""
+                visible: value.length > 0
+            }
         }
         VerticalScrollDecorator { }
     }

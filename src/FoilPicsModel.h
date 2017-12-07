@@ -109,6 +109,9 @@ public:
     static const QString MetaImageDate;         // "imageDate" -> QDateTime
     static const QString MetaCameraManufacturer;// "cameraManufacturer" -> QString
     static const QString MetaCameraModel;       // "cameraModel" -> QString
+    static const QString MetaLatitude;          // "latitude" -> double
+    static const QString MetaLongitude;         // "longitude" -> double
+    static const QString MetaAltitude;          // "altitude" -> double
 
 private Q_SLOTS:
     void imageRequest(QString aPath, FoilPicsImageRequest aRequest);
