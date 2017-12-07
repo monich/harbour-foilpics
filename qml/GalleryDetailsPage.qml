@@ -30,7 +30,9 @@ Page {
                     Format.formatDate(galleryItem.metaData.dateTaken, Format.Timepoint) : ""
                 cameraManufacturerItem.value = galleryItem.metaData.cameraManufacturer
                 cameraModelItem.value = galleryItem.metaData.cameraModel
-                gpsItem.value = galleryItem.metaData.latitude ?
+                gpsItem.value = galleryItem.metaData.latitude != "" &&
+                    galleryItem.metaData.longitude != "" &&
+                    galleryItem.metaData.altitude != "" ?
                     //: Coordinates
                     //% "Latitude %1, Longitude %2, Altitude %3"
                     qsTrId("foilpics-details-coordinates-value").arg(galleryItem.metaData.latitude).arg(galleryItem.metaData.longitude).arg(galleryItem.metaData.altitude) :
