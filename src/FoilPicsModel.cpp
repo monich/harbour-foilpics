@@ -971,18 +971,16 @@ void FoilPicsModel::EncryptTask::performTask()
                     }
                 }
 
-                var = iMetaData.value(MetaCameraManufacturer);
-                if (var.isValid()) {
-                    cameraMaker = var.toString();
+                cameraMaker = iMetaData.value(MetaCameraManufacturer).toString();
+                if (!cameraMaker.isEmpty()) {
                     cameraMakerBytes = cameraMaker.toUtf8();
                     header[headers.count].name = HEADER_CAMERA_MANUFACTURER;
                     header[headers.count].value = cameraMakerBytes.constData();
                     headers.count++;
                 }
 
-                var = iMetaData.value(MetaCameraModel);
-                if (var.isValid()) {
-                    cameraModel = var.toString();
+                cameraModel = iMetaData.value(MetaCameraModel).toString();
+                if (!cameraModel.isEmpty()) {
                     cameraModelBytes = cameraModel.toUtf8();
                     header[headers.count].name = HEADER_CAMERA_MODEL;
                     header[headers.count].value = cameraModelBytes.constData();
