@@ -11,7 +11,7 @@
     <message id="foilpics-menu-details">
         <source>Image details</source>
         <extracomment>Generic menu item</extracomment>
-        <translation>Détails de l'image</translation>
+        <translation>Détails de l&apos;image</translation>
     </message>
     <message id="foilpics-menu-encrypt">
         <source>Encrypt</source>
@@ -101,7 +101,7 @@
     <message id="foilpics-generate_key_warning-text">
         <source>You seem to have some encrypted files in the storage folder. Once you have generated a new key, you are going to lose access to those files. If you have forgotten your password, then keep in mind that most likely it&apos;s computationally easier to brute-force your password and recover the old key than to crack the new key.</source>
         <extracomment>Warning shown prior to generating the new key</extracomment>
-        <translation>Il semble que vous ayez des fichiers chiffrés dans le dossier. Une fois une nouvellela clef générée, vous perdrez l'accès à ces fichiers. Si vous avez oublié votre mot de passe, gardez à l'esprit qu'il est plus simple de brute-forcer votre mot de passe que de récupérer votre ancienne clef..</translation>
+        <translation>Il semble que vous ayez des fichiers chiffrés dans le dossier. Une fois une nouvellela clef générée, vous perdrez l&apos;accès à ces fichiers. Si vous avez oublié votre mot de passe, gardez à l&apos;esprit qu&apos;il est plus simple de brute-forcer votre mot de passe que de récupérer votre ancienne clef..</translation>
     </message>
     <message id="foilpics-generate_key_page-title">
         <source>You are about to generate a new key</source>
@@ -144,7 +144,7 @@
     <message id="foilpics-enter_password_view-label-enter_password">
         <source>Secret pictures are locked. Please enter your password</source>
         <extracomment>Password prompt label</extracomment>
-        <translation>Les images secrètes sont verrouillées. Merci d'entrer le mot de passe</translation>
+        <translation>Les images secrètes sont verrouillées. Merci d&apos;entrer le mot de passe</translation>
     </message>
     <message id="foilpics-enter_password_view-button-unlocking">
         <source>Unlocking...</source>
@@ -219,7 +219,7 @@
     <message id="foilpics-thumbnail_image-loading_failed">
         <source>Oops, can&apos;t display the thumbnail!</source>
         <extracomment>Thumbnail Image loading failed</extracomment>
-        <translation>Impossible d'afficher la miniature !</translation>
+        <translation>Impossible d&apos;afficher la miniature !</translation>
     </message>
     <message id="foilpics-share_method_list-add_account">
         <source>Add account</source>
@@ -254,7 +254,7 @@
     <message id="foilpics-confirm_password_page-description">
         <source>Make sure you don&apos;t forget your password. It&apos;s impossible to either recover it or to access the encrypted pictures without knowing it. Better take it seriously.</source>
         <extracomment>Password confirmation description</extracomment>
-        <translation>Faites en sorte de ne pas oublier votre mot de passe. C'est impossible de le récupérer ou d'accèder au contenu chiffré sans le connaître. Prenez ceci au sérieux</translation>
+        <translation>Faites en sorte de ne pas oublier votre mot de passe. C&apos;est impossible de le récupérer ou d&apos;accèder au contenu chiffré sans le connaître. Prenez ceci au sérieux</translation>
     </message>
     <message id="foilpics-confirm_password_page-text_field_placeholder-new_password">
         <source>New password again</source>
@@ -289,7 +289,7 @@
     <message id="foilpics-details-original_file_size-label">
         <source>Original file size</source>
         <extracomment>Details label</extracomment>
-        <translation>Taille du fichier d'origine</translation>
+        <translation>Taille du fichier d&apos;origine</translation>
     </message>
     <message id="foilpics-details-encrypted_file_size-label">
         <source>Encrypted file size</source>
@@ -319,12 +319,12 @@
     <message id="foilpics-details-camera_manufacturer-label">
         <source>Camera manufacturer</source>
         <extracomment>Details label</extracomment>
-        <translation>Fabricant de l'appareil photo</translation>
+        <translation>Fabricant de l&apos;appareil photo</translation>
     </message>
     <message id="foilpics-details-camera_model-label">
         <source>Camera model</source>
         <extracomment>Details label</extracomment>
-        <translation>Modèle de l'appareil photo</translation>
+        <translation>Modèle de l&apos;appareil photo</translation>
     </message>
     <message id="foilpics-details-coordinates-label">
         <source>Coordinates</source>
