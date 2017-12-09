@@ -25,7 +25,7 @@ ApplicationWindow {
 
     //: Application title
     //% "Foil Pics"
-    readonly property string title: qsTrId("foilpics-app_name")
+    readonly property string appTitle: qsTrId("foilpics-app_name")
 
     initialPage: Component {
         MainPage {

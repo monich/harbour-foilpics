@@ -21,21 +21,20 @@ Page {
 
         onStatusChanged: {
             if (status === DocumentGalleryItem.Finished) {
-                fileNameItem.value = galleryItem.metaData.fileName
-                fileSizeItem.value = FileUtil.formatFileSize(galleryItem.metaData.fileSize)
-                mimeTypeItem.value = galleryItem.metaData.mimeType
-                widthItem.value = galleryItem.metaData.width
-                heightItem.value = galleryItem.metaData.height
-                dateTakenItem.value = galleryItem.metaData.dateTaken ?
-                    Format.formatDate(galleryItem.metaData.dateTaken, Format.Timepoint) : ""
-                cameraManufacturerItem.value = galleryItem.metaData.cameraManufacturer
-                cameraModelItem.value = galleryItem.metaData.cameraModel
-                gpsItem.value = galleryItem.metaData.latitude != "" &&
-                    galleryItem.metaData.longitude != "" &&
-                    galleryItem.metaData.altitude != "" ?
+                var metadata = galleryItem.metaData
+                fileNameItem.value = metadata.fileName
+                fileSizeItem.value = FileUtil.formatFileSize(metadata.fileSize)
+                mimeTypeItem.value = metadata.mimeType
+                widthItem.value = metadata.width
+                heightItem.value = metadata.height
+                dateTakenItem.value = metadata.dateTaken ?
+                    Format.formatDate(metadata.dateTaken, Format.Timepoint) : ""
+                cameraManufacturerItem.value = metadata.cameraManufacturer
+                cameraModelItem.value = metadata.cameraModel
+                coordinatesItem.value = metadata.latitude != "" && metadata.longitude != "" ?
                     //: Coordinates
                     //% "Latitude %1, Longitude %2, Altitude %3"
-                    qsTrId("foilpics-details-coordinates-value").arg(galleryItem.metaData.latitude).arg(galleryItem.metaData.longitude).arg(galleryItem.metaData.altitude) :
+                    qsTrId("foilpics-details-coordinates-value").arg(metadata.latitude).arg(metadata.longitude).arg(metadata.altitude) :
                     ""
             }
         }
@@ -106,7 +105,7 @@ Page {
                 visible: value.length > 0
             }
             DetailItem {
-                id: gpsItem
+                id: coordinatesItem
                 //: Details label
                 //% "Coordinates"
                 label: qsTrId("foilpics-details-coordinates-label")

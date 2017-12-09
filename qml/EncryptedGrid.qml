@@ -16,7 +16,7 @@ ImageGridView {
     readonly property bool busy: foilModel.busy || progressTimer.running
     readonly property bool ready: foilModel.foilState === FoilPicsModel.FoilPicsReady
     readonly property int minOffsetIndex: expandItem != null ?
-                                            (expandItem.modelIndex + columnCount - (expandItem.modelIndex % columnCount)) : 0
+        (expandItem.modelIndex + columnCount - (expandItem.modelIndex % columnCount)) : 0
 
     function decryptItem(index) {
         pageStack.pop()
