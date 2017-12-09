@@ -336,5 +336,15 @@
         <extracomment>Coordinates</extracomment>
         <translation>Latitude %1, Longitude %2, Altitude %3</translation>
     </message>
+    <message id="foilpics-details-section_header-editable">
+        <source>Editable details</source>
+        <extracomment>Section header for editable details</extracomment>
+        <translation>Détails modifiables</translation>
+    </message>
+    <message id="foilpics-details-image_title-label">
+        <source>Title</source>
+        <extracomment>Details label</extracomment>
+        <translation>Titre</translation>
+    </message>
 </context>
 </TS>
