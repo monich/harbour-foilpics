@@ -2278,6 +2278,16 @@ bool FoilPicsModel::Private::encrypt(QUrl aUrl, QVariantMap aMetaData)
 {
     if (iPrivateKey && aUrl.isLocalFile()) {
         const bool wasBusy = busy();
+        // Missing coordinates are sometimes represented as all zeros
+        const double latitude = aMetaData.value(MetaLatitude).toDouble();
+        const double longitude = aMetaData.value(MetaLongitude).toDouble();
+        const double altitude = aMetaData.value(MetaAltitude).toDouble();
+        if (latitude == 0.0 && longitude == 0.0 && altitude == 0.0) {
+            // Bogus coordinates, don't store them
+            aMetaData.remove(MetaLatitude);
+            aMetaData.remove(MetaLongitude);
+            aMetaData.remove(MetaAltitude);
+        }
         EncryptTask* task = new EncryptTask(iThreadPool, aUrl.toLocalFile(),
             iFoilPicsDir, iPrivateKey, iPublicKey, iThumbSize, aMetaData);
         iEncryptTasks.append(task);
