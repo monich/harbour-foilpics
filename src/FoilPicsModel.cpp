@@ -121,6 +121,10 @@ public:
         LastRole
     };
 
+#define ROLE(X,x) static const QString RoleName##X;
+    FOILPICS_ROLES(ROLE)
+#undef ROLE
+
     struct FormatMap {
         const char* contentType;
         const char* imageFormat;
@@ -178,7 +182,12 @@ public:
     double* iAltitude;
     FoilPicsTask* iDecryptTask;
     FoilPicsTask* iSetTitleTask;
+    QVariantMap iVariant;
 };
+
+#define ROLE(X,x) const QString FoilPicsModel::ModelData::RoleName##X(#x);
+FOILPICS_ROLES(ROLE)
+#undef ROLE
 
 FoilPicsModel::ModelData::ModelData(QString aOriginalPath, int aOriginalSize,
     QSize aFullDimensions, GBytes* aDigest, QString aPath, QString aThumbFile,
@@ -211,6 +220,11 @@ FoilPicsModel::ModelData::ModelData(QString aOriginalPath, int aOriginalSize,
     iImageId = QLatin1String(buf->str);
     HDEBUG(iFileName << buf->str << iOrientation);
     g_string_free(buf, TRUE);
+
+    // Fill the variant map
+#define ROLE(X,x) iVariant.insert(RoleName##X, get(X##Role));
+    FOILPICS_ROLES(ROLE)
+#undef ROLE
 }
 
 FoilPicsModel::ModelData::~ModelData()
@@ -1653,10 +1667,6 @@ public:
         SignalCount
     };
 
-#define ROLE(X,x) static const QString Role##X;
-    FOILPICS_ROLES(ROLE)
-#undef ROLE
-
     Private(FoilPicsModel* aParent);
     ~Private();
 
@@ -1696,6 +1706,7 @@ public:
     void decryptAll();
     void decryptTaskDone(DecryptTask* aTask, bool aLast);
     void setTitleAt(int aIndex, QString aTitle);
+    void dataChanged(int aIndex, ModelData::Role aRole);
     void imageRequest(QString aPath, FoilPicsImageRequest aRequest);
     int findPath(QString aPath);
     bool dropDecryptedData(int aDontTouch);
@@ -1725,10 +1736,6 @@ public:
     QList<EncryptTask*> iEncryptTasks;
     QList<ImageRequestTask*> iImageRequestTasks;
 };
-
-#define ROLE(X,x) const QString FoilPicsModel::Private::Role##X(#x);
-FOILPICS_ROLES(ROLE)
-#undef ROLE
 
 FoilPicsModel::Private::Private(FoilPicsModel* aParent) :
     QObject(aParent),
@@ -2006,6 +2013,7 @@ void FoilPicsModel::Private::insertModelData(ModelData* aData)
     if (iThumbnailProvider) {
         aData->iThumbSource = iThumbnailProvider->addThumbnail(aData->iImageId,
             aData->iThumbnail);
+        aData->iVariant.insert(ModelData::RoleNameThumbnail, aData->iThumbSource);
     }
     if (!iImageProvider) {
         iImageProvider = FoilPicsImageProvider::createForObject(model);
@@ -2013,6 +2021,7 @@ void FoilPicsModel::Private::insertModelData(ModelData* aData)
     if (iImageProvider) {
         aData->iImageSource = iImageProvider->addImage(aData->iImageId,
             aData->iPath);
+        aData->iVariant.insert(ModelData::RoleNameUrl, aData->iImageSource);
     }
 
     // Insert the data into the model
@@ -2442,13 +2451,8 @@ void FoilPicsModel::Private::setTitleAt(int aIndex, QString aTitle)
                 // We know we are busy now
                 queueSignal(SignalBusyChanged);
             }
-
             // Notify the view
-            QVector<int> roles;
-            roles.append(ModelData::TitleRole);
-            FoilPicsModel* model = parentModel();
-            QModelIndex index(model->createIndex(aIndex, 0));
-            Q_EMIT model->dataChanged(index, index, roles);
+            dataChanged(aIndex, ModelData::TitleRole);
         }
     }
 }
@@ -2473,12 +2477,7 @@ void FoilPicsModel::Private::onSetTitleTaskDone()
         iImageProvider->addImage(data->iImageId, data->iPath);
 
         // Title change already (optimistically) signalled by setTitleAt
-        QVector<int> roles;
-        roles.append(ModelData::EncryptedFileSizeRole);
-        roles.append(ModelData::FileNameRole);
-        FoilPicsModel* model = parentModel();
-        QModelIndex index(model->createIndex(iData.indexOf(data), 0));
-        Q_EMIT model->dataChanged(index, index, roles);
+        dataChanged(iData.indexOf(data), ModelData::EncryptedFileSizeRole);
     }
 
     // There's no need to queue BusyChanged because we were busy when we
@@ -2487,6 +2486,17 @@ void FoilPicsModel::Private::onSetTitleTaskDone()
     task->release(this);
     emitQueuedSignals();
     saveInfo();
+}
+
+void FoilPicsModel::Private::dataChanged(int aIndex, ModelData::Role aRole)
+{
+    if (aIndex >= 0 && aIndex < iData.count()) {
+        QVector<int> roles;
+        roles.append(aRole);
+        FoilPicsModel* model = parentModel();
+        QModelIndex modelIndex(model->createIndex(aIndex, 0));
+        Q_EMIT model->dataChanged(modelIndex, modelIndex, roles);
+    }
 }
 
 //
@@ -2711,14 +2721,8 @@ void FoilPicsModel::removeAt(int aIndex)
 QVariantMap FoilPicsModel::get(int aIndex) const
 {
     HDEBUG(aIndex);
-    QVariantMap map;
     ModelData* data = iPrivate->dataAt(aIndex);
-    if (data) {
-#define ROLE(X,x) map.insert(Private::Role##X, data->get(ModelData::X##Role));
-FOILPICS_ROLES(ROLE)
-#undef ROLE
-    }
-    return map;
+    return data ? data->iVariant : QVariantMap();
 }
 
 void FoilPicsModel::decryptAt(int aIndex)
