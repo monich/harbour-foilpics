@@ -25,6 +25,7 @@ Page {
         EncryptedView {
             hints: page.hints
             foilModel: page.foilModel
+            mainPage: page
             Connections {
                 target: parent
                 onXChanged: contentOffsetX = target.x

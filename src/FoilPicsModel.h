@@ -61,6 +61,7 @@ class FoilPicsModel : public QAbstractListModel {
     class BaseTask;
     class DecryptTask;
     class EncryptTask;
+    class SetTitleTask;
     class ImageRequestTask;
 
 public:
@@ -102,6 +103,7 @@ public:
     Q_INVOKABLE void decryptAt(int aIndex);
     Q_INVOKABLE void decryptAll();
     Q_INVOKABLE void removeAt(int aIndex);
+    Q_INVOKABLE void setTitleAt(int aIndex, QString aTitle);
     Q_INVOKABLE QVariantMap get(int aIndex) const;
 
     // Keys for metadata passed to encryptFile:

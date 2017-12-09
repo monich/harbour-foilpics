@@ -75,17 +75,15 @@ void FoilPicsThumbnailProvider::release()
     }
 }
 
-QString FoilPicsThumbnailProvider::prefix() const
+QString FoilPicsThumbnailProvider::addThumbnail(QString aId, QImage aImage)
 {
-    return iPrefix;
-}
-
-void FoilPicsThumbnailProvider::addThumbnail(QString aId, QImage aImage)
-{
+    QString thumbSource;
     if (!aId.isEmpty() && !aImage.isNull()) {
         QMutexLocker locker(&iMutex);
         iImageMap.insert(aId, aImage);
+        thumbSource = iPrefix + aId;
     }
+    return thumbSource;
 }
 
 void FoilPicsThumbnailProvider::releaseThumbnail(QString aId)

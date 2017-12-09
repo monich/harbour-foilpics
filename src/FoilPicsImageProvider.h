@@ -51,7 +51,8 @@ public:
     static FoilPicsImageProvider* createForObject(QObject* aObject);
     void release();
 
-    QString prefix() const;
+    QString addImage(QString aId, QString aPath);
+    void releaseImage(QString aId);
 
     virtual QImage requestImage(const QString& aId, QSize* aSize,
         const QSize& aRequestedSize);
@@ -61,6 +62,8 @@ private:
     QString iPrefix;
     QObject* iObject;
     QQmlEngine* iEngine;
+    QMutex iMutex;
+    QHash<QString, QString> iPathMap;
 };
 
 #endif // FOILPICS_IMAGE_PROVIDER_H

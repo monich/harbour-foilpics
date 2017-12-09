@@ -2,8 +2,11 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 
 Page {
+    id: page
     allowedOrientations: Orientation.All
     property var details
+
+    signal titleChanged(var title)
 
     // These are used from the native code:
     //% "%n B"
@@ -16,6 +19,12 @@ Page {
     readonly property string _formatGB: qsTrId("foilpics-file_size-gigabytes")
     //% "%1 TB"
     readonly property string _formatTB: qsTrId("foilpics-file_size-terabytes")
+
+    onStatusChanged: {
+        if (status === PageStatus.Deactivating) {
+            page.titleChanged(titleDetail.value)
+        }
+    }
 
     SilicaFlickable {
         anchors.fill: parent
@@ -49,30 +58,26 @@ Page {
                 //: Details label
                 //% "Encrypted file size"
                 label: qsTrId("foilpics-details-encrypted_file_size-label")
-                value: ("encryptedFileSize" in details && details.encryptedFileSize) ?
-                    FileUtil.formatFileSize(details.encryptedFileSize) : ""
+                value: details.encryptedFileSize ? FileUtil.formatFileSize(details.encryptedFileSize) : ""
                 visible: value.length > 0
             }
             DetailItem {
                 //: Details label
                 //% "Type"
                 label: qsTrId("foilpics-details-mime_type-label")
-                value: ("mimeType" in details) ? details.mimeType : ""
-                visible: value.length > 0
+                value: details.mimeType
             }
             DetailItem {
                 //: Details label
                 //% "Width"
                 label: qsTrId("foilpics-details-width-label")
-                value: ("imageWidth" in details) ? details.imageWidth : ""
-                visible: value.length > 0
+                value: details.imageWidth
             }
             DetailItem {
                 //: Details label
                 //% "Height"
                 label: qsTrId("foilpics-details-height-label")
-                value: ("imageHeight" in details) ? details.imageHeight : ""
-                visible: value.length > 0
+                value: details.imageHeight
             }
             DetailItem {
                 //: Details label
@@ -107,6 +112,22 @@ Page {
                     qsTrId("foilpics-details-coordinates-value").arg(details.latitude).arg(details.longitude).arg(details.altitude) :
                     ""
                 visible: value.length > 0
+            }
+
+            SectionHeader {
+                //: Section header for editable details
+                //% "Editable details"
+                text: qsTrId("foilpics-details-section_header-editable")
+            }
+
+            EditableDetail {
+                id: titleDetail
+                //: Details label
+                //% "Title"
+                label: qsTrId("foilpics-details-image_title-label")
+                value: details.title
+                defaultValue: details.defaultTitle
+                onApply: page.titleChanged(value)
             }
         }
         VerticalScrollDecorator { }

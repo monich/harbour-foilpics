@@ -83,9 +83,17 @@ void FoilPicsImageProvider::release()
     }
 }
 
-QString FoilPicsImageProvider::prefix() const
+QString FoilPicsImageProvider::addImage(QString aId, QString aPath)
 {
-    return iPrefix;
+    QMutexLocker locker(&iMutex);
+    iPathMap.insert(aId, aPath);
+    return iPrefix + aId;
+}
+
+void FoilPicsImageProvider::releaseImage(QString aId)
+{
+    QMutexLocker locker(&iMutex);
+    iPathMap.remove(aId);
 }
 
 QImage FoilPicsImageProvider::requestImage(const QString& aId, QSize* aSize,
@@ -93,14 +101,23 @@ QImage FoilPicsImageProvider::requestImage(const QString& aId, QSize* aSize,
 {
     QImage image;
     FoilPicsImageRequest req;
-    if (QMetaObject::invokeMethod(iObject, "imageRequest", Qt::QueuedConnection,
-        Q_ARG(QString, aId), Q_ARG(FoilPicsImageRequest, req))) {
-        HDEBUG("Waiting for" << qPrintable(aId));
-        image = req.wait();
+
+    iMutex.lock();
+    QString path = iPathMap.value(aId);
+    iMutex.unlock();
+
+    if (!path.isEmpty()) {
+        if (QMetaObject::invokeMethod(iObject, "imageRequest",
+            Qt::QueuedConnection, Q_ARG(QString, path),
+            Q_ARG(FoilPicsImageRequest, req))) {
+            HDEBUG("Waiting for" << aId << "=>" << qPrintable(path));
+            image = req.wait();
+        }
+        if (aSize) {
+            *aSize = image.size();
+        }
     }
-    if (aSize) {
-        *aSize = image.size();
-    }
+
     if (!image.isNull()) {
         HDEBUG(aId << image.size());
     } else {

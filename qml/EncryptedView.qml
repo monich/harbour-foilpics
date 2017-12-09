@@ -5,11 +5,13 @@ import org.nemomobile.notifications 1.0
 
 Item {
     id: view
+    property Page mainPage
     property var hints
     property var foilModel
 
     Connections {
         target: view.foilModel
+        property int lastFoilState
         onFoilStateChanged: {
             // Don't let the progress screens disappear too fast
             switch (foilModel.foilState) {
@@ -20,6 +22,12 @@ Item {
                 decryptingTimer.start()
                 break
             }
+            if (lastFoilState === FoilPicsModel.FoilPicsReady &&
+                    target.foilState !== FoilPicsModel.FoilPicsReady) {
+                console.log("popping the stack")
+                pageStack.pop(mainPage, true)
+            }
+            lastFoilState = target.foilState
         }
         onKeyGenerated: {
             //: Pop-up notification

@@ -51,8 +51,7 @@ public:
     static FoilPicsThumbnailProvider* createForObject(QObject* aObject);
     void release();
 
-    QString prefix() const;
-    void addThumbnail(QString aId, QImage aImage);
+    QString addThumbnail(QString aId, QImage aImage);
     void releaseThumbnail(QString aId);
 
     virtual QImage requestImage(const QString& aId, QSize* aSize,

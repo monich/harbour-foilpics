@@ -4,6 +4,7 @@ import Sailfish.Silica 1.0
 SlideshowView {
     id: view
 
+    property string itemTitle: currentItem !== null ? currentItem.itemTitle : ""
     property bool itemScaled: currentItem !== null && currentItem.itemScaled
     property bool isPortrait
     property bool menuOpen
@@ -13,10 +14,6 @@ SlideshowView {
 
     signal clicked
 
-    function currentItemUrl() {
-        return model.get(currentIndex).url
-    }
-
     interactive: !itemScaled && count > 1
 
     Component.onCompleted: {
@@ -24,11 +21,8 @@ SlideshowView {
     }
 
     delegate: Item {
-        id: mediaItem
-
-        property QtObject modelData: model
         property alias itemScaled: imageViewer.scaled
-        readonly property url source: model.url
+        property string itemTitle: title
 
         width: view.width
         height: view.height

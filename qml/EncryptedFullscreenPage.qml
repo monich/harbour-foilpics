@@ -7,7 +7,7 @@ Page {
 
     property alias model: imageList.model
     property alias currentIndex: imageList.currentIndex
-    property var currentImageItem: model ? model.get(currentIndex) : null
+    property var currentImageItem
 
     signal decryptItem(int index)
     signal deleteItem(int index)
@@ -16,18 +16,22 @@ Page {
     allowedOrientations: Orientation.All
     backNavigation: drawer.open
 
-    function pop() {
-        pageStack.pop(pageStack.previousPage(page))
+    onCurrentIndexChanged: {
+        updateCurrentImageItem()
+        if (updateCurrentImageItem() && status === PageStatus.Active) {
+            requestIndex(currentIndex)
+        }
     }
 
-    Connections {
-        target: model
-        onFoilStateChanged: {
-            // Pop the page when the model gets locked
-            if (status === PageStatus.Active &&
-                ((page.model === undefined || page.model.foilState !== FoilPicsModel.FoilPicsReady))) {
-                page.pop()
-            }
+    Component.onCompleted: updateCurrentImageItem()
+
+    function updateCurrentImageItem() {
+        if (model && currentIndex >= 0 && currentIndex < model.count) {
+            currentImageItem = model.get(currentIndex)
+            return true
+        } else {
+            currentImageItem = null
+            return false
         }
     }
 
@@ -40,9 +44,14 @@ Page {
                 //: Generic menu item
                 //% "Image details"
                 text: qsTrId("foilpics-menu-details")
-                onClicked: pageStack.push(Qt.resolvedUrl("EncryptedDetailsPage.qml"), {
-                    details: currentImageItem
-                })
+                onClicked: {
+                    var details = pageStack.push(Qt.resolvedUrl("EncryptedDetailsPage.qml"), {
+                        details: currentImageItem
+                    })
+                    details.titleChanged.connect(function(title) {
+                        imageList.model.setTitleAt(currentIndex, title)
+                    })
+                }
             }
             MenuItem {
                 //: Generic menu item
@@ -70,17 +79,16 @@ Page {
                 id: header
                 height: page.isPortrait ? portraitHeader.height : landscapeHeader.height
                 width: parent.width
-                readonly property string title: currentImageItem ? currentImageItem.title : ""
                 PageHeader {
                     id: portraitHeader
-                    title: header.title
+                    title: imageList.itemTitle
                     rightMargin: Theme.horizontalPageMargin
                     description: currentImageItem ? currentImageItem.imageWidth + "×" + currentImageItem.imageHeight : ""
                     visible: page.isPortrait
                 }
                 PageHeader {
                     id: landscapeHeader
-                    title: header.title
+                    title: imageList.itemTitle
                     rightMargin: Theme.paddingLarge
                     visible: !page.isPortrait
                 }
@@ -103,18 +111,8 @@ Page {
                 onClicked: {
                     drawer.open = !drawer.open
                 }
-            }
-        }
-    }
 
-    onCurrentIndexChanged: {
-        if (status === PageStatus.Active) {
-            if (model === undefined || currentIndex >= model.count) {
-                // This can happen if all of the images are deleted
-                // or the model gets locked
-                page.pop()
-            } else {
-                requestIndex(currentIndex)
+                onItemTitleChanged: updateCurrentImageItem()
             }
         }
     }

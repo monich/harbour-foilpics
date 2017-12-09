@@ -337,5 +337,15 @@
         <extracomment>Coordinates</extracomment>
         <translation>Широта %1, Долгота %2, Высота %3</translation>
     </message>
+    <message id="foilpics-details-section_header-editable">
+        <source>Editable details</source>
+        <extracomment>Section header for editable details</extracomment>
+        <translation>Редактируемая информация</translation>
+    </message>
+    <message id="foilpics-details-image_title-label">
+        <source>Title</source>
+        <extracomment>Details label</extracomment>
+        <translation>Описание</translation>
+    </message>
 </context>
 </TS>
