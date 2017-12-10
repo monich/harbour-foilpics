@@ -4,8 +4,9 @@ import Sailfish.Silica 1.0
 SlideshowView {
     id: view
 
-    property string itemTitle: currentItem !== null ? currentItem.itemTitle : ""
-    property bool itemScaled: currentItem !== null && currentItem.itemScaled
+    readonly property string itemTitle: currentItem !== null ? currentItem.itemTitle : ""
+    readonly property bool itemScaled: currentItem !== null && currentItem.itemScaled
+    readonly property bool itemTouchingVerticalEdge: currentItem !== null && currentItem.itemTouchingVerticalEdge
     property bool isPortrait
     property bool menuOpen
 
@@ -14,15 +15,17 @@ SlideshowView {
 
     signal clicked
 
-    interactive: !itemScaled && count > 1
+    interactive: (!itemScaled || itemTouchingVerticalEdge) && count > 1
 
     Component.onCompleted: {
         view.positionViewAtIndex(view.currentIndex, PathView.Center)
     }
 
     delegate: Item {
-        property alias itemScaled: imageViewer.scaled
-        property string itemTitle: title
+        id: delegate
+        readonly property alias itemScaled: imageViewer.scaled
+        readonly property bool itemTouchingVerticalEdge: imageViewer.atXBeginning || imageViewer.atXEnd
+        readonly property string itemTitle: title
 
         width: view.width
         height: view.height
@@ -38,7 +41,8 @@ SlideshowView {
             menuOpen: view.menuOpen
             fitWidth: view.isPortrait
             orientation: model.orientation
-            enableZoom: !view.moving
+            viewMoving: view.moving
+            isCurrentItem: delegate.PathView.isCurrentItem
 
             onClicked: view.clicked()
         }

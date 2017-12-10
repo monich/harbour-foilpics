@@ -4,13 +4,12 @@ import Sailfish.Silica 1.0
 SilicaFlickable {
     id: flickable
 
-    property bool scaled: false
+    property bool scaled
     property bool menuOpen
-    property bool enableZoom
+    property bool viewMoving
+    property bool isCurrentItem
     property alias source: photo.source
     property bool fitWidth
-
-    property bool active: true
 
     property real _fittedScale: Math.min(maximumZoom, Math.min(width / implicitWidth,
                                                                height / implicitHeight))
@@ -18,8 +17,6 @@ SilicaFlickable {
                                            _viewOpenHeight / implicitHeight)
     property real _scale
 
-    //property var metadata
-    //property int orientation: metadata ? metadata.orientation : 0
     property int orientation: 0
 
     // Calculate a default value which produces approximately same level of zoom
@@ -29,7 +26,7 @@ SilicaFlickable {
     property int _maximumZoomedHeight: _fullHeight * maximumZoom
     property int _minimumZoomedWidth: implicitWidth * _fittedScale
     property int _minimumZoomedHeight: implicitHeight * _fittedScale
-    property bool _zoomAllowed: enableZoom && !menuOpen && _fittedScale !== maximumZoom && !_menuAnimating
+    property bool _zoomAllowed: !viewMoving && !menuOpen && _fittedScale !== maximumZoom && !_menuAnimating
     property int _fullWidth: _transpose ? Math.max(photo.implicitHeight, largePhoto.implicitHeight)
                                         : Math.max(photo.implicitWidth, largePhoto.implicitWidth)
     property int _fullHeight: _transpose ? Math.max(photo.implicitWidth, largePhoto.implicitWidth)
@@ -41,6 +38,8 @@ SilicaFlickable {
 
     readonly property bool _transpose: (orientation % 180) != 0
     property bool _menuAnimating
+    property bool _allowParentFlick
+    property bool _wasCurrentItem
 
     signal clicked
 
@@ -56,31 +55,42 @@ SilicaFlickable {
     contentWidth: container.width
     contentHeight: container.height
 
+    interactive: scaled && !_allowParentFlick
+
     // Only update the scale when width and height are properly set by Silica.
     // If we do it too early, then calculating a new _fittedScale goes wrong
     on_ViewOrientationChanged: {
         _updateScale()
     }
 
-    onActiveChanged: {
-        if (!active) {
-            _resetScale()
-            largePhoto.source = ""
+    onViewMovingChanged: {
+        if (!viewMoving) _allowParentFlick = false
+        _maybeResetScale()
+    }
+
+    onIsCurrentItemChanged: {
+        if (isCurrentItem) {
+            _wasCurrentItem = true
+        } else {
+            _maybeResetScale()
         }
     }
 
-    interactive: scaled
+    function _maybeResetScale() {
+        if (!viewMoving && !isCurrentItem && _wasCurrentItem) {
+            _wasCurrentItem = false
+            _resetScale()
+        }
+    }
 
-    function _resetScale()
-    {
+    function _resetScale() {
         if (scaled) {
             _scale = _fittedScale
             scaled = false
         }
     }
 
-    function _scaleImage(scale, center, prevCenter)
-    {
+    function _scaleImage(scale, center, prevCenter) {
         if (largePhoto.source != photo.source) {
             largePhoto.source = photo.source
         }
@@ -128,16 +138,12 @@ SilicaFlickable {
     }
 
     function _updateScale() {
-        if (photo.status != Image.Ready) {
-            return
+        if (photo.status === Image.Ready) {
+            state = menuOpen ? "menuOpen" :
+                _viewOrientation === Orientation.Portrait ? "portrait" :
+                _viewOrientation === Orientation.Landscape ? "landscape" :
+                "fullscreen" // fallback
         }
-        state = menuOpen
-                ? "menuOpen"
-                : _viewOrientation === Orientation.Portrait
-                ? "portrait"
-                : _viewOrientation === Orientation.Landscape
-                ? "landscape"
-                : "fullscreen" // fallback
     }
 
     children: ScrollDecorator {}
@@ -145,16 +151,20 @@ SilicaFlickable {
     PinchArea {
         id: container
         enabled: photo.status == Image.Ready
-        onPinchStarted: if (flickable.menuOpen) flickable.clicked()
-        onPinchUpdated: if (flickable._zoomAllowed) flickable._scaleImage(1.0 + pinch.scale - pinch.previousScale, pinch.center, pinch.previousCenter)
-        onPinchFinished: flickable.returnToBounds()
         width: Math.max(flickable.width, flickable._transpose ? photo.height : photo.width)
         height: Math.max(flickable.height, flickable._transpose ? photo.width : photo.height)
+
+        onPinchStarted: if (flickable.menuOpen) flickable.clicked()
+        onPinchUpdated: {
+            if (flickable._zoomAllowed) {
+                flickable._scaleImage(1.0 + pinch.scale - pinch.previousScale, pinch.center, pinch.previousCenter)
+            }
+        }
+        onPinchFinished: flickable.returnToBounds()
 
         Image {
             id: photo
             property var errorLabel
-            objectName: "zoomableImage"
 
             smooth: !(flickable.movingVertically || flickable.movingHorizontally)
             width: Math.ceil(implicitWidth * flickable._scale)
@@ -189,6 +199,7 @@ SilicaFlickable {
             opacity: status == Image.Ready ? 1 : 0
             Behavior on opacity { FadeAnimation{} }
         }
+
         Image {
             id: largePhoto
             sourceSize {
@@ -202,10 +213,24 @@ SilicaFlickable {
         }
 
         MouseArea {
+            property real startX
+            property real lastX
             anchors.fill: parent
-            onClicked: {
-                flickable.clicked()
+            onPressed: {
+                _allowParentFlick = false
+                startX = lastX = mouse.x
             }
+            onCanceled: {
+                if (flickable.atXBeginning && lastX > startX) {
+                    // Allow to flick left
+                    _allowParentFlick = true
+                } else if (flickable.atXEnd && lastX < startX) {
+                    // Allow to flick right
+                    _allowParentFlick = true
+                }
+            }
+            onMouseXChanged: lastX = mouse.x
+            onClicked: flickable.clicked()
         }
     }
 
@@ -221,6 +246,7 @@ SilicaFlickable {
             horizontalAlignment: Text.AlignHCenter
         }
     }
+
     // Let the states handle switching between menu open and fullscreen states.
     // We need to extend fullscreen state with two different states: portrait and
     // landscape to make it actually reset the fitted scale via state changes when
