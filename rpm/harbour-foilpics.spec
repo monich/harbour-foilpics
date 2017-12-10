@@ -1,10 +1,10 @@
 Name:           harbour-foilpics
 Summary:        Encrypted pictures
-Version:        1.0.0
+Version:        1.0.1
 Release:        1
 License:        BSD
 Group:          Applications/File
-URL:            http://github.com/monich/harbour-foilpics
+URL:            https://github.com/monich/harbour-foilpics
 Source0:        %{name}-%{version}.tar.gz
 
 Requires:       sailfishsilica-qt5
