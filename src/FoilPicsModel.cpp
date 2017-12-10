@@ -139,6 +139,7 @@ public:
     ~ModelData();
 
     QVariant get(Role aRole) const;
+    void updateVariant(Role aRole);
 
     static QString defaultTitle(QString aPath);
     static QString defaultTitle(QFileInfo aFileInfo);
@@ -255,6 +256,19 @@ FoilPicsModel::ModelData* FoilPicsModel::ModelData::fromFoilMsg(FoilMsg* aMsg,
         headerTime(aMsg, HEADER_IMAGE_DATE));
     g_bytes_unref(digest);
     return data;
+}
+
+void FoilPicsModel::ModelData::updateVariant(Role aRole)
+{
+    switch (aRole) {
+#define ROLE(X,x) case X##Role: \
+    iVariant.insert(RoleName##X, get(X##Role)); break;
+    FOILPICS_ROLES(ROLE)
+#undef ROLE
+    case ModelData::FirstRole:
+    case ModelData::LastRole:
+        break;
+    }
 }
 
 QVariant FoilPicsModel::ModelData::get(Role aRole) const
@@ -632,6 +646,12 @@ FoilMsg* FoilPicsModel::BaseTask::decryptAndVerify(const char* aFileName)
         HDEBUG("Decrypting" << aFileName);
         FoilMsg* msg = foilmsg_decrypt_file(iPrivateKey, aFileName, NULL);
         if (msg) {
+#if HARBOUR_DEBUG
+            for (uint i=0; i<msg->headers.count; i++) {
+                const FoilMsgHeader* header = msg->headers.header + i;
+                HDEBUG(" " << header->name << ":" << header->value);
+            }
+#endif // HARBOUR_DEBUG
             if (foilmsg_verify(msg, iPublicKey)) {
                 return msg;
             } else {
@@ -1563,46 +1583,51 @@ FoilPicsModel::SetTitleTask::SetTitleTask(QThreadPool* aPool, ModelData* aData,
 QString FoilPicsModel::SetTitleTask::setTitleAndEncrypt(FoilMsg* aMsg)
 {
     QString destPath;
-    // Allocate one more in case if title was missing
-    FoilMsgHeader* header = new FoilMsgHeader[aMsg->headers.count + 1];
-    FoilMsgHeaders headers;
-    uint i;
-
-    // Copy the headers (except Title)
-    headers.header = header;
-    headers.count = 0;
-    for (i = 0; i < aMsg->headers.count; i++) {
-        if (strcmp(aMsg->headers.header[i].name, HEADER_TITLE)) {
-            header[headers.count++] = aMsg->headers.header[i];
-        }
-    }
-
-    // Now add the title
-    QByteArray titleBytes(iTitle.toUtf8());
-    const char* title = titleBytes.constData();
-    header[headers.count].name = HEADER_TITLE;
-    header[headers.count].value = title;
-    headers.count++;
-
-    FoilMsgEncryptOptions opt;
-    memset(&opt, 0, sizeof(opt));
-    opt.key_type = ENCRYPT_KEY_TYPE;
-
     QString destDir(QFileInfo(iPath).dir().path());
     GString* dest = g_string_sized_new(destDir.size() + 9);
     FoilOutput* out = createFoilFile(destDir, dest);
     if (out) {
-        FoilBytes bytes;
+        // Allocate one more in case if title was missing
+        FoilMsgHeader* header = new FoilMsgHeader[aMsg->headers.count + 1];
+        FoilMsgHeaders headers;
+        uint i;
+
         HDEBUG("Writing" << dest->str);
+
+        // Copy the headers (except Title)
+        headers.header = header;
+        headers.count = 0;
+        for (i = 0; i < aMsg->headers.count; i++) {
+            const FoilMsgHeader* src = aMsg->headers.header + i;
+            if (strcmp(src->name, HEADER_TITLE)) {
+                HDEBUG(" " << src->name << ":" << src->value);
+                header[headers.count++] = *src;
+            }
+        }
+
+        // Now add the title
+        QByteArray titleBytes(iTitle.toUtf8());
+        const char* title = titleBytes.constData();
+        HDEBUG("  " HEADER_TITLE " :" << title);
+        header[headers.count].name = HEADER_TITLE;
+        header[headers.count].value = title;
+        headers.count++;
+
+        FoilMsgEncryptOptions opt;
+        memset(&opt, 0, sizeof(opt));
+        opt.key_type = ENCRYPT_KEY_TYPE;
+
+        FoilBytes bytes;
         if (foilmsg_encrypt(out, foil_bytes_from_data(&bytes, aMsg->data),
             aMsg->content_type, &headers, iPrivateKey, iPublicKey, &opt,
             NULL)) {
             destPath = QString(dest->str);
+            HDEBUG("Wrote" << foil_output_bytes_written(out) << "bytes");
         }
         foil_output_unref(out);
+        g_string_free(dest, TRUE);
+        delete [] header;
     }
-    g_string_free(dest, TRUE);
-    delete [] header;
     return destPath;
 }
 
@@ -2013,7 +2038,7 @@ void FoilPicsModel::Private::insertModelData(ModelData* aData)
     if (iThumbnailProvider) {
         aData->iThumbSource = iThumbnailProvider->addThumbnail(aData->iImageId,
             aData->iThumbnail);
-        aData->iVariant.insert(ModelData::RoleNameThumbnail, aData->iThumbSource);
+        aData->updateVariant(ModelData::ThumbnailRole);
     }
     if (!iImageProvider) {
         iImageProvider = FoilPicsImageProvider::createForObject(model);
@@ -2021,7 +2046,7 @@ void FoilPicsModel::Private::insertModelData(ModelData* aData)
     if (iImageProvider) {
         aData->iImageSource = iImageProvider->addImage(aData->iImageId,
             aData->iPath);
-        aData->iVariant.insert(ModelData::RoleNameUrl, aData->iImageSource);
+        aData->updateVariant(ModelData::UrlRole);
     }
 
     // Insert the data into the model
@@ -2437,6 +2462,9 @@ void FoilPicsModel::Private::setTitleAt(int aIndex, QString aTitle)
         QString title(aTitle.isEmpty() ? data->iDefaultTitle : aTitle);
         if (data->iTitle != title) {
             data->iTitle = title;
+            data->updateVariant(ModelData::TitleRole);
+            dataChanged(aIndex, ModelData::TitleRole);
+
             HDEBUG("Settings title at" << aIndex << "to" << title);
             const bool wasBusy = busy();
             if (data->iSetTitleTask) {
@@ -2451,8 +2479,6 @@ void FoilPicsModel::Private::setTitleAt(int aIndex, QString aTitle)
                 // We know we are busy now
                 queueSignal(SignalBusyChanged);
             }
-            // Notify the view
-            dataChanged(aIndex, ModelData::TitleRole);
         }
     }
 }
@@ -2476,8 +2502,14 @@ void FoilPicsModel::Private::onSetTitleTaskDone()
         // from the hash of the original file. Just update the path.
         iImageProvider->addImage(data->iImageId, data->iPath);
 
-        // Title change already (optimistically) signalled by setTitleAt
-        dataChanged(iData.indexOf(data), ModelData::EncryptedFileSizeRole);
+        // The file size may have changed
+        const int size = QFileInfo(data->iPath).size();
+        if (data->iEncryptedSize != size) {
+            HDEBUG("Encrypted size" << data->iEncryptedSize << "->" << size);
+            data->iEncryptedSize = size;
+            data->updateVariant(ModelData::EncryptedFileSizeRole);
+            dataChanged(iData.indexOf(data), ModelData::EncryptedFileSizeRole);
+        }
     }
 
     // There's no need to queue BusyChanged because we were busy when we
