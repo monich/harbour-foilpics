@@ -126,7 +126,7 @@
     <message id="foilpics-generate_key_view-label-minimum_length" numerus="yes">
         <source>Type at least %0 character(s)</source>
         <extracomment>Password field label</extracomment>
-        <translation> 
+        <translation>
             <numerusform>Nutze mindestens %0 Zeichen</numerusform>
             <numerusform>Nutze mindestens %0 Zeichen</numerusform>
         </translation>
@@ -159,7 +159,6 @@
     <message id="foilpics-change_password_page-label-enter_passwords">
         <source>Please enter the current and the new password</source>
         <extracomment>Password change prompt</extracomment>
-        <translation>Please enter the current and the new password</translation>
         <translation>Bitte gib dein derzeitiges und neues Passwort ein.</translation>
     </message>
     <message id="foilpics-change_password_page-text_field_label-current_password">
