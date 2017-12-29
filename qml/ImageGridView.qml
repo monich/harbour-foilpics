@@ -4,8 +4,8 @@ import Sailfish.Silica 1.0
 SilicaGridView {
     id: grid
 
-    property real cellSize: Math.floor(width / columnCount)
-    property int columnCount: Math.floor(width / Theme.itemSizeHuge)
+    readonly property real cellSize: Math.floor(width / columnCount)
+    readonly property int columnCount: Math.floor(width / Theme.itemSizeHuge)
     property bool highlightEnabled: true
     property bool unfocusHighlightEnabled
     property bool forceUnfocusHighlight
