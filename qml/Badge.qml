@@ -8,7 +8,9 @@ Item {
     property real maxWidth
 
     width: maxWidth > 0 ? Math.max(label.paintedWidth + radius, height) : height
+    height: Theme.itemSizeSmall/2
     visible: opacity > 0
+    opacity: text.length ? 1 : 0
     Behavior on opacity { FadeAnimation {} }
 
     Rectangle {
