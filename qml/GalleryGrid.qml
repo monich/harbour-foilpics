@@ -7,7 +7,6 @@ ImageGridView {
 
     property var hints
     property var foilModel
-    readonly property int animationDuration: 150
     property var transferMethodsModel
     property alias contextMenu: contextMenuItem
     property Item expandItem
@@ -93,7 +92,7 @@ ImageGridView {
             grid.contextMenu.show(delegate)
         }
 
-        GridView.onAdd: AddAnimation { target: delegate; duration: animationDuration }
+        GridView.onAdd: AddAnimation { target: delegate }
         GridView.onRemove: SequentialAnimation {
             PropertyAction { target: delegate; property: "GridView.delayRemove"; value: true }
             NumberAnimation { target: delegate; properties: "opacity,scale"; to: 0; duration: 250; easing.type: Easing.InOutQuad }
