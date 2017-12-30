@@ -34,6 +34,7 @@
 #include "FoilPicsDefs.h"
 #include "FoilPicsGalleryPlugin.h"
 #include "FoilPicsHints.h"
+#include "FoilPicsModelWatch.h"
 #include "FoilPicsModel.h"
 #include "FoilPicsThumbnailerPlugin.h"
 #include "FoilPicsFileUtil.h"
@@ -51,6 +52,7 @@
 static void register_types(const char* uri, int v1 = 1, int v2 = 0)
 {
     HarbourLib::registerTypes(uri, v1, v2);
+    qmlRegisterType<FoilPicsModelWatch>(uri, v1, v2, "FoilPicsModelWatch");
     qmlRegisterType<FoilPicsHints>(uri, v1, v2, "FoilPicsHints");
     qmlRegisterType<FoilPicsModel>(uri, v1, v2, "FoilPicsModel");
 }

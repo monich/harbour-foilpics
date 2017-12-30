@@ -2,42 +2,78 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import harbour.foilpics 1.0
 
-ImageGridView {
-    id: grid
+SilicaListView {
+    id: view
 
     property var hints
-    property alias foilModel: grid.model
+    property var foilModel
     property alias pulleyFlickable: pullDownMenu.flickable
-    readonly property int animationDuration: 150
 
-    property alias contextMenu: contextMenuItem
-    property Item expandItem
-    property real expandHeight: contextMenu.height
     readonly property bool busy: foilModel.busy || progressTimer.running
     readonly property bool ready: foilModel.foilState === FoilPicsModel.FoilPicsReady
-    readonly property int minOffsetIndex: expandItem != null ?
-        (expandItem.modelIndex + columnCount - (expandItem.modelIndex % columnCount)) : 0
 
-    function decryptItem(index) {
-        pageStack.pop()
-        grid.currentIndex = index
-        grid.currentItem.decrypt()
-        grid.positionViewAtIndex(index, GridView.Visible)
+    property int requestedGroupIndex: -1
+    property var requestedGroup
+
+    model: foilModel.groupModel
+
+    RemorsePopup {
+        id: decryptAllRemorse
     }
 
-    function requestDecrypt(item, callback) {
-        var remorse = decryptRemorseComponent.createObject(null)
-        remorse.z = item.z + 1
-        remorse.execute(createRemorseContainer(item),
-            //: Decrypting image in 5 seconds
-            //% "Decrypting"
-            qsTrId("foilpics-encrypted_grid-remorse-decrypting"),
-            callback)
+    function jumpToIndex(index, cellSize, columnCount) {
+        requestedGroupIndex = foilModel.groupIndexAt(index)
+        var groupIndex = model.offsetWithinGroup(requestedGroupIndex, index)
+        var count = model.groupPicsCountAt(requestedGroupIndex)
+        // This (hopefully) instantiates delegate and updates requestedGroup
+        positionViewAtIndex(requestedGroupIndex, ListView.Visible)
+        requestedGroup.currentIndex = groupIndex
+        var groupTop = requestedGroup.y + requestedGroup.headerHeight
+        var cellTop = groupTop + Math.floor(groupIndex/columnCount) * cellSize
+        if (cellTop < contentY) {
+            contentY = cellTop
+        } else {
+            var cellBottom = cellTop + cellSize
+            var viewportBottom = contentY + view.height
+            if (cellBottom > viewportBottom) {
+                contentY += (cellBottom - viewportBottom)
+            }
+        }
+    }
+
+    function decryptItem(index, cellSize, columnCount) {
+        jumpToIndex(index, cellSize, columnCount)
+        pageStack.pop()
+        var item = requestedGroup.currentItem
+        if (item) {
+            var remorse = decryptRemorseComponent.createObject(null)
+            remorse.z = item.z + 1
+            remorse.execute(remorseContainerComponent.createObject(item),
+                //: Decrypting image in 5 seconds
+                //% "Decrypting"
+                qsTrId("foilpics-encrypted_grid-remorse-decrypting"),
+                function() { foilModel.decryptAt(index) })
+        }
+    }
+
+    function deleteItem(index, cellSize, columnCount) {
+        jumpToIndex(index, cellSize, columnCount)
+        pageStack.pop()
+        var item = requestedGroup.currentItem
+        if (item) {
+            var remorse = decryptRemorseComponent.createObject(null)
+            remorse.z = item.z + 1
+            remorse.execute(remorseContainerComponent.createObject(item),
+                //: Deleting image in 5 seconds
+                //% "Deleting"
+                qsTrId("foilpics-image_grid_view-remorse-deleting"),
+                function() { foilModel.removeAt(index) })
+        }
     }
 
     PullDownMenu {
         id: pullDownMenu
-        visible: grid.ready
+        visible: view.ready
         MenuItem {
             //: Pulley menu item
             //% "Generate a new key"
@@ -80,6 +116,7 @@ ImageGridView {
                 progressTimer.start()
             }
         }
+        onDecryptionStarted: leftSwipeToDecryptedHintLoader.armed = true
     }
 
     Timer {
@@ -99,9 +136,7 @@ ImageGridView {
                 left: header.extraContent.left
                 verticalCenter: header.extraContent.verticalCenter
             }
-            height: Theme.itemSizeSmall/2
             maxWidth: header.extraContent.width
-            opacity: foilModel.count ? 1 : 0
             text: foilModel.count ? foilModel.count : ""
         }
         ProgressBar {
@@ -112,85 +147,33 @@ ImageGridView {
             rightMargin: header.rightMargin
             indeterminate: true
             visible: opacity > 0
-            opacity: grid.busy ? 1 : 0
+            opacity: view.busy ? 1 : 0
             Behavior on opacity { FadeAnimation {} }
             Behavior on x { NumberAnimation {} }
         }
     }
 
-    delegate: ThumbnailBase {
+    delegate: EncryptedGroup {
         id: delegate
-        width: grid.cellWidth
-        height: isItemExpanded ? grid.contextMenu.height + grid.cellHeight : grid.cellHeight
-        contentYOffset: index >= grid.minOffsetIndex ? grid.expandHeight : 0.0
-        z: isItemExpanded ? 1000 : 1
-        enabled: isItemExpanded || !grid.contextMenu.active
+        width: parent.width
+        flickable: view
+        foilModel: view.foilModel
+        title: groupName
+        picsModel: groupPicsModel
+        picsCount: groupPicsCount
+        isDefault: defaultGroup
+        onDecryptItem: view.decryptItem(globalIndex, cellSize, columnCount)
+        onDeleteItem: view.deleteItem(globalIndex, cellSize, columnCount)
+        onRequestIndex: view.jumpToIndex(globalIndex, cellSize, columnCount)
+        modelIndex: model.index
 
-        property bool isItemExpanded: grid.expandItem === delegate
-        property int modelIndex: index
-
-        Image {
-            y: contentYOffset
-            x: contentXOffset
-            fillMode: Image.PreserveAspectCrop
-            source: thumbnail
-            width:  grid.cellWidth
-            height: grid.cellHeight
-            clip: true
-        }
-
-        function remove() {
-            requestDelete(delegate, function() { foilModel.removeAt(modelIndex) })
-        }
-
-        function decrypt() {
-            requestDecrypt(delegate, function() {
-                foilModel.decryptAt(modelIndex)
-                leftSwipeToDecryptedHintLoader.armed = true
-            })
-        }
-
-        onClicked: {
-            if (!grid.contextMenu.active) {
-                var page = pageStack.push(Qt.resolvedUrl("EncryptedFullscreenPage.qml"),{
-                    currentIndex: index,
-                    model: grid.model})
-                if (page) {
-                    page.decryptItem.connect(grid.decryptItem)
-                    page.deleteItem.connect(grid.deleteItem)
-                    page.requestIndex.connect(grid.jumpToIndex)
+        Connections {
+            target: view
+            onRequestedGroupIndexChanged: {
+                if (requestedGroupIndex === delegate.modelIndex) {
+                    requestedGroup = delegate
                 }
             }
-        }
-
-        onPressAndHold: {
-            grid.expandItem = delegate
-            grid.contextMenu.show(delegate)
-        }
-
-        GridView.onAdd: AddAnimation { target: delegate; duration: animationDuration }
-        GridView.onRemove: SequentialAnimation {
-            PropertyAction { target: delegate; property: "GridView.delayRemove"; value: true }
-            NumberAnimation { target: delegate; properties: "opacity,scale"; to: 0; duration: 250; easing.type: Easing.InOutQuad }
-            PropertyAction { target: delegate; property: "GridView.delayRemove"; value: false }
-        }
-    }
-
-    ContextMenu {
-        id: contextMenuItem
-        x: parent !== null ? -parent.x : 0.0
-
-        MenuItem {
-            //: Generic menu item
-            //% "Decrypt"
-            text: qsTrId("foilpics-menu-decrypt")
-            onClicked: grid.expandItem.decrypt()
-        }
-        MenuItem {
-            //: Generic menu item
-            //% "Delete"
-            text: qsTrId("foilpics-menu-delete")
-            onClicked: grid.expandItem.remove()
         }
     }
 
@@ -202,11 +185,19 @@ ImageGridView {
             //: Placeholder text
             //% "You don't have any encrypted pictures"
             qsTrId("foilpics-encrypted_grid-placeholder-no_pictures")
-        enabled: !grid.busy && foilModel && foilModel.count === 0
+        enabled: !view.busy && foilModel && foilModel.count === 0
     }
 
-    RemorsePopup {
-        id: decryptAllRemorse
+    // This container is used for making RemorseItem to follow
+    // offset changes if there are multiple deletions ongoing
+    // at the same time.
+    Component {
+        id: remorseContainerComponent
+        Item {
+            y: parent.contentYOffset
+            width: parent.width
+            height: parent.height
+        }
     }
 
     Component {
@@ -248,4 +239,6 @@ ImageGridView {
         }
         Behavior on opacity { FadeAnimation {} }
     }
+
+    VerticalScrollDecorator { }
 }

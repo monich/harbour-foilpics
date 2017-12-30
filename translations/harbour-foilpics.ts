@@ -346,5 +346,45 @@
         <extracomment>Details label</extracomment>
         <translation>Title</translation>
     </message>
+    <message id="foilpics-details-group-label">
+        <source>Group</source>
+        <extracomment>Details label</extracomment>
+        <translation>Group</translation>
+    </message>
+    <message id="foilpics-default_group">
+        <source>Default</source>
+        <extracomment>Name of the default group</extracomment>
+        <translation>Default</translation>
+    </message>
+    <message id="foilpics-edit_group_page-header">
+        <source>Group</source>
+        <extracomment>Page header</extracomment>
+        <translation>Group</translation>
+    </message>
+    <message id="foilpics-edit_group_page-menu-rename">
+        <source>Rename</source>
+        <extracomment>Group context menu item</extracomment>
+        <translation>Rename</translation>
+    </message>
+    <message id="foilpics-edit_group_page-menu-clear">
+        <source>Clear</source>
+        <extracomment>Group context menu item</extracomment>
+        <translation>Clear</translation>
+    </message>
+    <message id="foilpics-edit_group_page-menu-remove">
+        <source>Remove</source>
+        <extracomment>Group context menu item</extracomment>
+        <translation>Remove</translation>
+    </message>
+    <message id="foilpics-edit_group_page-add_group">
+        <source>Add group</source>
+        <extracomment>Button label</extracomment>
+        <translation>Add group</translation>
+    </message>
+    <message id="foilpics-edit_group_page-new_group_name">
+        <source>New group</source>
+        <extracomment>Name for the newly created group</extracomment>
+        <translation>New group</translation>
+    </message>
 </context>
 </TS>

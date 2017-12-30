@@ -24,7 +24,6 @@ Item {
             }
             if (lastFoilState === FoilPicsModel.FoilPicsReady &&
                     target.foilState !== FoilPicsModel.FoilPicsReady) {
-                console.log("popping the stack")
                 pageStack.pop(mainPage, true)
             }
             lastFoilState = target.foilState
@@ -99,14 +98,14 @@ Item {
             Behavior on opacity { FadeAnimation {} }
         }
 
-        // EncryptedGrid
+        // EncryptedList
         Loader {
             anchors.fill: parent
             active: opacity > 0
             opacity: (foilModel.foilState === FoilPicsModel.FoilPicsReady &&
                       !generatingKeyTimer.running && !decryptingTimer.running) ? 1 : 0
             sourceComponent: Component {
-                EncryptedGrid {
+                EncryptedList {
                     hints: view.hints
                     foilModel: view.foilModel
                     pulleyFlickable: flickable

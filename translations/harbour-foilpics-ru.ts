@@ -347,5 +347,45 @@
         <extracomment>Details label</extracomment>
         <translation>Описание</translation>
     </message>
+    <message id="foilpics-details-group-label">
+        <source>Group</source>
+        <extracomment>Details label</extracomment>
+        <translation>Коллекция</translation>
+    </message>
+    <message id="foilpics-default_group">
+        <source>Default</source>
+        <extracomment>Name of the default group</extracomment>
+        <translation>Не выбрана</translation>
+    </message>
+    <message id="foilpics-edit_group_page-header">
+        <source>Group</source>
+        <extracomment>Page header</extracomment>
+        <translation>Коллекция</translation>
+    </message>
+    <message id="foilpics-edit_group_page-menu-rename">
+        <source>Rename</source>
+        <extracomment>Group context menu item</extracomment>
+        <translation>Переименовать</translation>
+    </message>
+    <message id="foilpics-edit_group_page-menu-clear">
+        <source>Clear</source>
+        <extracomment>Group context menu item</extracomment>
+        <translation>Очистить</translation>
+    </message>
+    <message id="foilpics-edit_group_page-menu-remove">
+        <source>Remove</source>
+        <extracomment>Group context menu item</extracomment>
+        <translation>Удалить</translation>
+    </message>
+    <message id="foilpics-edit_group_page-add_group">
+        <source>Add group</source>
+        <extracomment>Button label</extracomment>
+        <translation>Добавить коллекцию</translation>
+    </message>
+    <message id="foilpics-edit_group_page-new_group_name">
+        <source>New group</source>
+        <extracomment>Name for the newly created group</extracomment>
+        <translation>Новая коллекция</translation>
+    </message>
 </context>
 </TS>

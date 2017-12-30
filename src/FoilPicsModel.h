@@ -45,15 +45,15 @@
 class FoilPicsModel : public QAbstractListModel {
     Q_OBJECT
     Q_ENUMS(FoilState)
-    Q_PROPERTY(int count READ count NOTIFY countChanged)
+    Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
     Q_PROPERTY(bool busy READ busy NOTIFY busyChanged)
     Q_PROPERTY(bool keyAvailable READ keyAvailable NOTIFY keyAvailableChanged)
     Q_PROPERTY(FoilState foilState READ foilState NOTIFY foilStateChanged)
     Q_PROPERTY(QSize thumbnailSize READ thumbnailSize WRITE setThumbnailSize NOTIFY thumbnailSizeChanged)
     Q_PROPERTY(bool mayHaveEncryptedPictures READ mayHaveEncryptedPictures NOTIFY mayHaveEncryptedPicturesChanged)
+    Q_PROPERTY(QAbstractItemModel* groupModel READ groupModel CONSTANT)
 
     class Private;
-    class ModelInfo;
     class ModelData;
     class SaveInfoTask;
     class GenerateKeyTask;
@@ -61,10 +61,11 @@ class FoilPicsModel : public QAbstractListModel {
     class BaseTask;
     class DecryptTask;
     class EncryptTask;
-    class SetTitleTask;
+    class SetHeaderTask;
     class ImageRequestTask;
 
 public:
+    class ModelInfo;
     class DecryptPicsTask;
 
     enum FoilState {
@@ -81,7 +82,6 @@ public:
 
     FoilPicsModel(QObject* aParent = NULL);
 
-    int count() const;
     bool busy() const;
     bool keyAvailable() const;
     FoilState foilState() const;
@@ -89,9 +89,13 @@ public:
     QSize thumbnailSize() const;
     void setThumbnailSize(QSize aSize);
 
+    static int groupIdRole();
+    QAbstractItemModel* groupModel();
+    void clearGroup(QByteArray aGroupId);
+
     // QAbstractListModel
     virtual QHash<int,QByteArray> roleNames() const;
-    virtual int rowCount(const QModelIndex& aParent) const;
+    virtual int rowCount(const QModelIndex& aParent = QModelIndex()) const;
     virtual QVariant data(const QModelIndex& aIndex, int aRole) const;
 
     Q_INVOKABLE void generateKey(int aBits, QString aPassword);
@@ -104,6 +108,8 @@ public:
     Q_INVOKABLE void decryptAll();
     Q_INVOKABLE void removeAt(int aIndex);
     Q_INVOKABLE void setTitleAt(int aIndex, QString aTitle);
+    Q_INVOKABLE void setGroupIdAt(int aIndex, QString aId);
+    Q_INVOKABLE int groupIndexAt(int aIndex) const;
     Q_INVOKABLE QVariantMap get(int aIndex) const;
 
     // Keys for metadata passed to encryptFile:
@@ -128,6 +134,7 @@ Q_SIGNALS:
 
     void keyGenerated();
     void passwordChanged();
+    void decryptionStarted();
 
 private:
     Private* iPrivate;

@@ -69,21 +69,26 @@ HEADERS += \
     src/FoilPicsDefs.h \
     src/FoilPicsFileUtil.h \
     src/FoilPicsGalleryPlugin.h \
+    src/FoilPicsGroupModel.h \
     src/FoilPicsHints.h \
     src/FoilPicsImageProvider.h \
     src/FoilPicsImageRequest.h \
     src/FoilPicsModel.h \
+    src/FoilPicsModelWatch.h \
     src/FoilPicsTask.h \
     src/FoilPicsThumbnailerPlugin.h \
+    src/FoilPicsThumbnailProvider.h
     src/FoilPicsThumbnailProvider.h
 
 SOURCES += \
     src/FoilPicsFileUtil.cpp \
     src/FoilPicsGalleryPlugin.cpp \
+    src/FoilPicsGroupModel.cpp \
     src/FoilPicsHints.cpp \
     src/FoilPicsImageProvider.cpp \
     src/FoilPicsImageRequest.cpp \
     src/FoilPicsModel.cpp \
+    src/FoilPicsModelWatch.cpp \
     src/FoilPicsTask.cpp \
     src/FoilPicsThumbnailerPlugin.cpp \
     src/FoilPicsThumbnailProvider.cpp \

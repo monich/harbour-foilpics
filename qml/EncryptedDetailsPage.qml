@@ -1,12 +1,16 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import harbour.foilpics 1.0
 
 Page {
     id: page
     allowedOrientations: Orientation.All
     property var details
+    property var foilModel
+    readonly property var groupModel: foilModel ? foilModel.groupModel : null
 
     signal titleChanged(var title)
+    signal requestIndex(int index)
 
     // These are used from the native code:
     //% "%n B"
@@ -24,6 +28,39 @@ Page {
         if (status === PageStatus.Deactivating) {
             page.titleChanged(titleDetail.value)
         }
+    }
+
+    function groupLabel() {
+        return details.groupId ?
+            groupModel.groupName(details.groupId) :
+            //: Name of the default group
+            //% "Default"
+            qsTrId("foilpics-default_group")
+    }
+
+    // ImageId is the hash of the original file, it doesn't change
+    // when we move the image between the groups.
+    FoilPicsModelWatch {
+        id: groupIdWatch
+        model: foilModel
+        keyRole: "imageId"
+        keyValue: details.imageId
+        role: "groupId"
+        onIndexChanged: page.requestIndex(index)
+        onValueChanged: {
+            details.groupId = value
+            groupNameWatch.keyValue = value
+            groupDetailName.text = page.groupLabel()
+        }
+    }
+
+    FoilPicsModelWatch {
+        id: groupNameWatch
+        model: groupModel
+        keyRole: "groupId"
+        keyValue: details.groupId
+        role: "groupName"
+        onValueChanged: groupDetailName.text = page.groupLabel()
     }
 
     SilicaFlickable {
@@ -128,6 +165,71 @@ Page {
                 value: details.title
                 defaultValue: details.defaultTitle
                 onApply: page.titleChanged(value)
+            }
+
+            Item {
+                id: groupDetail
+                width: parent.width
+                height: Math.max(groupDetailLabel.height, groupDetailItem.height)
+
+                Text {
+                    id: groupDetailLabel
+                    anchors {
+                        left: parent.left
+                        leftMargin: Theme.horizontalPageMargin
+                        right: parent.horizontalCenter
+                        rightMargin: Theme.paddingSmall
+                        verticalCenter: parent.verticalCenter
+                    }
+                    horizontalAlignment: Text.AlignRight
+                    color: Theme.secondaryHighlightColor
+                    font.pixelSize: Theme.fontSizeSmall
+                    textFormat: Text.PlainText
+                    wrapMode: Text.Wrap
+                    //: Details label
+                    //% "Group"
+                    text: qsTrId("foilpics-details-group-label")
+                }
+
+                ListItem {
+                    id: groupDetailItem
+                    y: Theme.paddingSmall
+                    anchors {
+                        left: parent.horizontalCenter
+                        leftMargin: Theme.paddingSmall
+                        right: parent.right
+                        rightMargin: Theme.horizontalPageMargin
+                        verticalCenter: parent.verticalCenter
+                    }
+                    Label {
+                        id: groupDetailName
+                        text: page.groupLabel()
+                        anchors {
+                            fill: parent
+                            leftMargin: Theme.paddingSmall
+                        }
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                        font.pixelSize: Theme.fontSizeSmall
+                        truncationMode: TruncationMode.Fade
+                    }
+                    onClicked: {
+                        var groupPage = pageStack.push(Qt.resolvedUrl("EditGroupPage.qml"), {
+                            groupModel: groupModel,
+                            selectedGroupId: details.groupId
+                        })
+                        groupPage.groupSelected.connect(function(index) {
+                            var groupId = groupModel.groupId(index)
+                            groupDetailName.text = groupModel.defaultGroupAt(index) ?
+                                //: Name of the default group
+                                //% "Default"
+                                qsTrId("foilpics-default_group") :
+                                groupModel.groupNameAt(index)
+                            foilModel.setGroupIdAt(groupIdWatch.index, groupId)
+                            pageStack.pop()
+                        })
+                    }
+                }
             }
         }
         VerticalScrollDecorator { }

@@ -46,10 +46,17 @@ Page {
                 text: qsTrId("foilpics-menu-details")
                 onClicked: {
                     var details = pageStack.push(Qt.resolvedUrl("EncryptedDetailsPage.qml"), {
-                        details: currentImageItem
+                        details: currentImageItem,
+                        foilModel: model
                     })
                     details.titleChanged.connect(function(title) {
                         imageList.model.setTitleAt(currentIndex, title)
+                    })
+                    details.requestIndex.connect(function(index) {
+                        // onCurrentIndexChanged won't emit requestIndex
+                        // because the page is not active
+                        currentIndex = index
+                        page.requestIndex(index)
                     })
                 }
             }
@@ -108,10 +115,7 @@ Page {
                 isPortrait: page.isPortrait
                 menuOpen: drawer.open
 
-                onClicked: {
-                    drawer.open = !drawer.open
-                }
-
+                onClicked: drawer.open = !drawer.open
                 onItemTitleChanged: updateCurrentImageItem()
             }
         }
