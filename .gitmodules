@@ -6,4 +6,4 @@
 	url = https://github.com/monich/foil.git
 [submodule "libglibutil"]
 	path = libglibutil
-	url = https://git.merproject.org/mer-core/libglibutil.git
+	url = https://github.com/monich/libglibutil.git
