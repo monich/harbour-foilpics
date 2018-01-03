@@ -349,42 +349,42 @@
     <message id="foilpics-details-group-label">
         <source>Group</source>
         <extracomment>Details label</extracomment>
-        <translation type="unfinished">Groupe</translation>
+        <translation>Groupe</translation>
     </message>
     <message id="foilpics-default_group">
         <source>Default</source>
         <extracomment>Name of the default group</extracomment>
-        <translation type="unfinished">Défaut</translation>
+        <translation>Défaut</translation>
     </message>
     <message id="foilpics-edit_group_page-header">
         <source>Group</source>
         <extracomment>Page header</extracomment>
-        <translation type="unfinished">Groupe</translation>
+        <translation>Groupe</translation>
     </message>
     <message id="foilpics-edit_group_page-menu-rename">
         <source>Rename</source>
         <extracomment>Group context menu item</extracomment>
-        <translation type="unfinished">Renommer</translation>
+        <translation>Renommer</translation>
     </message>
     <message id="foilpics-edit_group_page-menu-clear">
         <source>Clear</source>
         <extracomment>Group context menu item</extracomment>
-        <translation type="unfinished">Effacer</translation>
+        <translation>Effacer</translation>
     </message>
     <message id="foilpics-edit_group_page-menu-remove">
         <source>Remove</source>
         <extracomment>Group context menu item</extracomment>
-        <translation type="unfinished">Supprimer</translation>
+        <translation>Supprimer</translation>
     </message>
     <message id="foilpics-edit_group_page-add_group">
         <source>Add group</source>
         <extracomment>Button label</extracomment>
-        <translation type="unfinished">Ajouter un groupe</translation>
+        <translation>Ajouter un groupe</translation>
     </message>
     <message id="foilpics-edit_group_page-new_group_name">
         <source>New group</source>
         <extracomment>Name for the newly created group</extracomment>
-        <translation type="unfinished">Nouveau groupe</translation>
+        <translation>Nouveau groupe</translation>
     </message>
 </context>
 </TS>
