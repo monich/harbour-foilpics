@@ -1,9 +1,9 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import harbour.foilpics 1.0
 
 ImageGridView {
     id: grid
-    anchors.fill: parent
 
     property var hints
     property var foilModel
@@ -14,6 +14,9 @@ ImageGridView {
     property int minOffsetIndex: expandItem != null ?
         expandItem.modelIndex + columnCount - (expandItem.modelIndex % columnCount) : 0
 
+    property var selectionModel
+    property bool selecting
+
     function encryptItem(index) {
         pageStack.pop()
         grid.currentIndex = index
@@ -23,9 +26,13 @@ ImageGridView {
 
     header: PageHeader {
         id: header
-        //: Gallery grid title
-        //% "Photos"
-        title: qsTrId("foilpics-gallery_grid-title")
+        title: grid.selecting ?
+            //: Gallery grid title in selection mode
+            //% "Select photos"
+            qsTrId("foilpics-gallery_grid-selection_title") :
+            //: Gallery grid title
+            //% "Photos"
+            qsTrId("foilpics-gallery_grid-title")
         Badge {
             anchors {
                 left: header.extraContent.left
@@ -40,20 +47,21 @@ ImageGridView {
 
     delegate: ThumbnailImage {
         id: delegate
-
-        property bool isItemExpanded: grid.expandItem === delegate
-        property url mediaUrl: url
-        property int modelIndex: index
-
         source: mediaUrl
         size: grid.cellSize
         height: isItemExpanded ? grid.contextMenu.height + grid.cellSize : grid.cellSize
         contentYOffset: index >= grid.minOffsetIndex ? grid.expandHeight : 0.0
         z: isItemExpanded ? 1000 : 1
         enabled: isItemExpanded || !grid.contextMenu.active
+        selectionModel: grid.selectionModel
+        selectionKey: url
 
-        function encrypt() {
-            foilModel.encryptFile(delegate.mediaUrl, {
+        readonly property url mediaUrl: url
+        readonly property bool isItemExpanded: grid.expandItem === delegate
+        readonly property int modelIndex: index
+
+        function metadata() {
+            return {
                 orientation: model.orientation,
                 imageDate: model.dateTaken,
                 cameraManufacturer: model.cameraManufacturer,
@@ -61,18 +69,26 @@ ImageGridView {
                 latitude: model.latitude,
                 longitude: model.longitude,
                 altitude: model.altitude
-            })
+            }
+        }
+
+        function encrypt() {
+            foilModel.encryptFile(delegate.mediaUrl, metadata())
             // Count this as a hint:
             if (hints.letsEncryptSomething < MaximumHintCount) hints.letsEncryptSomething++
             rightSwipeToEncryptedHintLoader.armed = true
         }
 
         function remove() {
-            requestDelete(delegate, function() { FileUtil.deleteMedia(delegate.mediaUrl) })
+            requestDelete(delegate, function() {
+                FileUtil.deleteLocalFile(delegate.mediaUrl)
+            })
         }
 
         onClicked: {
-            if (!grid.contextMenu.active) {
+            if (selecting) {
+                selectionModel.toggleSelection(selectionKey)
+            } else if (!grid.contextMenu.active) {
                 var page = pageStack.push(Qt.resolvedUrl("GalleryFullscreenPage.qml"), {
                     currentIndex: index,
                     model: grid.model,
@@ -88,8 +104,10 @@ ImageGridView {
         }
 
         onPressAndHold: {
-            grid.expandItem = delegate
-            grid.contextMenu.show(delegate)
+            if (!selecting) {
+                grid.expandItem = delegate
+                grid.contextMenu.open(delegate)
+            }
         }
 
         GridView.onAdd: AddAnimation { target: delegate }
@@ -97,6 +115,12 @@ ImageGridView {
             PropertyAction { target: delegate; property: "GridView.delayRemove"; value: true }
             NumberAnimation { target: delegate; properties: "opacity,scale"; to: 0; duration: 250; easing.type: Easing.InOutQuad }
             PropertyAction { target: delegate; property: "GridView.delayRemove"; value: false }
+        }
+    }
+
+    onSelectingChanged: {
+        if (selecting) {
+            grid.contextMenu.close()
         }
     }
 

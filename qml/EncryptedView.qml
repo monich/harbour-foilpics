@@ -8,6 +8,7 @@ Item {
     property Page mainPage
     property var hints
     property var foilModel
+    property bool isCurrentView
 
     Connections {
         target: view.foilModel
@@ -42,6 +43,11 @@ Item {
         }
     }
 
+    Connections {
+        target: parent
+        onIsCurrentItemChanged: isCurrentView = target.isCurrentItem
+    }
+
     Notification {
         id: notification
     }
@@ -59,6 +65,8 @@ Item {
     SilicaFlickable {
         id: flickable
         anchors.fill: parent
+        contentHeight: height
+
         // GenerateKeyView
         Loader {
             anchors.fill: parent
@@ -98,14 +106,15 @@ Item {
             Behavior on opacity { FadeAnimation {} }
         }
 
-        // EncryptedList
+        // EncryptedPicsView
         Loader {
             anchors.fill: parent
             active: opacity > 0
             opacity: (foilModel.foilState === FoilPicsModel.FoilPicsReady &&
                       !generatingKeyTimer.running && !decryptingTimer.running) ? 1 : 0
+            readonly property bool isCurrentItem: isCurrentView
             sourceComponent: Component {
-                EncryptedList {
+                EncryptedPicsView {
                     hints: view.hints
                     foilModel: view.foilModel
                     pulleyFlickable: flickable

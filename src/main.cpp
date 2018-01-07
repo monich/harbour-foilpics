@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2017 Jolla Ltd.
- * Copyright (C) 2017 Slava Monich <slava@monich.com>
+ * Copyright (C) 2017-2018 Jolla Ltd.
+ * Copyright (C) 2017-2018 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -31,11 +31,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "FoilPicsBusyState.h"
 #include "FoilPicsDefs.h"
 #include "FoilPicsGalleryPlugin.h"
 #include "FoilPicsHints.h"
 #include "FoilPicsModelWatch.h"
 #include "FoilPicsModel.h"
+#include "FoilPicsSelection.h"
+#include "FoilPicsSelectionState.h"
 #include "FoilPicsThumbnailerPlugin.h"
 #include "FoilPicsFileUtil.h"
 
@@ -52,9 +55,12 @@
 static void register_types(const char* uri, int v1 = 1, int v2 = 0)
 {
     HarbourLib::registerTypes(uri, v1, v2);
-    qmlRegisterType<FoilPicsModelWatch>(uri, v1, v2, "FoilPicsModelWatch");
+    qmlRegisterType<FoilPicsBusyState>(uri, v1, v2, "FoilPicsBusyState");
     qmlRegisterType<FoilPicsHints>(uri, v1, v2, "FoilPicsHints");
     qmlRegisterType<FoilPicsModel>(uri, v1, v2, "FoilPicsModel");
+    qmlRegisterType<FoilPicsModelWatch>(uri, v1, v2, "FoilPicsModelWatch");
+    qmlRegisterType<FoilPicsSelection>(uri, v1, v2, "FoilPicsSelection");
+    qmlRegisterType<FoilPicsSelectionState>(uri, v1, v2, "FoilPicsSelectionState");
 }
 
 int main(int argc, char *argv[])

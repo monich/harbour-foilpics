@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2017 Jolla Ltd.
- * Copyright (C) 2017 Slava Monich <slava@monich.com>
+ * Copyright (C) 2017-2018 Jolla Ltd.
+ * Copyright (C) 2017-2018 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -104,15 +104,20 @@ public:
     Q_INVOKABLE void lock(bool aTimeout);
     Q_INVOKABLE bool unlock(QString aPassword);
     Q_INVOKABLE bool encryptFile(QUrl aUrl, QVariantMap aMetaData);
+    Q_INVOKABLE void encryptFiles(QObject* aModel, QList<int> aRows);
+    Q_INVOKABLE void decryptFiles(QList<int> aRows);
     Q_INVOKABLE void decryptAt(int aIndex);
     Q_INVOKABLE void decryptAll();
     Q_INVOKABLE void removeAt(int aIndex);
+    Q_INVOKABLE void removeFiles(QList<int> aRows);
     Q_INVOKABLE void setTitleAt(int aIndex, QString aTitle);
     Q_INVOKABLE void setGroupIdAt(int aIndex, QString aId);
+    Q_INVOKABLE void setGroupIdForRows(QList<int> aRows, QString aId);
     Q_INVOKABLE int groupIndexAt(int aIndex) const;
     Q_INVOKABLE QVariantMap get(int aIndex) const;
 
     // Keys for metadata passed to encryptFile:
+    static const QString MetaUrl;               // "url" -> QUrl
     static const QString MetaOrientation;       // "orientation" -> int
     static const QString MetaImageDate;         // "imageDate" -> QDateTime
     static const QString MetaCameraManufacturer;// "cameraManufacturer" -> QString

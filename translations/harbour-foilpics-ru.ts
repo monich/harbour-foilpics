@@ -23,6 +23,11 @@
         <extracomment>Generic menu item</extracomment>
         <translation>Расшифровать</translation>
     </message>
+    <message id="foilpics-menu-group">
+        <source>Group</source>
+        <extracomment>Generic menu item</extracomment>
+        <translation>Сгруппировать</translation>
+    </message>
     <message id="foilpics-menu-delete">
         <source>Delete</source>
         <extracomment>Generic menu item</extracomment>
@@ -38,15 +43,29 @@
         <extracomment>Pulley menu item</extracomment>
         <translation>Поменять пароль</translation>
     </message>
-    <message id="foilpics-pulley_menu-decrypt_all">
-        <source>Decrypt all</source>
+    <message id="foilpics-pulley_menu-select_photos">
+        <source>Select photos</source>
         <extracomment>Pulley menu item</extracomment>
-        <translation>Расшифровать всё</translation>
+        <translation>Выбрать картинки</translation>
     </message>
-    <message id="foilpics-pulley_menu-remorse-decrypting_all">
-        <source>Decrypting all pictures</source>
-        <extracomment>Decrypting all pictures in 5 seconds</extracomment>
-        <translation>Всё будет расшифровано</translation>
+    <message id="foilpics-pulley_menu-select_all">
+        <source>Select all</source>
+        <extracomment>Pulley menu item</extracomment>
+        <translation>Отметить все</translation>
+    </message>
+    <message id="foilpics-pulley_menu-select_none">
+        <source>Select none</source>
+        <extracomment>Pulley menu item</extracomment>
+        <translation>Сбросить отметки</translation>
+    </message>
+    <message id="foilpics-remorse-deleting_selected" numerus="yes">
+        <source>Deleting %0 selected pictures</source>
+        <extracomment>Generic remorse popup text</extracomment>
+        <translation>
+            <numerusform>%0 картинка будет удалена</numerusform>
+            <numerusform>%0 картинки будут удалены</numerusform>
+            <numerusform>%0 картинок будут удалены</numerusform>
+        </translation>
     </message>
     <message id="foilpics-file_size-bytes">
         <source>%n B</source>
@@ -93,16 +112,6 @@
         <extracomment>Left swipe hint text</extracomment>
         <translation>Расшифрованные картинки попадают обратно в галерею</translation>
     </message>
-    <message id="foilpics-generate_key_page-title">
-        <source>You are about to generate a new key</source>
-        <extracomment>Label text</extracomment>
-        <translation>Создание нового ключа</translation>
-    </message>
-    <message id="foilpics-generating_key_view-generating_new_key">
-        <source>Generating new key...</source>
-        <extracomment>Progress view label</extracomment>
-        <translation>Генерируется новый ключ...</translation>
-    </message>
     <message id="foilpics-generate_key_warning-title">
         <source>Warning</source>
         <extracomment>Title for the new key warning</extracomment>
@@ -112,6 +121,16 @@
         <source>You seem to have some encrypted files in the storage folder. Once you have generated a new key, you are going to lose access to those files. If you have forgotten your password, then keep in mind that most likely it&apos;s computationally easier to brute-force your password and recover the old key than to crack the new key.</source>
         <extracomment>Warning shown prior to generating the new key</extracomment>
         <translation>Кажется, у вас есть какие-то файлы, которые могут быть зашифрованы старым ключём. Если вы затрёте старый ключ новым, то скорее всего навсегда потеряете доступ к таким файлам. На случай, если вы забыли пароль и надеетесь когда-нибудь потом их расшифровать, то имейте в виду, что обычно подобрать пароль и восстановить старый ключ значительно проще, чем подбирать уничтоженный ключ. Последнее вообще практически невозможно.</translation>
+    </message>
+    <message id="foilpics-generate_key_page-title">
+        <source>You are about to generate a new key</source>
+        <extracomment>Label text</extracomment>
+        <translation>Создание нового ключа</translation>
+    </message>
+    <message id="foilpics-generating_key_view-generating_new_key">
+        <source>Generating new key...</source>
+        <extracomment>Progress view label</extracomment>
+        <translation>Генерируется новый ключ...</translation>
     </message>
     <message id="foilpics-generate_key_view-label-key_needed">
         <source>You need to generate the key and select the password before you can encrypt your pictures</source>
@@ -127,9 +146,9 @@
         <source>Type at least %0 character(s)</source>
         <extracomment>Password field label</extracomment>
         <translation>
-            <numerusform>В пароле должен быть хотя бы %0 символ</numerusform>
-            <numerusform>В пароле должен быть хотя бы %0 символа</numerusform>
-            <numerusform>В пароле должен быть хотя бы %0 символов</numerusform>
+            <numerusform>Минимум %0 символ</numerusform>
+            <numerusform>Минимум %0 символа</numerusform>
+            <numerusform>Минимум %0 символов</numerusform>
         </translation>
     </message>
     <message id="foilpics-generate_key_view-button-generate_key">
@@ -202,10 +221,24 @@
         <extracomment>Gallery grid title</extracomment>
         <translation>Галерея</translation>
     </message>
+    <message id="foilpics-gallery_grid-selection_title">
+        <source>Select photos</source>
+        <extracomment>Gallery grid title in selection mode</extracomment>
+        <translation>Выберите картинки</translation>
+    </message>
     <message id="foilpics-gallery_view-placeholder-no_pictures">
         <source>The photo gallery seems to be empty</source>
         <extracomment>Placeholder text</extracomment>
         <translation>Здесь пусто и скучно, совсем ничего нет</translation>
+    </message>
+    <message id="foilpics-gallery_view-remorse-encrypting_selected" numerus="yes">
+        <source>Encrypting %0 selected pictures</source>
+        <extracomment>Remorse popup text</extracomment>
+        <translation>
+            <numerusform>Зашифровка %0 картинки</numerusform>
+            <numerusform>Зашифровка %0 картинок</numerusform>
+            <numerusform>Зашифровка %0 картинок</numerusform>
+        </translation>
     </message>
     <message id="foilpics-gallery_fullscreen_view-header">
         <source>Share</source>
@@ -216,6 +249,11 @@
         <source>Encrypted</source>
         <extracomment>Encrypted grid title</extracomment>
         <translation>Секретно</translation>
+    </message>
+    <message id="foilpics-encrypted_grid-selection_title">
+        <source>Select photos</source>
+        <extracomment>Encrypted grid title in selection mode</extracomment>
+        <translation>Выберите картинки</translation>
     </message>
     <message id="foilpics-thumbnail_image-loading_failed">
         <source>Oops, can&apos;t display the thumbnail!</source>
@@ -246,6 +284,15 @@
         <source>Decrypting</source>
         <extracomment>Decrypting image in 5 seconds</extracomment>
         <translation>Расшифровка</translation>
+    </message>
+    <message id="foilpics-encrypted_pics_view-remorse-decrypting_selected" numerus="yes">
+        <source>Decrypting %0 selected pictures</source>
+        <extracomment>Remorse popup text</extracomment>
+        <translation>
+            <numerusform>Расшифровка %0 картинки</numerusform>
+            <numerusform>Расшифровка %0 картинок</numerusform>
+            <numerusform>Расшифровка %0 картинок</numerusform>
+        </translation>
     </message>
     <message id="foilpics-confirm_password_page-info_label">
         <source>Please type in your new password one more time</source>
@@ -350,17 +397,17 @@
     <message id="foilpics-details-group-label">
         <source>Group</source>
         <extracomment>Details label</extracomment>
-        <translation>Коллекция</translation>
+        <translation>Группа</translation>
     </message>
     <message id="foilpics-default_group">
         <source>Default</source>
         <extracomment>Name of the default group</extracomment>
-        <translation>Не выбрана</translation>
+        <translation>По умолчанию</translation>
     </message>
     <message id="foilpics-edit_group_page-header">
-        <source>Group</source>
+        <source>Groups</source>
         <extracomment>Page header</extracomment>
-        <translation>Коллекция</translation>
+        <translation>Группы</translation>
     </message>
     <message id="foilpics-edit_group_page-menu-rename">
         <source>Rename</source>
@@ -380,12 +427,17 @@
     <message id="foilpics-edit_group_page-add_group">
         <source>Add group</source>
         <extracomment>Button label</extracomment>
-        <translation>Добавить коллекцию</translation>
+        <translation>Добавить группу</translation>
     </message>
     <message id="foilpics-edit_group_page-new_group_name">
         <source>New group</source>
         <extracomment>Name for the newly created group</extracomment>
-        <translation>Новая коллекция</translation>
+        <translation>Новая группа</translation>
+    </message>
+    <message id="foilpics-selection_panel-done_button">
+        <source>Done</source>
+        <extracomment>Button that exits selection mode</extracomment>
+        <translation>Готово</translation>
     </message>
 </context>
 </TS>

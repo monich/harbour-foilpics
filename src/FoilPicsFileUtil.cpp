@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2017 Jolla Ltd.
- * Copyright (C) 2017 Slava Monich <slava@monich.com>
+ * Copyright (C) 2017-2018 Jolla Ltd.
+ * Copyright (C) 2017-2018 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -32,11 +32,13 @@
  */
 
 #include "FoilPicsFileUtil.h"
+#include "FoilPicsRole.h"
 
 #include "HarbourDebug.h"
 
 #include <QFile>
 
+#include <QAbstractItemModel>
 #include <QDBusConnection>
 #include <QDBusPendingCall>
 #include <QDBusServiceWatcher>
@@ -174,7 +176,7 @@ void FoilPicsFileUtil::mediaDeleted(QUrl aUrl)
     }
 }
 
-bool FoilPicsFileUtil::deleteMedia(QUrl aUrl)
+bool FoilPicsFileUtil::deleteLocalFile(QUrl aUrl)
 {
     if (aUrl.isLocalFile()) {
         QString path(aUrl.toLocalFile());
@@ -188,6 +190,33 @@ bool FoilPicsFileUtil::deleteMedia(QUrl aUrl)
         HWARN(aUrl << "is not a local file");
     }
     return false;
+}
+
+void FoilPicsFileUtil::deleteLocalFilesFromModel(QObject* aModel,
+    QString aRole, QList<int> aRows)
+{
+    const int n = aRows.count();
+    if (n > 0) {
+        QAbstractItemModel* model = qobject_cast<QAbstractItemModel*>(aModel);
+        HASSERT(model);
+        if (model) {
+            const int role = FoilPicsRole::find(model, aRole);
+            if (role >= 0) {
+                const int column = 0;
+                const int rowCount = model->rowCount();
+                for (int i = 0; i < n; i++) {
+                    const int row = aRows.at(i);
+                    if (row >= 0 && row < rowCount) {
+                        QModelIndex index(model->index(row, column));
+                        QUrl url(model->data(index, role).toUrl());
+                        if (url.isValid()) {
+                            deleteLocalFile(url);
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 bool FoilPicsFileUtil::deleteFile(QString aPath)

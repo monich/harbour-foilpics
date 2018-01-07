@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2017 Jolla Ltd.
- * Copyright (C) 2017 Slava Monich <slava@monich.com>
+ * Copyright (C) 2017-2018 Jolla Ltd.
+ * Copyright (C) 2017-2018 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -35,6 +35,7 @@
 #include "FoilPicsFileUtil.h"
 #include "FoilPicsImageProvider.h"
 #include "FoilPicsGroupModel.h"
+#include "FoilPicsRole.h"
 #include "FoilPicsTask.h"
 #include "FoilPicsThumbnailProvider.h"
 
@@ -82,6 +83,7 @@
 #define INFO_GROUPS_HEADER "Groups"
 
 // Keys for metadata passed to encryptFile:
+const QString FoilPicsModel::MetaUrl("url");                 // QUrl
 const QString FoilPicsModel::MetaOrientation("orientation"); // int
 const QString FoilPicsModel::MetaImageDate("imageDate");     // QDateTime
 const QString FoilPicsModel::MetaCameraManufacturer("cameraManufacturer"); // QString
@@ -1781,7 +1783,7 @@ public Q_SLOTS:
 
 public:
     static size_t maxBytesToDecrypt();
-    void queueSignal(Signal sig);
+    void queueSignal(Signal aSignal);
     void emitQueuedSignals();
     bool checkPassword(QString aPassword);
     bool changePassword(QString aOldPassword, QString aNewPassword);
@@ -1789,15 +1791,20 @@ public:
     void setFoilState(FoilState aState);
     void insertModelData(ModelData* aModelData);
     void destroyItemAt(int aIndex);
+    bool destroyItemAndRemoveFilesAt(int aIndex);
     void removeAt(int aIndex);
+    void removeFiles(QList<int> aRows);
     void clearGroupModel();
     void clearModel();
     void saveInfo();
     void generate(int aBits, QString aPassword);
     void lock(bool aTimeout);
     bool unlock(QString aPassword);
+    void encryptFile(QString aFile, QVariantMap aMetaData);
     bool encrypt(QUrl aUrl, QVariantMap aMetaData);
+    void encryptFiles(QAbstractItemModel* aModel, QList<int> aRows);
     void decryptAt(int aIndex);
+    void decryptFiles(QList<int> aRows);
     void decryptAll();
     void decryptTaskDone(DecryptTask* aTask, bool aLast);
     void setTitleAt(int aIndex, QString aTitle);
@@ -1805,6 +1812,7 @@ public:
     void clearGroup(QByteArray aId);
     void sortModel();
     void setGroupIdAt(int aIndex, QByteArray aId);
+    void setGroupIdForRows(QList<int> aRows, QByteArray aId);
     void dataChanged(int aIndex, ModelData::Role aRole);
     void imageRequest(QString aPath, FoilPicsImageRequest aRequest);
     void headerUpdateDone(SetHeaderTask* aTask);
@@ -2208,7 +2216,7 @@ void FoilPicsModel::Private::destroyItemAt(int aIndex)
     }
 }
 
-void FoilPicsModel::Private::removeAt(int aIndex)
+bool FoilPicsModel::Private::destroyItemAndRemoveFilesAt(int aIndex)
 {
     ModelData* data = dataAt(aIndex);
     if (data) {
@@ -2221,12 +2229,39 @@ void FoilPicsModel::Private::removeAt(int aIndex)
         destroyItemAt(aIndex);
         BaseTask::removeFile(path);
         BaseTask::removeFile(thumbPath);
+        return true;
+    }
+    return false;
+}
 
+void FoilPicsModel::Private::removeAt(int aIndex)
+{
+    const bool wasBusy = busy();
+    if (destroyItemAndRemoveFilesAt(aIndex)) {
         // saveInfo() doesn't queue BusyChanged signal, we have to do it here
-        const bool wasBusy = busy();
         saveInfo();
-        if (busy() != wasBusy) {
+        if (wasBusy != busy()) {
             queueSignal(SignalBusyChanged);
+        }
+    }
+}
+
+void FoilPicsModel::Private::removeFiles(QList<int> aRows)
+{
+    const int n = aRows.count();
+    if (n > 0) {
+        int removed = 0;
+        const bool wasBusy = busy();
+        for (int i = 0; i < n; i++) {
+            if (destroyItemAndRemoveFilesAt(aRows.at(i))) {
+                removed++;
+            }
+        }
+        if (removed > 0) {
+            saveInfo();
+            if (wasBusy != busy()) {
+                queueSignal(SignalBusyChanged);
+            }
         }
     }
 }
@@ -2449,24 +2484,29 @@ bool FoilPicsModel::Private::unlock(QString aPassword)
     return ok;
 }
 
+void FoilPicsModel::Private::encryptFile(QString aFile, QVariantMap aMetaData)
+{
+    // Missing coordinates are sometimes represented as all zeros
+    const double latitude = aMetaData.value(MetaLatitude).toDouble();
+    const double longitude = aMetaData.value(MetaLongitude).toDouble();
+    const double altitude = aMetaData.value(MetaAltitude).toDouble();
+    if (latitude == 0.0 && longitude == 0.0 && altitude == 0.0) {
+        // Bogus coordinates, don't store them
+        aMetaData.remove(MetaLatitude);
+        aMetaData.remove(MetaLongitude);
+        aMetaData.remove(MetaAltitude);
+    }
+    EncryptTask* task = new EncryptTask(iThreadPool, aFile, iFoilPicsDir,
+        iPrivateKey, iPublicKey, iThumbSize, aMetaData);
+    iEncryptTasks.append(task);
+    task->submit(this, SLOT(onEncryptTaskDone()));
+}
+
 bool FoilPicsModel::Private::encrypt(QUrl aUrl, QVariantMap aMetaData)
 {
     if (iPrivateKey && aUrl.isLocalFile()) {
         const bool wasBusy = busy();
-        // Missing coordinates are sometimes represented as all zeros
-        const double latitude = aMetaData.value(MetaLatitude).toDouble();
-        const double longitude = aMetaData.value(MetaLongitude).toDouble();
-        const double altitude = aMetaData.value(MetaAltitude).toDouble();
-        if (latitude == 0.0 && longitude == 0.0 && altitude == 0.0) {
-            // Bogus coordinates, don't store them
-            aMetaData.remove(MetaLatitude);
-            aMetaData.remove(MetaLongitude);
-            aMetaData.remove(MetaAltitude);
-        }
-        EncryptTask* task = new EncryptTask(iThreadPool, aUrl.toLocalFile(),
-            iFoilPicsDir, iPrivateKey, iPublicKey, iThumbSize, aMetaData);
-        iEncryptTasks.append(task);
-        task->submit(this, SLOT(onEncryptTaskDone()));
+        encryptFile(aUrl.toLocalFile(), aMetaData);
         if (!wasBusy) {
             // We know we are busy now
             queueSignal(SignalBusyChanged);
@@ -2474,6 +2514,56 @@ bool FoilPicsModel::Private::encrypt(QUrl aUrl, QVariantMap aMetaData)
         return true;
     }
     return false;
+}
+
+void FoilPicsModel::Private::encryptFiles(QAbstractItemModel* aModel, QList<int> aRows)
+{
+    HASSERT(aModel);
+    if (iPrivateKey && !aRows.isEmpty()) {
+        // URL is absolutely required
+        FoilPicsRole urlRole(aModel, MetaUrl);
+        if (urlRole.isValid()) {
+            int submitted = 0;
+            const bool wasBusy = busy();
+            FoilPicsRole orientationRole(aModel, MetaOrientation);
+            FoilPicsRole imageDateRole(aModel, MetaImageDate);
+            FoilPicsRole cameraManufacturerRole(aModel, MetaCameraManufacturer);
+            FoilPicsRole cameraModelRole(aModel, MetaCameraModel);
+            FoilPicsRole latitudeRole(aModel, MetaLatitude);
+            FoilPicsRole longitudeRole(aModel, MetaLongitude);
+            FoilPicsRole altitudeRole(aModel, MetaAltitude);
+            const FoilPicsRole* roles[] = {&orientationRole,  &imageDateRole,
+                &cameraManufacturerRole, &cameraModelRole, &latitudeRole,
+                &longitudeRole, &altitudeRole
+            };
+            // Start from the end of the list, in an attempt to disturb
+            // the model less
+            for (int i=aRows.count()-1; i>=0; i--) {
+                const int row = aRows.at(i);
+                QUrl url(urlRole.valueAt(row).toUrl());
+                if (url.isLocalFile()) {
+                    // Pull metadata out of the model
+                    QVariantMap metadata;
+                    for (uint k=0; k<G_N_ELEMENTS(roles); k++) {
+                        const FoilPicsRole* role = roles[k];
+                        QVariant value(role->valueAt(row));
+                        if (value.isValid()) {
+                            metadata.insert(role->name(), value);
+                        }
+                    }
+                    // Encrypt this file
+                    encryptFile(url.toLocalFile(), metadata);
+                    submitted++;
+                } else {
+                    HWARN("Can't encrypt" << url);
+                }
+            }
+            if (!wasBusy && submitted) {
+                // We know we are busy now
+                queueSignal(SignalBusyChanged);
+            }
+        }
+    }
 }
 
 void FoilPicsModel::Private::onEncryptTaskDone()
@@ -2537,15 +2627,44 @@ void FoilPicsModel::Private::onDecryptTaskDone()
     decryptTaskDone(qobject_cast<DecryptTask*>(sender()), true);
 }
 
+void FoilPicsModel::Private::decryptFiles(QList<int> aRows)
+{
+    if (!iData.isEmpty() && !aRows.isEmpty()) {
+        const bool wasBusy = busy();
+        HDEBUG("Decrypting" << aRows.count() << "picture(s)");
+        // Start from the last picture
+        qSort(aRows);
+        ModelData* data;
+        for (int i = aRows.count() - 1; i > 0; i--) {
+            data = dataAt(aRows.at(i));
+            if (data && !data->iDecryptTask) {
+                data->iDecryptTask = new DecryptTask(iThreadPool, data,
+                    iPrivateKey, iPublicKey);
+                data->iDecryptTask->submit(this, SLOT(onDecryptAllProgress()));
+            }
+        }
+        // The last onDecryptTaskDone will reset the image info
+        data = dataAt(aRows.first());
+        if (data && !data->iDecryptTask) {
+            data->iDecryptTask = new DecryptTask(iThreadPool, data,
+                iPrivateKey, iPublicKey);
+            data->iDecryptTask->submit(this, SLOT(onDecryptTaskDone()));
+        }
+        if (busy() != wasBusy) {
+            queueSignal(SignalBusyChanged);
+        }
+        queueSignal(SignalDecryptionStarted);
+    }
+}
+
 void FoilPicsModel::Private::decryptAll()
 {
     if (!iData.isEmpty()) {
         const bool wasBusy = busy();
-        const int n = iData.count();
-        HDEBUG("Decrypting all" << n << "picture(s)");
+        HDEBUG("Decrypting all" << iData.count() << "picture(s)");
         // Start from the last picture
         ModelData* data;
-        for (int i = n-1; i > 0; i--) {
+        for (int i = iData.count() - 1; i > 0; i--) {
             data = iData.at(i);
             if (!data->iDecryptTask) {
                 data->iDecryptTask = new DecryptTask(iThreadPool, data,
@@ -2695,6 +2814,29 @@ void FoilPicsModel::Private::setGroupIdAt(int aIndex, QByteArray aId)
         const bool wasBusy = busy();
         if (setGroupId(data, aId)) {
             HDEBUG(aIndex << QString::fromLatin1(aId));
+            sortModel();
+            if (!wasBusy) {
+                // We know we are busy now
+                queueSignal(SignalBusyChanged);
+            }
+        }
+    }
+}
+
+void FoilPicsModel::Private::setGroupIdForRows(QList<int> aRows, QByteArray aId)
+{
+    if (!aRows.isEmpty()) {
+        const bool wasBusy = busy();
+        qSort(aRows);
+        int updated = 0;
+        const int n = aRows.count();
+        for (int i = 0; i < n; i++) {
+            ModelData* data = dataAt(aRows.at(i));
+            if (setGroupId(data, aId)) {
+                updated++;
+            }
+        }
+        if (updated > 0) {
             sortModel();
             if (!wasBusy) {
                 // We know we are busy now
@@ -3003,11 +3145,25 @@ void FoilPicsModel::removeAt(int aIndex)
     iPrivate->emitQueuedSignals();
 }
 
+void FoilPicsModel::removeFiles(QList<int> aRows)
+{
+    HDEBUG(aRows);
+    iPrivate->removeFiles(aRows);
+    iPrivate->emitQueuedSignals();
+}
+
 QVariantMap FoilPicsModel::get(int aIndex) const
 {
     HDEBUG(aIndex);
     ModelData* data = iPrivate->dataAt(aIndex);
     return data ? data->iVariant : QVariantMap();
+}
+
+void FoilPicsModel::decryptFiles(QList<int> aRows)
+{
+    HDEBUG(aRows);
+    iPrivate->decryptFiles(aRows);
+    iPrivate->emitQueuedSignals();
 }
 
 void FoilPicsModel::decryptAt(int aIndex)
@@ -3029,6 +3185,12 @@ bool FoilPicsModel::encryptFile(QUrl aUrl, QVariantMap aMetaData)
     const bool ok = iPrivate->encrypt(aUrl, aMetaData);
     iPrivate->emitQueuedSignals();
     return ok;
+}
+
+void FoilPicsModel::encryptFiles(QObject* aModel, QList<int> aList)
+{
+    iPrivate->encryptFiles(qobject_cast<QAbstractItemModel*>(aModel), aList);
+    iPrivate->emitQueuedSignals();
 }
 
 void FoilPicsModel::lock(bool aTimeout)
@@ -3081,6 +3243,13 @@ int FoilPicsModel::groupIndexAt(int aIndex) const
 void FoilPicsModel::setGroupIdAt(int aIndex, QString aId)
 {
     iPrivate->setGroupIdAt(aIndex, aId.toLatin1());
+    iPrivate->emitQueuedSignals();
+}
+
+void FoilPicsModel::setGroupIdForRows(QList<int> aRows, QString aId)
+{
+    HDEBUG(aRows << aId);
+    iPrivate->setGroupIdForRows(aRows, aId.toLatin1());
     iPrivate->emitQueuedSignals();
 }
 

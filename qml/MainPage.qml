@@ -53,7 +53,8 @@ Page {
         highlightRangeMode: ListView.StrictlyEnforceRange
         model: pages
         delegate: Loader {
-            enabled: index == scroller.currentIndex
+            readonly property bool isCurrentItem: index == scroller.currentIndex
+            enabled: isCurrentItem
             width: scroller.width
             height: scroller.height
             sourceComponent: modelData

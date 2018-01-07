@@ -23,6 +23,11 @@
         <extracomment>Generic menu item</extracomment>
         <translation>Avkryptera</translation>
     </message>
+    <message id="foilpics-menu-group">
+        <source>Group</source>
+        <extracomment>Generic menu item</extracomment>
+        <translation type="unfinished">Grupp</translation>
+    </message>
     <message id="foilpics-menu-delete">
         <source>Delete</source>
         <extracomment>Generic menu item</extracomment>
@@ -38,15 +43,28 @@
         <extracomment>Pulley menu item</extracomment>
         <translation>Byt lösenord</translation>
     </message>
-    <message id="foilpics-pulley_menu-decrypt_all">
-        <source>Decrypt all</source>
+    <message id="foilpics-pulley_menu-select_photos">
+        <source>Select photos</source>
         <extracomment>Pulley menu item</extracomment>
-        <translation>Avkryptera alla</translation>
+        <translation type="unfinished">Välj foton</translation>
     </message>
-    <message id="foilpics-pulley_menu-remorse-decrypting_all">
-        <source>Decrypting all pictures</source>
-        <extracomment>Decrypting all pictures in 5 seconds</extracomment>
-        <translation>Avkrypterar alla bilder om 5 sekunder</translation>
+    <message id="foilpics-pulley_menu-select_all">
+        <source>Select all</source>
+        <extracomment>Pulley menu item</extracomment>
+        <translation type="unfinished">Markera alla</translation>
+    </message>
+    <message id="foilpics-pulley_menu-select_none">
+        <source>Select none</source>
+        <extracomment>Pulley menu item</extracomment>
+        <translation type="unfinished">Avmarkera alla</translation>
+    </message>
+    <message id="foilpics-remorse-deleting_selected" numerus="yes">
+        <source>Deleting %0 selected pictures</source>
+        <extracomment>Generic remorse popup text</extracomment>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
     </message>
     <message id="foilpics-file_size-bytes">
         <source>%n B</source>
@@ -202,10 +220,23 @@ Om du har glömt ditt lösenord, bör du veta att det troligen är datortekniskt
         <extracomment>Gallery grid title</extracomment>
         <translation>Bilder</translation>
     </message>
+    <message id="foilpics-gallery_grid-selection_title">
+        <source>Select photos</source>
+        <extracomment>Gallery grid title in selection mode</extracomment>
+        <translation type="unfinished">Välj foton</translation>
+    </message>
     <message id="foilpics-gallery_view-placeholder-no_pictures">
         <source>The photo gallery seems to be empty</source>
         <extracomment>Placeholder text</extracomment>
         <translation>Bildgalleriet verkar vara tomt</translation>
+    </message>
+    <message id="foilpics-gallery_view-remorse-encrypting_selected" numerus="yes">
+        <source>Encrypting %0 selected pictures</source>
+        <extracomment>Remorse popup text</extracomment>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
     </message>
     <message id="foilpics-gallery_fullscreen_view-header">
         <source>Share</source>
@@ -216,6 +247,11 @@ Om du har glömt ditt lösenord, bör du veta att det troligen är datortekniskt
         <source>Encrypted</source>
         <extracomment>Encrypted grid title</extracomment>
         <translation>Krypterat</translation>
+    </message>
+    <message id="foilpics-encrypted_grid-selection_title">
+        <source>Select photos</source>
+        <extracomment>Encrypted grid title in selection mode</extracomment>
+        <translation type="unfinished">Välj foton</translation>
     </message>
     <message id="foilpics-thumbnail_image-loading_failed">
         <source>Oops, can&apos;t display the thumbnail!</source>
@@ -246,6 +282,14 @@ Om du har glömt ditt lösenord, bör du veta att det troligen är datortekniskt
         <source>Decrypting</source>
         <extracomment>Decrypting image in 5 seconds</extracomment>
         <translation>Avkrypterar</translation>
+    </message>
+    <message id="foilpics-encrypted_pics_view-remorse-decrypting_selected" numerus="yes">
+        <source>Decrypting %0 selected pictures</source>
+        <extracomment>Remorse popup text</extracomment>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
     </message>
     <message id="foilpics-confirm_password_page-info_label">
         <source>Please type in your new password one more time</source>
@@ -358,9 +402,9 @@ Om du har glömt ditt lösenord, bör du veta att det troligen är datortekniskt
         <translation type="unfinished">Standard</translation>
     </message>
     <message id="foilpics-edit_group_page-header">
-        <source>Group</source>
+        <source>Groups</source>
         <extracomment>Page header</extracomment>
-        <translation type="unfinished">Grupp</translation>
+        <translation type="unfinished">Grupper</translation>
     </message>
     <message id="foilpics-edit_group_page-menu-rename">
         <source>Rename</source>
@@ -386,6 +430,11 @@ Om du har glömt ditt lösenord, bör du veta att det troligen är datortekniskt
         <source>New group</source>
         <extracomment>Name for the newly created group</extracomment>
         <translation type="unfinished">Ny grupp</translation>
+    </message>
+    <message id="foilpics-selection_panel-done_button">
+        <source>Done</source>
+        <extracomment>Button that exits selection mode</extracomment>
+        <translation type="unfinished">Klart</translation>
     </message>
 </context>
 </TS>

@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2017-2018 Jolla Ltd.
- * Copyright (C) 2017-2018 Slava Monich <slava@monich.com>
+ * Copyright (C) 2018 Jolla Ltd.
+ * Copyright (C) 2018 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -31,40 +31,30 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef FOILPICS_FILE_UTIL_H
-#define FOILPICS_FILE_UTIL_H
+#ifndef FOILPICS_ROLE_H
+#define FOILPICS_ROLE_H
 
-#include <QObject>
-#include <QLocale>
-#include <QUrl>
+#include <QAbstractItemModel>
 
-class FoilPicsFileUtil : public QObject {
-    Q_OBJECT
-    static FoilPicsFileUtil* gInstance;
-
-public:
-    FoilPicsFileUtil(QObject* aParent);
-    ~FoilPicsFileUtil();
-
-    static FoilPicsFileUtil* instance();
-
-    Q_INVOKABLE bool deleteFile(QString aPath);
-    Q_INVOKABLE bool deleteLocalFile(QUrl aUrl);
-    Q_INVOKABLE void deleteLocalFilesFromModel(QObject* aModel, QString aRole,
-        QList<int> aRows);
-    Q_INVOKABLE QString formatFileSize(qlonglong aBytes);
-
-    void mediaDeleted(QString aFilename);
-    void mediaDeleted(QUrl aUrl);
-
-public Q_SLOTS:
-    void onTrackerRegistered();
-    void onTrackerUnregistered();
-
+class FoilPicsRole {
 private:
-    class TrackerProxy;
-    TrackerProxy* iTrackerProxy;
-    QLocale iLocale;
+    FoilPicsRole();
+    Q_DISABLE_COPY(FoilPicsRole)
+public:
+    FoilPicsRole(QAbstractItemModel* aModel, QString aRole);
+    static int find(QAbstractItemModel* aModel, QString aRole);
+    bool isValid() const;
+    QString name() const;
+    QVariant valueAt(int aIndex, int aColumn = 0) const;
+private:
+    QAbstractItemModel* iModel;
+    QString iRoleName;
+    int iRole;
 };
 
-#endif // FOILPICS_FILE_UTIL_H
+inline bool FoilPicsRole::isValid() const
+    { return iRole >= 0; }
+inline QString FoilPicsRole::name() const
+    { return iRoleName; }
+
+#endif // FOILPICS_ROLE_H

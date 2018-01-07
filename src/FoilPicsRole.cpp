@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2017-2018 Jolla Ltd.
- * Copyright (C) 2017-2018 Slava Monich <slava@monich.com>
+ * Copyright (C) 2018 Jolla Ltd.
+ * Copyright (C) 2018 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -31,40 +31,44 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef FOILPICS_FILE_UTIL_H
-#define FOILPICS_FILE_UTIL_H
+#include "FoilPicsRole.h"
+#include "HarbourDebug.h"
 
-#include <QObject>
-#include <QLocale>
-#include <QUrl>
+FoilPicsRole::FoilPicsRole(QAbstractItemModel* aModel, QString aRole) :
+    iRole(find(aModel, aRole))
+{
+    if (iRole >= 0) {
+        iRoleName = aRole;
+        iModel = aModel;
+    } else {
+        iModel = NULL;
+    }
+}
 
-class FoilPicsFileUtil : public QObject {
-    Q_OBJECT
-    static FoilPicsFileUtil* gInstance;
+int FoilPicsRole::find(QAbstractItemModel* aModel, QString aRole)
+{
+    if (aModel && !aRole.isEmpty()) {
+        const QByteArray roleName(aRole.toUtf8());
+        const QHash<int,QByteArray> roleMap(aModel->roleNames());
+        const QList<int> roles(roleMap.keys());
+        const int n = roles.count();
+        for (int i = 0; i < n; i++) {
+            const QByteArray name(roleMap.value(roles.at(i)));
+            if (name == roleName) {
+                HDEBUG(aRole << roles.at(i));
+                return roles.at(i);
+            }
+        }
+        HDEBUG("Unknown role" << aRole);
+    }
+    return -1;
+}
 
-public:
-    FoilPicsFileUtil(QObject* aParent);
-    ~FoilPicsFileUtil();
-
-    static FoilPicsFileUtil* instance();
-
-    Q_INVOKABLE bool deleteFile(QString aPath);
-    Q_INVOKABLE bool deleteLocalFile(QUrl aUrl);
-    Q_INVOKABLE void deleteLocalFilesFromModel(QObject* aModel, QString aRole,
-        QList<int> aRows);
-    Q_INVOKABLE QString formatFileSize(qlonglong aBytes);
-
-    void mediaDeleted(QString aFilename);
-    void mediaDeleted(QUrl aUrl);
-
-public Q_SLOTS:
-    void onTrackerRegistered();
-    void onTrackerUnregistered();
-
-private:
-    class TrackerProxy;
-    TrackerProxy* iTrackerProxy;
-    QLocale iLocale;
-};
-
-#endif // FOILPICS_FILE_UTIL_H
+QVariant FoilPicsRole::valueAt(int aIndex, int aColumn) const
+{
+    if (iRole >= 0) {
+        return iModel->data(iModel->index(aIndex, aColumn), iRole);
+    } else {
+        return QVariant();
+    }
+}

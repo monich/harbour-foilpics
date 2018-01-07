@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2017-2018 Jolla Ltd.
- * Copyright (C) 2017-2018 Slava Monich <slava@monich.com>
+ * Copyright (C) 2018 Jolla Ltd.
+ * Copyright (C) 2018 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -31,40 +31,39 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef FOILPICS_FILE_UTIL_H
-#define FOILPICS_FILE_UTIL_H
+#ifndef FOILPICS_SELECTION_STATE_H
+#define FOILPICS_SELECTION_STATE_H
 
-#include <QObject>
-#include <QLocale>
-#include <QUrl>
+#include <QtQml>
 
-class FoilPicsFileUtil : public QObject {
+class FoilPicsSelectionState : public QObject
+{
     Q_OBJECT
-    static FoilPicsFileUtil* gInstance;
+    Q_PROPERTY(QObject* model READ model WRITE setModel NOTIFY modelChanged)
+    Q_PROPERTY(QString key READ key WRITE setKey NOTIFY keyChanged)
+    Q_PROPERTY(bool selected READ selected NOTIFY selectedChanged)
 
 public:
-    FoilPicsFileUtil(QObject* aParent);
-    ~FoilPicsFileUtil();
+    explicit FoilPicsSelectionState(QObject* aParent = NULL);
 
-    static FoilPicsFileUtil* instance();
+    QObject* model() const;
+    void setModel(QObject* aModel);
 
-    Q_INVOKABLE bool deleteFile(QString aPath);
-    Q_INVOKABLE bool deleteLocalFile(QUrl aUrl);
-    Q_INVOKABLE void deleteLocalFilesFromModel(QObject* aModel, QString aRole,
-        QList<int> aRows);
-    Q_INVOKABLE QString formatFileSize(qlonglong aBytes);
+    QString key() const;
+    void setKey(QString aKey);
 
-    void mediaDeleted(QString aFilename);
-    void mediaDeleted(QUrl aUrl);
+    bool selected() const;
 
-public Q_SLOTS:
-    void onTrackerRegistered();
-    void onTrackerUnregistered();
+Q_SIGNALS:
+    void modelChanged();
+    void keyChanged();
+    void selectedChanged();
 
 private:
-    class TrackerProxy;
-    TrackerProxy* iTrackerProxy;
-    QLocale iLocale;
+    class Private;
+    Private* iPrivate;
 };
 
-#endif // FOILPICS_FILE_UTIL_H
+QML_DECLARE_TYPE(FoilPicsSelectionState)
+
+#endif // FOILPICS_SELECTION_STATE_H

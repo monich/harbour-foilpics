@@ -20,6 +20,9 @@ Item {
     property bool isDefault
     property int modelIndex
 
+    property var selectionModel
+    property bool selecting
+
     signal decryptItem(int globalIndex)
     signal deleteItem(int globalIndex)
     signal requestIndex(int globalIndex)
@@ -48,9 +51,11 @@ Item {
             contentYOffset: index >= grid.minOffsetIndex ? grid.expandHeight : 0.0
             z: isItemExpanded ? 1000 : 1
             enabled: isItemExpanded || !grid.contextMenu.active
+            selectionModel: group.selectionModel
+            selectionKey: imageId
 
-            property bool isItemExpanded: grid.expandItem === delegate
-            property int modelIndex: index
+            readonly property bool isItemExpanded: grid.expandItem === delegate
+            readonly property int modelIndex: index
 
             Image {
                 y: contentYOffset
@@ -71,7 +76,9 @@ Item {
             }
 
             onClicked: {
-                if (!grid.contextMenu.active) {
+                if (selecting) {
+                    selectionModel.toggleSelection(selectionKey)
+                } else if (!grid.contextMenu.active) {
                     var sourceIndex = picsModel.mapToSource(modelIndex)
                     var page = pageStack.push(Qt.resolvedUrl("EncryptedFullscreenPage.qml"),{
                         currentIndex: sourceIndex,
@@ -87,8 +94,10 @@ Item {
             }
 
             onPressAndHold: {
-                grid.expandItem = delegate
-                grid.contextMenu.show(delegate)
+                if (!selecting) {
+                    grid.expandItem = delegate
+                    grid.contextMenu.open(delegate)
+                }
             }
 
             GridView.onAdd: AddAnimation { target: delegate }

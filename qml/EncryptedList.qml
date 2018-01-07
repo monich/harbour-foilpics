@@ -5,21 +5,13 @@ import harbour.foilpics 1.0
 SilicaListView {
     id: view
 
-    property var hints
     property var foilModel
-    property alias pulleyFlickable: pullDownMenu.flickable
-
-    readonly property bool busy: foilModel.busy || progressTimer.running
-    readonly property bool ready: foilModel.foilState === FoilPicsModel.FoilPicsReady
+    property var selectionModel
+    property bool selecting
+    property bool busy
 
     property int requestedGroupIndex: -1
     property var requestedGroup
-
-    model: foilModel.groupModel
-
-    RemorsePopup {
-        id: decryptAllRemorse
-    }
 
     function jumpToIndex(index, cellSize, columnCount) {
         requestedGroupIndex = foilModel.groupIndexAt(index)
@@ -71,65 +63,15 @@ SilicaListView {
         }
     }
 
-    PullDownMenu {
-        id: pullDownMenu
-        visible: view.ready
-        MenuItem {
-            //: Pulley menu item
-            //% "Generate a new key"
-            text: qsTrId("foilpics-pulley_menu-generate_key")
-            visible: !foilModel.count
-            onClicked: {
-                pageStack.push(Qt.resolvedUrl("GenerateKeyPage.qml"), {
-                    foilModel: foilModel
-                })
-            }
-        }
-        MenuItem {
-            //: Pulley menu item
-            //% "Change password"
-            text: qsTrId("foilpics-pulley_menu-change_password")
-            onClicked: {
-                pageStack.push(Qt.resolvedUrl("ChangePasswordDialog.qml"), {
-                    foilModel: foilModel
-                })
-            }
-        }
-        MenuItem {
-            //: Pulley menu item
-            //% "Decrypt all"
-            text: qsTrId("foilpics-pulley_menu-decrypt_all")
-            visible: foilModel.count > 0
-            onClicked: decryptAllRemorse.execute(
-                //: Decrypting all pictures in 5 seconds
-                //% "Decrypting all pictures"
-                qsTrId("foilpics-pulley_menu-remorse-decrypting_all"),
-                function() { foilModel.decryptAll() })
-        }
-    }
-
-    Connections {
-        target: foilModel
-        onBusyChanged: {
-            if (foilModel.busy) {
-                // Look busy for at least a second
-                progressTimer.start()
-            }
-        }
-        onDecryptionStarted: leftSwipeToDecryptedHintLoader.armed = true
-    }
-
-    Timer {
-        id: progressTimer
-        interval: 1000
-        running: true
-    }
-
     header: PageHeader {
         id: header
-        //: Encrypted grid title
-        //% "Encrypted"
-        title: qsTrId("foilpics-encrypted_grid-title")
+        title: view.selecting ?
+            //: Encrypted grid title in selection mode
+            //% "Select photos"
+            qsTrId("foilpics-encrypted_grid-selection_title") :
+            //: Encrypted grid title
+            //% "Encrypted"
+            qsTrId("foilpics-encrypted_grid-title")
         Badge {
             id: badge
             anchors {
@@ -166,6 +108,8 @@ SilicaListView {
         onDeleteItem: view.deleteItem(globalIndex, cellSize, columnCount)
         onRequestIndex: view.jumpToIndex(globalIndex, cellSize, columnCount)
         modelIndex: model.index
+        selectionModel: view.selectionModel
+        selecting: view.selecting
 
         Connections {
             target: view
@@ -175,17 +119,6 @@ SilicaListView {
                 }
             }
         }
-    }
-
-    ViewPlaceholder {
-        text: hints.letsEncryptSomething < MaximumHintCount ?
-            //: Placeholder text with a hint
-            //% "Why not to encrypt something?"
-            qsTrId("foilpics-encrypted_grid-placeholder-no_pictures_hint") :
-            //: Placeholder text
-            //% "You don't have any encrypted pictures"
-            qsTrId("foilpics-encrypted_grid-placeholder-no_pictures")
-        enabled: !view.busy && foilModel && foilModel.count === 0
     }
 
     // This container is used for making RemorseItem to follow
@@ -210,34 +143,6 @@ SilicaListView {
             horizontalAlignment: Text.AlignHCenter
             font.pixelSize: Theme.fontSizeSmallBase
         }
-    }
-
-    Loader {
-        id: leftSwipeToDecryptedHintLoader
-        anchors.fill: parent
-        active: opacity > 0
-        opacity: ((hints.leftSwipeToDecrypted < MaximumHintCount && armed) | running) ? 1 : 0
-        property bool armed
-        property bool running
-        sourceComponent: Component {
-            LeftRightSwipeHint {
-                //: Left swipe hint text
-                //% "Decrypted pictures are moved back to the gallery"
-                text: qsTrId("foilpics-hint-swipe_left_to_decrypted")
-                hintEnabled: leftSwipeToDecryptedHintLoader.armed && !hintDelayTimer.running
-                onHintShown: {
-                    hints.leftSwipeToDecrypted++
-                    leftSwipeToDecryptedHintLoader.armed = false
-                }
-                onHintRunningChanged: leftSwipeToDecryptedHintLoader.running = hintRunning
-                Timer {
-                    id: hintDelayTimer
-                    interval: 1000
-                    running: true
-                }
-            }
-        }
-        Behavior on opacity { FadeAnimation {} }
     }
 
     VerticalScrollDecorator { }

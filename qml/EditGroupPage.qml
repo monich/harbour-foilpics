@@ -19,7 +19,7 @@ Page {
 
         header: PageHeader {
             //: Page header
-            //% "Group"
+            //% "Groups"
             title: qsTrId("foilpics-edit_group_page-header")
         }
 

@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2017 Jolla Ltd.
- * Copyright (C) 2017 Slava Monich <slava@monich.com>
+ * Copyright (C) 2017-2018 Jolla Ltd.
+ * Copyright (C) 2017-2018 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -32,6 +32,7 @@
  */
 
 #include "FoilPicsModelWatch.h"
+#include "FoilPicsRole.h"
 #include "HarbourDebug.h"
 
 // ==========================================================================
@@ -46,7 +47,6 @@ public:
 
     FoilPicsModelWatch* watcher() const;
     bool isUsable() const;
-    int findRole(QString aRole) const;
     void setModel(QAbstractItemModel* aModel);
     void setKeyRole(QString aRole);
     void setKeyValue(QString aValue);
@@ -134,28 +134,9 @@ void FoilPicsModelWatch::Private::setModel(QAbstractItemModel* aModel)
     }
 }
 
-int FoilPicsModelWatch::Private::findRole(QString aRole) const
-{
-    if (!aRole.isEmpty() && iModel) {
-        const QByteArray roleName(aRole.toUtf8());
-        const QHash<int,QByteArray> roleMap(iModel->roleNames());
-        const QList<int> roles(roleMap.keys());
-        const int n = roles.count();
-        for (int i = 0; i < n; i++) {
-            const int role(roles.at(i));
-            const QByteArray name(roleMap.value(role));
-            if (name == roleName) {
-                return role;
-            }
-        }
-        HDEBUG("Unknown role" << aRole);
-    }
-    return -1;
-}
-
 void FoilPicsModelWatch::Private::updateKeyRole()
 {
-    const int role = findRole(iKeyRoleName);
+    const int role = FoilPicsRole::find(iModel, iKeyRoleName);
     if (role >= 0) {
         if (iKeyRole != role) {
             iKeyRole = role;
@@ -169,7 +150,7 @@ void FoilPicsModelWatch::Private::updateKeyRole()
 
 void FoilPicsModelWatch::Private::updateWatchRole()
 {
-    const int role = findRole(iWatchRoleName);
+    const int role = FoilPicsRole::find(iModel, iWatchRoleName);
     if (role >= 0) {
         if (iWatchRole != role) {
             iWatchRole = role;
@@ -267,8 +248,10 @@ void FoilPicsModelWatch::Private::searchModel(int aFirstRow, int aLastRow)
 
 void FoilPicsModelWatch::Private::onModelDestroyed(QObject* aModel)
 {
+    HDEBUG("");
     iModel = NULL;
     reset();
+    Q_EMIT watcher()->modelChanged();
 }
 
 void FoilPicsModelWatch::Private::onModelReset()
