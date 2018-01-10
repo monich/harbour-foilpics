@@ -103,6 +103,7 @@ SilicaListView {
         title: groupName
         picsModel: groupPicsModel
         picsCount: groupPicsCount
+        isFirstGroup: firstGroup
         isDefault: defaultGroup
         onDecryptItem: view.decryptItem(globalIndex, cellSize, columnCount)
         onDeleteItem: view.deleteItem(globalIndex, cellSize, columnCount)

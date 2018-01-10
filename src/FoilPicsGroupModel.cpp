@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2017 Jolla Ltd.
- * Copyright (C) 2017 Slava Monich <slava@monich.com>
+ * Copyright (C) 2017-2018 Jolla Ltd.
+ * Copyright (C) 2017-2018 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -177,6 +177,12 @@ public:
 
 Q_SIGNALS:
     void countChanged();
+
+public Q_SLOTS:
+    void onModelReset();
+
+public:
+    int iLastKnownCount;
 };
 
 FoilPicsGroupModel::ProxyModel::ProxyModel(FoilPicsModel* aPicsModel,
@@ -186,9 +192,10 @@ FoilPicsGroupModel::ProxyModel::ProxyModel(FoilPicsModel* aPicsModel,
     setFilterRole(FoilPicsModel::groupIdRole());
     setFilterFixedString(aId);
     setDynamicSortFilter(true);
+    iLastKnownCount = rowCount();
     connect(this, SIGNAL(rowsInserted(QModelIndex,int,int)), SIGNAL(countChanged()));
     connect(this, SIGNAL(rowsRemoved(QModelIndex,int,int)), SIGNAL(countChanged()));
-    connect(this, SIGNAL(modelReset()), SIGNAL(countChanged()));
+    connect(this, SIGNAL(modelReset()), SLOT(onModelReset()));
 }
 
 bool FoilPicsGroupModel::ProxyModel::filterAcceptsRow(int aSourceRow,
@@ -234,6 +241,15 @@ QVariantMap FoilPicsGroupModel::ProxyModel::get(int aIndex) const
     return sourcePicsModel()->get(mapToSource(aIndex));
 }
 
+void FoilPicsGroupModel::ProxyModel::onModelReset()
+{
+    const int count = rowCount();
+    if (iLastKnownCount != count) {
+        iLastKnownCount = count;
+        Q_EMIT countChanged();
+    }
+}
+
 // ==========================================================================
 // FoilPicsGroupModel::ModelData
 // ==========================================================================
@@ -247,62 +263,88 @@ public:
         GroupNameRole,
         GroupPicsModelRole,
         GroupPicsCountRole,
+        FirstGroupRole,
         DefaultGroupRole
     };
 
     ModelData(FoilPicsModel* aPicsModel);
     ModelData(FoilPicsModel* aPicsModel, const Group& aGroup);
     ModelData(FoilPicsModel* aPicsModel, QByteArray aId, QString aName);
+    void init();
+
     QVariant get(Role aRole) const;
-    QAbstractProxyModel* createFilterModel() const;
-    QAbstractProxyModel* filterModel() const;
+    ProxyModel* createProxyModel() const;
+    QAbstractProxyModel* proxyModel() const;
+    bool isFirstGroup() const;
+    bool firstGroupMayHaveChanged() const;
 
 Q_SIGNALS:
-    void filterModelDestroyed();
-    void filterModelCountChanged();
+    void proxyModelDestroyed();
+    void proxyModelCountChanged();
 
 public Q_SLOTS:
-    void onFilterModelDestroyed(QObject* aModel);
+    void onProxyModelDestroyed(QObject* aModel);
 
 public:
-    FoilPicsModel* iPicsModel;
-    mutable QAbstractProxyModel* iFilterModel;
     Group iGroup;
+    FoilPicsModel* iPicsModel;
+    mutable ProxyModel* iProxyModel;
+    mutable bool iLastKnownFirstGroup;
 };
 
 FoilPicsGroupModel::ModelData::ModelData(FoilPicsModel* aPicsModel) :
-    QObject(aPicsModel), iPicsModel(aPicsModel), iFilterModel(NULL)
+    QObject(aPicsModel), iPicsModel(aPicsModel)
 {
+    init();
 }
 
 FoilPicsGroupModel::ModelData::ModelData(FoilPicsModel* aPicsModel,
-    const Group& aGroup) : QObject(aPicsModel), iPicsModel(aPicsModel),
-    iFilterModel(NULL), iGroup(aGroup)
+    const Group& aGroup) : QObject(aPicsModel),
+    iGroup(aGroup), iPicsModel(aPicsModel)
 {
+    init();
 }
 
 FoilPicsGroupModel::ModelData::ModelData(FoilPicsModel* aPicsModel,
     QByteArray aId, QString aName) : QObject(aPicsModel),
-    iPicsModel(aPicsModel), iFilterModel(NULL), iGroup(aId, aName)
+    iGroup(aId, aName), iPicsModel(aPicsModel)
 {
+    init();
 }
 
-QAbstractProxyModel* FoilPicsGroupModel::ModelData::filterModel() const
+void FoilPicsGroupModel::ModelData::init()
 {
-    if (!iFilterModel) {
-        iFilterModel = createFilterModel();
+    iProxyModel = NULL;
+    iLastKnownFirstGroup = false;
+}
+
+QAbstractProxyModel* FoilPicsGroupModel::ModelData::proxyModel() const
+{
+    if (!iProxyModel) {
+        iProxyModel = createProxyModel();
     }
-    return iFilterModel;
+    return iProxyModel;
 }
 
-QAbstractProxyModel* FoilPicsGroupModel::ModelData::createFilterModel() const
+FoilPicsGroupModel::ProxyModel* FoilPicsGroupModel::ModelData::createProxyModel() const
 {
     // Using parent() here to avoid cast, because this is const
     ProxyModel* model = new ProxyModel(iPicsModel, iGroup.iId, parent());
-    connect(model, SIGNAL(destroyed(QObject*)), SLOT(onFilterModelDestroyed(QObject*)));
-    connect(model, SIGNAL(countChanged()), SIGNAL(filterModelCountChanged()));
+    connect(model, SIGNAL(destroyed(QObject*)), SLOT(onProxyModelDestroyed(QObject*)));
+    connect(model, SIGNAL(countChanged()), SIGNAL(proxyModelCountChanged()));
     HDEBUG(model->rowCount() << iGroup.iId.data());
     return model;
+}
+
+bool FoilPicsGroupModel::ModelData::isFirstGroup() const
+{
+    QAbstractProxyModel* model = proxyModel();
+    return model->rowCount() && !model->mapToSource(model->index(0, 0)).row();
+}
+
+bool FoilPicsGroupModel::ModelData::firstGroupMayHaveChanged() const
+{
+    return iLastKnownFirstGroup != isFirstGroup();
 }
 
 QVariant FoilPicsGroupModel::ModelData::get(Role aRole) const
@@ -310,8 +352,9 @@ QVariant FoilPicsGroupModel::ModelData::get(Role aRole) const
     switch (aRole) {
     case GroupIdRole: return QString::fromLatin1(iGroup.iId);
     case GroupNameRole: return iGroup.iName;
-    case GroupPicsModelRole: return QVariant::fromValue(filterModel());
-    case GroupPicsCountRole: return filterModel()->rowCount();
+    case GroupPicsModelRole: return QVariant::fromValue(proxyModel());
+    case GroupPicsCountRole: return proxyModel()->rowCount();
+    case FirstGroupRole: return (iLastKnownFirstGroup = isFirstGroup());
     case DefaultGroupRole: return iGroup.isDefault();
     // No default to make sure that we get "warning: enumeration value
     // not handled in switch" if we forget to handle a role.
@@ -319,10 +362,10 @@ QVariant FoilPicsGroupModel::ModelData::get(Role aRole) const
     return QVariant();
 }
 
-void FoilPicsGroupModel::ModelData::onFilterModelDestroyed(QObject* aModel)
+void FoilPicsGroupModel::ModelData::onProxyModelDestroyed(QObject* aModel)
 {
-    iFilterModel = NULL;
-    Q_EMIT filterModelDestroyed();
+    iProxyModel = NULL;
+    Q_EMIT proxyModelDestroyed();
 }
 
 // ==========================================================================
@@ -352,21 +395,28 @@ public:
     void setGroups(GroupList aGroups);
     bool equalGroups(GroupList aGroups);
     void dataChanged(int aRow, QVector<int> aRoles);
+    void dataChanged(int aRow, ModelData::Role aRole);
 
 public Q_SLOTS:
-    void onFilterModelDestroyed();
-    void onFilterModelCountChanged();
+    void onProxyModelDestroyed();
+    void onProxyModelCountChanged();
+    void onParentModelReset();
+    void onPicsModelReset();
 
 public:
     FoilPicsModel* iPicsModel;
     QList<ModelData*> iData;
     QHash<QByteArray,int> iMap;
+    int iLastKnownCount;
 };
 
 FoilPicsGroupModel::Private::Private(FoilPicsGroupModel* aParent,
-    FoilPicsModel* aPicsModel) : QObject(aParent), iPicsModel(aPicsModel)
+    FoilPicsModel* aPicsModel) : QObject(aParent), iPicsModel(aPicsModel),
+    iLastKnownCount(0)
 {
     appendDefaultGroup();
+    connect(aParent, SIGNAL(modelReset()), SLOT(onParentModelReset()));
+    connect(aPicsModel, SIGNAL(modelReset()), SLOT(onPicsModelReset()));
 }
 
 FoilPicsGroupModel::Private::~Private()
@@ -410,11 +460,11 @@ inline FoilPicsGroupModel::ModelData*
 FoilPicsGroupModel::Private::connectData(ModelData* aData) const
 {
     connect(aData,
-        SIGNAL(filterModelDestroyed()),
-        SLOT(onFilterModelDestroyed()));
+        SIGNAL(proxyModelDestroyed()),
+        SLOT(onProxyModelDestroyed()));
     connect(aData,
-        SIGNAL(filterModelCountChanged()),
-        SLOT(onFilterModelCountChanged()));
+        SIGNAL(proxyModelCountChanged()),
+        SLOT(onProxyModelCountChanged()));
     return aData;
 }
 
@@ -488,8 +538,7 @@ void FoilPicsGroupModel::Private::appendDefaultGroup()
 void FoilPicsGroupModel::Private::clear()
 {
     ModelData* defaultData = NULL;
-    const int n = iData.count();
-    for (int i = n - 1; i >= 0; i--) {
+    for (int i = iData.count() - 1; i >= 0; i--) {
         ModelData* data = iData.at(i);
         if (!defaultData && data->iGroup.isDefault()) {
             defaultData = data;
@@ -535,6 +584,13 @@ QByteArray FoilPicsGroupModel::Private::generateUniqueId() const
     return id;
 }
 
+void FoilPicsGroupModel::Private::dataChanged(int aRow, ModelData::Role aRole)
+{
+    QVector<int> roles;
+    roles.append(aRole);
+    dataChanged(aRow, roles);
+}
+
 void FoilPicsGroupModel::Private::dataChanged(int aRow, QVector<int> aRoles)
 {
     FoilPicsGroupModel* model = parentModel();
@@ -542,7 +598,7 @@ void FoilPicsGroupModel::Private::dataChanged(int aRow, QVector<int> aRoles)
     Q_EMIT model->dataChanged(modelIndex, modelIndex, aRoles);
 }
 
-void FoilPicsGroupModel::Private::onFilterModelDestroyed()
+void FoilPicsGroupModel::Private::onProxyModelDestroyed()
 {
     ModelData* data = qobject_cast<ModelData*>(sender());
     const int row = iData.indexOf(data);
@@ -555,15 +611,33 @@ void FoilPicsGroupModel::Private::onFilterModelDestroyed()
     }
 }
 
-void FoilPicsGroupModel::Private::onFilterModelCountChanged()
+void FoilPicsGroupModel::Private::onProxyModelCountChanged()
 {
     ModelData* data = qobject_cast<ModelData*>(sender());
     const int row = iData.indexOf(data);
-    HDEBUG(row << data->filterModel()->rowCount());
+    HDEBUG(row << data->proxyModel()->rowCount());
     if (row >= 0) {
-        QVector<int> roles;
-        roles.append(ModelData::GroupPicsCountRole);
-        dataChanged(row, roles);
+        dataChanged(row, ModelData::GroupPicsCountRole);
+    }
+}
+
+void FoilPicsGroupModel::Private::onParentModelReset()
+{
+    FoilPicsGroupModel* model = parentModel();
+    const int count = model->rowCount();
+    if (iLastKnownCount != count) {
+        iLastKnownCount = count;
+        Q_EMIT model->countChanged();
+    }
+}
+
+void FoilPicsGroupModel::Private::onPicsModelReset()
+{
+    for (int i = 0; i < iData.count(); i++) {
+        ModelData* data = iData.at(i);
+        if (data->firstGroupMayHaveChanged()) {
+            dataChanged(i, ModelData::FirstGroupRole);
+        }
     }
 }
 
@@ -578,7 +652,6 @@ FoilPicsGroupModel::FoilPicsGroupModel(FoilPicsModel* aParent) :
     qRegisterMetaType<GroupList>("FoilPicsGroupModel::GroupList");
     connect(this, SIGNAL(rowsInserted(QModelIndex,int,int)), SIGNAL(countChanged()));
     connect(this, SIGNAL(rowsRemoved(QModelIndex,int,int)), SIGNAL(countChanged()));
-    connect(this, SIGNAL(modelReset()), SIGNAL(countChanged()));
 }
 
 QHash<int,QByteArray> FoilPicsGroupModel::roleNames() const
@@ -588,6 +661,7 @@ QHash<int,QByteArray> FoilPicsGroupModel::roleNames() const
     roles.insert(ModelData::GroupNameRole, "groupName");
     roles.insert(ModelData::GroupPicsModelRole, "groupPicsModel");
     roles.insert(ModelData::GroupPicsCountRole, "groupPicsCount");
+    roles.insert(ModelData::FirstGroupRole, "firstGroup");
     roles.insert(ModelData::DefaultGroupRole, "defaultGroup");
     return roles;
 }
@@ -664,7 +738,7 @@ bool FoilPicsGroupModel::defaultGroupAt(int aIndex) const
 int FoilPicsGroupModel::groupPicsCountAt(int aIndex) const
 {
     ModelData* data = iPrivate->dataAt(aIndex);
-    return data ? data->filterModel()->rowCount() : 0;
+    return data ? data->proxyModel()->rowCount() : 0;
 }
 
 void FoilPicsGroupModel::clearGroupAt(int aIndex)
@@ -679,7 +753,7 @@ int FoilPicsGroupModel::offsetWithinGroup(int aIndex, int aSource) const
 {
     ModelData* data = iPrivate->dataAt(aIndex);
     if (data) {
-        QAbstractProxyModel* model = data->filterModel();
+        QAbstractProxyModel* model = data->proxyModel();
         const int n = model->rowCount();
         const int first = model->mapToSource(model->index(0, 0)).row();
         if (first >= 0 && aSource >= first && aSource < (first + n)) {
@@ -736,11 +810,20 @@ void FoilPicsGroupModel::moveGroup(int aFrom, int aTo)
         if (beginMoveRows(parent, aFrom, aFrom, parent, dest)) {
             iPrivate->iData.move(aFrom, aTo);
             // Update damaged map entries
+            const int i1 = qMin(aFrom, aTo);
             const int i2 = qMax(aFrom, aTo);
-            for (int i = qMin(aFrom, aTo); i <= i2; i++) {
+            for (int i = i1; i <= i2; i++) {
                 iPrivate->iMap.insert(iPrivate->iData.at(i)->iGroup.iId, i);
             }
             endMoveRows();
+
+            // "firstGroup" may have changed
+            QVector<int> roles;
+            roles.append(ModelData::FirstGroupRole);
+            for (int i = i1; i <= i2; i++) {
+                QModelIndex modelIndex(index(i));
+                Q_EMIT dataChanged(modelIndex, modelIndex, roles);
+            }
         } else {
             HDEBUG("oops, can't move" << aFrom << "->" << aTo);
         }

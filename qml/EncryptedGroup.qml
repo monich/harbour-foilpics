@@ -6,7 +6,7 @@ Item {
     id: group
     height: grid.y + grid.height
     readonly property real headerHeight: grid.y
-    readonly property bool headerVisible: (!isDefault || modelIndex > 0) && picsCount > 0
+    readonly property bool headerVisible: (!isDefault || !isFirstGroup) && picsCount > 0
 
     property var foilModel
     property var flickable
@@ -18,6 +18,7 @@ Item {
     property alias currentItem: grid.currentItem
     property int picsCount
     property bool isDefault
+    property bool isFirstGroup
     property int modelIndex
 
     property var selectionModel

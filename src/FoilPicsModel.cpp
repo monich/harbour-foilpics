@@ -2314,6 +2314,7 @@ void FoilPicsModel::Private::onCheckPicsTaskDone()
 void FoilPicsModel::Private::onGroupModelChanged()
 {
     if (!iIgnoreGroupModelChange) {
+        sortModel();
         saveInfo();
     }
 }
@@ -2758,9 +2759,13 @@ void FoilPicsModel::Private::setTitleAt(int aIndex, QString aTitle)
 void FoilPicsModel::Private::sortModel()
 {
     FoilPicsModel* model = parentModel();
-    model->beginResetModel();
-    qSort(iData.begin(), iData.end(), LessThan(this));
-    model->endResetModel();
+    ModelData::List data = iData;
+    qSort(data.begin(), data.end(), LessThan(this));
+    if (data != iData) {
+        model->beginResetModel();
+        iData = data;
+        model->endResetModel();
+    }
 }
 
 bool FoilPicsModel::Private::setGroupId(ModelData* aData, QByteArray aId)
