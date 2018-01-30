@@ -61,9 +61,9 @@
     <message id="foilpics-remorse-deleting_selected" numerus="yes">
         <source>Deleting %0 selected pictures</source>
         <extracomment>Generic remorse popup text</extracomment>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>Tar bort %0 markerad bild</numerusform>
+            <numerusform>Tar bort %0 markerade bilder</numerusform>
         </translation>
     </message>
     <message id="foilpics-file_size-bytes">
@@ -233,9 +233,9 @@ Om du har glömt ditt lösenord, bör du veta att det troligen är datortekniskt
     <message id="foilpics-gallery_view-remorse-encrypting_selected" numerus="yes">
         <source>Encrypting %0 selected pictures</source>
         <extracomment>Remorse popup text</extracomment>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>Krypterar %1 markerad bild</numerusform>
+            <numerusform>Krypterar %1 markerade bilder</numerusform>
         </translation>
     </message>
     <message id="foilpics-gallery_fullscreen_view-header">
@@ -286,9 +286,9 @@ Om du har glömt ditt lösenord, bör du veta att det troligen är datortekniskt
     <message id="foilpics-encrypted_pics_view-remorse-decrypting_selected" numerus="yes">
         <source>Decrypting %0 selected pictures</source>
         <extracomment>Remorse popup text</extracomment>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>Avkrypterar %1 markerad bild</numerusform>
+            <numerusform>Avrypterar %1 markerade bilder</numerusform>
         </translation>
     </message>
     <message id="foilpics-confirm_password_page-info_label">
