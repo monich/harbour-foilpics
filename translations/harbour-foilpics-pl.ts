@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="en">
+<TS version="2.1" language="pl">
 <context>
     <name></name>
     <message id="foilpics-app_name">
@@ -61,7 +61,8 @@
     <message id="foilpics-remorse-deleting_selected" numerus="yes">
         <source>Deleting %0 selected pictures</source>
         <extracomment>Generic remorse popup text</extracomment>
-        <translation>
+        <translation type="unfinished">
+            <numerusform>Usuwanie %0 wybranego zdjęcie</numerusform>
             <numerusform>Usuwanie %0 wybranego zdjęcia</numerusform>
             <numerusform>Usuwanie %0 wybranych zdjęć</numerusform>
         </translation>
@@ -144,8 +145,9 @@
     <message id="foilpics-generate_key_view-label-minimum_length" numerus="yes">
         <source>Type at least %0 character(s)</source>
         <extracomment>Password field label</extracomment>
-        <translation>
+        <translation type="unfinished">
             <numerusform>Wpisz minimum %0 znak</numerusform>
+            <numerusform>Wpisz minimum %0 znaki</numerusform>
             <numerusform>Wpisz minimum %0 znaków</numerusform>
         </translation>
     </message>
@@ -232,7 +234,8 @@
     <message id="foilpics-gallery_view-remorse-encrypting_selected" numerus="yes">
         <source>Encrypting %0 selected pictures</source>
         <extracomment>Remorse popup text</extracomment>
-        <translation>
+        <translation type="unfinished">
+            <numerusform>Szyfrowanie %0 zaznaczonego zdjęcie</numerusform>
             <numerusform>Szyfrowanie %0 zaznaczonego zdjęcia</numerusform>
             <numerusform>Szyfrowanie %0 zaznaczonych zdjęć</numerusform>
         </translation>
@@ -285,7 +288,8 @@
     <message id="foilpics-encrypted_pics_view-remorse-decrypting_selected" numerus="yes">
         <source>Decrypting %0 selected pictures</source>
         <extracomment>Remorse popup text</extracomment>
-        <translation>
+        <translation type="unfinished">
+            <numerusform>Odszyfrowywanie %0 zaznaczonego zdjęcie</numerusform>
             <numerusform>Odszyfrowywanie %0 zaznaczonego zdjęcia</numerusform>
             <numerusform>Odszyfrowywanie %0 zaznaczonych zdjęć</numerusform>
         </translation>
