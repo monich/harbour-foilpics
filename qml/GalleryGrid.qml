@@ -106,7 +106,7 @@ ImageGridView {
         onPressAndHold: {
             if (!selecting) {
                 grid.expandItem = delegate
-                grid.contextMenu.open(delegate)
+                grid.contextMenu.show(delegate)
             }
         }
 
@@ -120,7 +120,7 @@ ImageGridView {
 
     onSelectingChanged: {
         if (selecting) {
-            grid.contextMenu.close()
+            grid.contextMenu.hide()
         }
     }
 

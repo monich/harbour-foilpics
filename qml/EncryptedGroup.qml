@@ -97,7 +97,7 @@ Item {
             onPressAndHold: {
                 if (!selecting) {
                     grid.expandItem = delegate
-                    grid.contextMenu.open(delegate)
+                    grid.contextMenu.show(delegate)
                 }
             }
 
