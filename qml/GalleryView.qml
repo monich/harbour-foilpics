@@ -98,36 +98,6 @@ SilicaFlickable {
         }
     }
 
-    PushUpMenu {
-        visible: selecting
-        MenuItem {
-            //: Generic menu item
-            //% "Encrypt"
-            text: qsTrId("foilpics-menu-encrypt")
-            visible: selectedPicturesCount > 0 && foilModel.keyAvailable
-            onClicked: bulkActionRemorse.execute(
-                //: Remorse popup text
-                //% "Encrypting %0 selected pictures"
-                qsTrId("foilpics-gallery_view-remorse-encrypting_selected", selectedPicturesCount).arg(selectedPicturesCount),
-                function() {
-                    foilModel.encryptFiles(galleryModel, selectionModel.makeSelectionBusy())
-                })
-        }
-        MenuItem {
-            //: Generic menu item
-            //% "Delete"
-            text: qsTrId("foilpics-menu-delete")
-            enabled: selectedPicturesCount > 0
-            onClicked: bulkActionRemorse.execute(
-                //: Generic remorse popup text
-                //% "Deleting %0 selected pictures"
-                qsTrId("foilpics-remorse-deleting_selected", selectedPicturesCount).arg(selectedPicturesCount),
-                function() {
-                    FileUtil.deleteLocalFilesFromModel(galleryModel, galleryModel.keyRole, selectionModel.makeSelectionBusy())
-                })
-        }
-    }
-
     RemorsePopup {
         id: bulkActionRemorse
         function cancelNicely() {
@@ -148,10 +118,53 @@ SilicaFlickable {
         model: galleryModel
     }
 
-    SelectionPanel {
+    GallerySelectionPanel {
         id: selectionPanel
         active: selecting
+        canDelete: selectedPicturesCount > 0
+        canEncrypt: selectedPicturesCount > 0 && foilModel.keyAvailable
+        //: Generic menu item
+        //% "Delete"
+        onDeleteHint: showHint(qsTrId("foilpics-menu-delete"))
+        onDeleteSelected: bulkActionRemorse.execute(
+            //: Generic remorse popup text
+            //% "Deleting %0 selected pictures"
+            qsTrId("foilpics-remorse-deleting_selected", selectedPicturesCount).arg(selectedPicturesCount),
+            function() {
+                FileUtil.deleteLocalFilesFromModel(galleryModel, galleryModel.keyRole, selectionModel.makeSelectionBusy())
+            })
+        //: Generic menu item
+        //% "Encrypt"
+        onEncryptHint: showHint(qsTrId("foilpics-menu-encrypt"))
+        onEncryptSelected: bulkActionRemorse.execute(
+            //: Remorse popup text
+            //% "Encrypting %0 selected pictures"
+            qsTrId("foilpics-gallery_view-remorse-encrypting_selected", selectedPicturesCount).arg(selectedPicturesCount),
+            function() {
+                foilModel.encryptFiles(galleryModel, selectionModel.makeSelectionBusy())
+            })
+        //: Button that exits selection mode
+        //% "Done"
+        onDoneHint: showHint(qsTrId("foilpics-selection_panel-done_button"))
         onDone: selecting = false
+    }
+
+    function showHint(text) {
+        selectionHint.text = text
+        selectionHintTimer.restart()
+    }
+
+    InteractionHintLabel {
+        id: selectionHint
+        anchors.fill: grid
+        visible: opacity > 0
+        opacity: selectionHintTimer.running ? 1.0 : 0.0
+        Behavior on opacity { FadeAnimation { duration: 1000 } }
+    }
+
+    Timer {
+        id: selectionHintTimer
+        interval: 1000
     }
 
     ViewPlaceholder {

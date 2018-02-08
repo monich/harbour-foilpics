@@ -66,56 +66,6 @@ SilicaFlickable {
         }
     }
 
-    PushUpMenu {
-        visible: selecting
-        flickable: pulleyFlickable
-        MenuItem {
-            //: Generic menu item
-            //% "Group"
-            text: qsTrId("foilpics-menu-group")
-            enabled: selectedPicturesCount > 0
-            onClicked: {
-                var groupPage = pageStack.push(Qt.resolvedUrl("EditGroupPage.qml"), {
-                    groupModel: foilModel.groupModel
-                })
-                groupPage.groupSelected.connect(function(index) {
-                    if (selectionModel) {
-                        var rows = selectionModel.getSelectedRows()
-                        selectionModel.clearSelection()
-                        foilModel.setGroupIdForRows(rows, foilModel.groupModel.groupId(index))
-                    }
-                    pageStack.pop()
-                })
-            }
-        }
-        MenuItem {
-            //: Generic menu item
-            //% "Decrypt"
-            text: qsTrId("foilpics-menu-decrypt")
-            enabled: selectedPicturesCount > 0
-            onClicked: bulkActionRemorse.execute(
-                //: Remorse popup text
-                //% "Decrypting %0 selected pictures"
-                qsTrId("foilpics-encrypted_pics_view-remorse-decrypting_selected", selectedPicturesCount).arg(selectedPicturesCount),
-                function() {
-                    foilModel.decryptFiles(selectionModel.makeSelectionBusy())
-                })
-        }
-        MenuItem {
-            //: Generic menu item
-            //% "Delete"
-            text: qsTrId("foilpics-menu-delete")
-            enabled: selectedPicturesCount > 0
-            onClicked: bulkActionRemorse.execute(
-                //: Generic remorse popup text
-                //% "Deleting %0 selected pictures"
-                qsTrId("foilpics-remorse-deleting_selected", selectedPicturesCount).arg(selectedPicturesCount),
-                function() {
-                    foilModel.removeFiles(selectionModel.makeSelectionBusy())
-                })
-        }
-    }
-
     RemorsePopup {
         id: bulkActionRemorse
         function cancelNicely() {
@@ -190,10 +140,68 @@ SilicaFlickable {
         busy: foilModel.busy || progressTimer.running
     }
 
-    SelectionPanel {
+    EncryptedSelectionPanel {
         id: selectionPanel
         active: selecting
+        enableActions: selectedPicturesCount > 0
+        //: Generic menu item
+        //% "Delete"
+        onDeleteHint: showHint(qsTrId("foilpics-menu-delete"))
+        onDeleteSelected: bulkActionRemorse.execute(
+            //: Generic remorse popup text
+            //% "Deleting %0 selected pictures"
+            qsTrId("foilpics-remorse-deleting_selected", selectedPicturesCount).arg(selectedPicturesCount),
+            function() {
+                foilModel.removeFiles(selectionModel.makeSelectionBusy())
+            })
+        //: Generic menu item
+        //% "Group"
+        onGroupHint: showHint(qsTrId("foilpics-menu-group"))
+        onGroupSelected: {
+            var groupPage = pageStack.push(Qt.resolvedUrl("EditGroupPage.qml"), {
+                groupModel: foilModel.groupModel
+            })
+            groupPage.groupSelected.connect(function(index) {
+                if (selectionModel) {
+                    var rows = selectionModel.getSelectedRows()
+                    selectionModel.clearSelection()
+                    foilModel.setGroupIdForRows(rows, foilModel.groupModel.groupId(index))
+                }
+                pageStack.pop()
+            })
+        }
+        //: Generic menu item
+        //% "Decrypt"
+        onDecryptHint: showHint(qsTrId("foilpics-menu-decrypt"))
+        onDecryptSelected: bulkActionRemorse.execute(
+            //: Remorse popup text
+            //% "Decrypting %0 selected pictures"
+            qsTrId("foilpics-encrypted_pics_view-remorse-decrypting_selected", selectedPicturesCount).arg(selectedPicturesCount),
+            function() {
+                foilModel.decryptFiles(selectionModel.makeSelectionBusy())
+            })
+        //: Button that exits selection mode
+        //% "Done"
+        onDoneHint: showHint(qsTrId("foilpics-selection_panel-done_button"))
         onDone: selecting = false
+    }
+
+    function showHint(text) {
+        selectionHint.text = text
+        selectionHintTimer.restart()
+    }
+
+    InteractionHintLabel {
+        id: selectionHint
+        anchors.fill: list
+        visible: opacity > 0
+        opacity: selectionHintTimer.running ? 1.0 : 0.0
+        Behavior on opacity { FadeAnimation { duration: 1000 } }
+    }
+
+    Timer {
+        id: selectionHintTimer
+        interval: 1000
     }
 
     ViewPlaceholder {
