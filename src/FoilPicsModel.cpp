@@ -1810,10 +1810,11 @@ public:
     void setTitleAt(int aIndex, QString aTitle);
     bool setGroupId(ModelData* aData, QByteArray aId);
     void clearGroup(QByteArray aId);
-    void sortModel();
+    bool sortModel();
     void setGroupIdAt(int aIndex, QByteArray aId);
     void setGroupIdForRows(QList<int> aRows, QByteArray aId);
     void dataChanged(int aIndex, ModelData::Role aRole);
+    void dataChanged(QList<int> aRows, ModelData::Role aRole);
     void imageRequest(QString aPath, FoilPicsImageRequest aRequest);
     void headerUpdateDone(SetHeaderTask* aTask);
     int findPath(QString aPath);
@@ -2756,7 +2757,7 @@ void FoilPicsModel::Private::setTitleAt(int aIndex, QString aTitle)
     }
 }
 
-void FoilPicsModel::Private::sortModel()
+bool FoilPicsModel::Private::sortModel()
 {
     FoilPicsModel* model = parentModel();
     ModelData::List data = iData;
@@ -2765,6 +2766,10 @@ void FoilPicsModel::Private::sortModel()
         model->beginResetModel();
         iData = data;
         model->endResetModel();
+        return true;
+    } else {
+        // The order didn't change
+        return false;
     }
 }
 
@@ -2789,19 +2794,22 @@ bool FoilPicsModel::Private::setGroupId(ModelData* aData, QByteArray aId)
 void FoilPicsModel::Private::clearGroup(QByteArray aId)
 {
     if (!aId.isEmpty()) {
-        bool changed = false;
         const bool wasBusy = busy();
         const int n = iData.count();
+        QList<int> changedRows;
         for (int i = 0; i < n; i++) {
             ModelData* data = iData.at(i);
             if (data->iGroupId == aId) {
                 HDEBUG(i << QString::fromLatin1(aId));
                 setGroupId(data, QByteArray());
-                changed = true;
+                changedRows.append(i);
             }
         }
-        if (changed) {
-            sortModel();
+        if (!changedRows.isEmpty()) {
+            if (!sortModel()) {
+                // The order hasn't changed => the model wasn't reset
+                dataChanged(changedRows, ModelData::ImageIdRole);
+            }
             if (!wasBusy) {
                 // We know we are busy now
                 queueSignal(SignalBusyChanged);
@@ -2819,7 +2827,10 @@ void FoilPicsModel::Private::setGroupIdAt(int aIndex, QByteArray aId)
         const bool wasBusy = busy();
         if (setGroupId(data, aId)) {
             HDEBUG(aIndex << QString::fromLatin1(aId));
-            sortModel();
+            if (!sortModel()) {
+                // The order hasn't changed => the model wasn't reset
+                dataChanged(aIndex, ModelData::ImageIdRole);
+            }
             if (!wasBusy) {
                 // We know we are busy now
                 queueSignal(SignalBusyChanged);
@@ -2833,16 +2844,20 @@ void FoilPicsModel::Private::setGroupIdForRows(QList<int> aRows, QByteArray aId)
     if (!aRows.isEmpty()) {
         const bool wasBusy = busy();
         qSort(aRows);
-        int updated = 0;
+        QList<int> updatedRows;
         const int n = aRows.count();
         for (int i = 0; i < n; i++) {
-            ModelData* data = dataAt(aRows.at(i));
+            const int row = aRows.at(i);
+            ModelData* data = dataAt(row);
             if (setGroupId(data, aId)) {
-                updated++;
+                updatedRows.append(row);
             }
         }
-        if (updated > 0) {
-            sortModel();
+        if (!updatedRows.isEmpty()) {
+            if (!sortModel()) {
+                // The order hasn't changed => the model wasn't reset
+                dataChanged(updatedRows, ModelData::ImageIdRole);
+            }
             if (!wasBusy) {
                 // We know we are busy now
                 queueSignal(SignalBusyChanged);
@@ -2911,6 +2926,14 @@ void FoilPicsModel::Private::dataChanged(int aIndex, ModelData::Role aRole)
         FoilPicsModel* model = parentModel();
         QModelIndex modelIndex(model->index(aIndex));
         Q_EMIT model->dataChanged(modelIndex, modelIndex, roles);
+    }
+}
+
+void FoilPicsModel::Private::dataChanged(QList<int> aRows, ModelData::Role aRole)
+{
+    const int n = aRows.count();
+    for (int i = 0; i < n; i++) {
+        dataChanged(aRows.at(i), aRole);
     }
 }
 
