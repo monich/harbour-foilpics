@@ -406,10 +406,11 @@ void FoilPicsSelection::Private::onModelRowsRemoved(const QModelIndex& aParent,
     int aStart, int aEnd)
 {
     HDEBUG(aStart << aEnd);
+    HASSERT(aEnd < iKeyList.count());
 
     // Create the full list of removed keys
     QStringList removed;
-    for (int i = aEnd; i >= aStart; i--) {
+    for (int i = qMin(aEnd, iKeyList.count() - 1); i >= aStart; i--) {
         const QString key(iKeyList.takeAt(i));
         HDEBUG(key << i);
         if (!removed.contains(key)) {
