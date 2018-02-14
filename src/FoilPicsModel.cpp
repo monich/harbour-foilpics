@@ -2133,12 +2133,21 @@ int FoilPicsModel::Private::compare(const ModelData* aData1, const ModelData* aD
         // Different groups
         return iGroupModel->indexOfGroup(aData1->iGroupId) -
             iGroupModel->indexOfGroup(aData2->iGroupId);
-    } else {
-        // Most recent first (within the group)
-        const qint64 msec1 = aData1->iSortTime.toMSecsSinceEpoch();
-        const qint64 msec2 = aData2->iSortTime.toMSecsSinceEpoch();
-        return msec1 > msec2 ? -1 : msec1 < msec2 ? 1 : 0;
     }
+
+    // Most recent first (within the group)
+    const qint64 msec1 = aData1->iSortTime.toMSecsSinceEpoch();
+    const qint64 msec2 = aData2->iSortTime.toMSecsSinceEpoch();
+    if (msec1 > msec2) {
+        return -1;
+    } else if (msec1 < msec2) {
+        return 1;
+    }
+
+    // Finally compare the original file name. If those match too,
+    // then image ids must be different.
+    int res = aData1->iFileName.compare(aData2->iFileName);
+    return res ? res : aData1->iImageId.compare(aData2->iImageId);
 }
 
 int FoilPicsModel::Private::sortProc(const void* aPtr1, const void* aPtr2,
@@ -2763,6 +2772,7 @@ bool FoilPicsModel::Private::sortModel()
     ModelData::List data = iData;
     qSort(data.begin(), data.end(), LessThan(this));
     if (data != iData) {
+        HDEBUG("list has changed");
         model->beginResetModel();
         iData = data;
         model->endResetModel();
