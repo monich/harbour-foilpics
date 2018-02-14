@@ -179,7 +179,7 @@ Q_SIGNALS:
     void countChanged();
 
 public Q_SLOTS:
-    void onModelReset();
+    void checkCount();
 
 public:
     int iLastKnownCount;
@@ -193,9 +193,9 @@ FoilPicsGroupModel::ProxyModel::ProxyModel(FoilPicsModel* aPicsModel,
     setFilterFixedString(aId);
     setDynamicSortFilter(true);
     iLastKnownCount = rowCount();
-    connect(this, SIGNAL(rowsInserted(QModelIndex,int,int)), SIGNAL(countChanged()));
-    connect(this, SIGNAL(rowsRemoved(QModelIndex,int,int)), SIGNAL(countChanged()));
-    connect(this, SIGNAL(modelReset()), SLOT(onModelReset()));
+    connect(this, SIGNAL(rowsInserted(QModelIndex,int,int)), SLOT(checkCount()));
+    connect(this, SIGNAL(rowsRemoved(QModelIndex,int,int)), SLOT(checkCount()));
+    connect(this, SIGNAL(modelReset()), SLOT(checkCount()));
 }
 
 bool FoilPicsGroupModel::ProxyModel::filterAcceptsRow(int aSourceRow,
@@ -241,7 +241,7 @@ QVariantMap FoilPicsGroupModel::ProxyModel::get(int aIndex) const
     return sourcePicsModel()->get(mapToSource(aIndex));
 }
 
-void FoilPicsGroupModel::ProxyModel::onModelReset()
+void FoilPicsGroupModel::ProxyModel::checkCount()
 {
     const int count = rowCount();
     if (iLastKnownCount != count) {
@@ -401,7 +401,7 @@ public Q_SLOTS:
     void onProxyModelDestroyed();
     void onProxyModelCountChanged();
     void onParentModelReset();
-    void onPicsModelReset();
+    void updateFirstGroup();
 
 public:
     FoilPicsModel* iPicsModel;
@@ -415,8 +415,23 @@ FoilPicsGroupModel::Private::Private(FoilPicsGroupModel* aParent,
     iLastKnownCount(0)
 {
     appendDefaultGroup();
-    connect(aParent, SIGNAL(modelReset()), SLOT(onParentModelReset()));
-    connect(aPicsModel, SIGNAL(modelReset()), SLOT(onPicsModelReset()));
+    connect(aParent,
+        SIGNAL(modelReset()),
+        SLOT(onParentModelReset()));
+    // Queue these signals to make sure that update the firstGroup
+    // attribute after all the model counts have been updated:
+    connect(aPicsModel,
+        SIGNAL(rowsMoved(QModelIndex,int,int,QModelIndex,int)),
+        SLOT(updateFirstGroup()), Qt::QueuedConnection);
+    connect(aPicsModel,
+        SIGNAL(rowsInserted(QModelIndex,int,int)),
+        SLOT(updateFirstGroup()), Qt::QueuedConnection);
+    connect(aPicsModel,
+        SIGNAL(rowsRemoved(QModelIndex,int,int)),
+        SLOT(updateFirstGroup()), Qt::QueuedConnection);
+    connect(aPicsModel,
+        SIGNAL(modelReset()),
+        SLOT(updateFirstGroup()), Qt::QueuedConnection);
 }
 
 FoilPicsGroupModel::Private::~Private()
@@ -618,6 +633,9 @@ void FoilPicsGroupModel::Private::onProxyModelCountChanged()
     HDEBUG(row << data->proxyModel()->rowCount());
     if (row >= 0) {
         dataChanged(row, ModelData::GroupPicsCountRole);
+        if (data->firstGroupMayHaveChanged()) {
+            dataChanged(row, ModelData::FirstGroupRole);
+        }
     }
 }
 
@@ -631,11 +649,12 @@ void FoilPicsGroupModel::Private::onParentModelReset()
     }
 }
 
-void FoilPicsGroupModel::Private::onPicsModelReset()
+void FoilPicsGroupModel::Private::updateFirstGroup()
 {
     for (int i = 0; i < iData.count(); i++) {
         ModelData* data = iData.at(i);
         if (data->firstGroupMayHaveChanged()) {
+            HDEBUG(i << data->isFirstGroup());
             dataChanged(i, ModelData::FirstGroupRole);
         }
     }
