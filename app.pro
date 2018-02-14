@@ -19,7 +19,7 @@ app_settings {
     # This path is hardcoded in jolla-settings
     TRANSLATIONS_PATH = /usr/share/translations
 } else {
-    TRANSLATIONS_PATH = /usr/share/$${PREFIX}-$${NAME}/translations
+    TRANSLATIONS_PATH = /usr/share/$${TARGET}/translations
 }
 
 CONFIG(debug, debug|release) {
