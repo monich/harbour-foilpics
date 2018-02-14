@@ -1,6 +1,6 @@
 Name:           harbour-foilpics
 Summary:        Encrypted pictures
-Version:        1.0.3
+Version:        1.0.4
 Release:        1
 License:        BSD
 Group:          Applications/File
@@ -30,6 +30,7 @@ Picture encryption application.
 %setup -q -n %{name}-%{version}
 
 %build
+find  -type f  -exec touch {} + # Workaround for Mer OBS being slightly broken
 %qtc_qmake5 %{name}.pro
 %qtc_make %{?_smp_mflags}
 
