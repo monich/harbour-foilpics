@@ -6,4 +6,4 @@ app.depends = harbour-lib-target
 
 harbour-lib.target = harbour-lib-target
 
-OTHER_FILES += README.md rpm/*.spec
+OTHER_FILES += README.md LICENSE rpm/*.spec
