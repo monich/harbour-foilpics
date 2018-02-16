@@ -63,7 +63,6 @@
         <extracomment>Generic remorse popup text</extracomment>
         <translation>
             <numerusform>%0 kijelölt kép törlése</numerusform>
-            <numerusform>%0 kijelölt kép törlése</numerusform>
         </translation>
     </message>
     <message id="foilpics-file_size-bytes">
@@ -145,7 +144,6 @@
         <source>Type at least %0 character(s)</source>
         <extracomment>Password field label</extracomment>
         <translation>
-            <numerusform>Írj be legalább %0 karaktert</numerusform>
             <numerusform>Írj be legalább %0 karaktert</numerusform>
         </translation>
     </message>
@@ -234,7 +232,6 @@
         <extracomment>Remorse popup text</extracomment>
         <translation>
             <numerusform>%0 kijelölt kép titkosítása</numerusform>
-            <numerusform>%0 kijelölt kép titkosítása</numerusform>
         </translation>
     </message>
     <message id="foilpics-gallery_fullscreen_view-header">
@@ -286,7 +283,6 @@
         <source>Decrypting %0 selected pictures</source>
         <extracomment>Remorse popup text</extracomment>
         <translation>
-            <numerusform>%0 kijelölt kép visszafejtése</numerusform>
             <numerusform>%0 kijelölt kép visszafejtése</numerusform>
         </translation>
     </message>
