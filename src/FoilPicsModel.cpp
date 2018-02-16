@@ -2262,7 +2262,8 @@ void FoilPicsModel::Private::removeFiles(QList<int> aRows)
     if (n > 0) {
         int removed = 0;
         const bool wasBusy = busy();
-        for (int i = 0; i < n; i++) {
+        qSort(aRows);
+        for (int i = n - 1; i >= 0; i--) {
             if (destroyItemAndRemoveFilesAt(aRows.at(i))) {
                 removed++;
             }
