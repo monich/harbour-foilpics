@@ -56,12 +56,16 @@ FoilPicsImageProvider::FoilPicsImageProvider(QObject* aObject, QQmlEngine* aEngi
 {
     QOpenGLContext ctx;
     if (ctx.create()) {
+        GLint maxSize = 0;
         QOffscreenSurface surface;
         surface.setFormat( ctx.format() );
         surface.create();
         ctx.makeCurrent(&surface);
         glEnable(GL_TEXTURE_2D);
-        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &iMaxSize);
+        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxSize);
+        if (maxSize > 0) {
+            iMaxSize = maxSize;
+        }
     }
     HDEBUG(iPrefix << iMaxSize);
     HASSERT(iEngine);
