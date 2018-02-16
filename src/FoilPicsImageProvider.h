@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2017 Jolla Ltd.
- * Copyright (C) 2017 Slava Monich <slava@monich.com>
+ * Copyright (C) 2017-2018 Jolla Ltd.
+ * Copyright (C) 2017-2018 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -35,7 +35,6 @@
 #define FOILPICS_IMAGE_PROVIDER_H
 
 #include <QMutex>
-#include <QImage>
 #include <QQuickImageProvider>
 
 class QQmlEngine;
@@ -58,6 +57,7 @@ public:
         const QSize& aRequestedSize);
 
 private:
+    int iMaxSize;
     QString iId;
     QString iPrefix;
     QObject* iObject;

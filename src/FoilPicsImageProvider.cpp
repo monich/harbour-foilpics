@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2017 Jolla Ltd.
- * Copyright (C) 2017 Slava Monich <slava@monich.com>
+ * Copyright (C) 2017-2018 Jolla Ltd.
+ * Copyright (C) 2017-2018 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -39,18 +39,31 @@
 #include <QQmlEngine>
 #include <QWaitCondition>
 
+#include <QtGui/QOpenGLContext>
+#include <QtGui/QOffscreenSurface>
+
 // ==========================================================================
 // FoilPicsImageProvider
 // ==========================================================================
 
 FoilPicsImageProvider::FoilPicsImageProvider(QObject* aObject, QQmlEngine* aEngine) :
     QQuickImageProvider(Image, ForceAsynchronousImageLoading),
+    iMaxSize(3264),
     iId(QString().sprintf("foilpicsimage-%p", this)),
     iPrefix("image://" + iId + "/"),
     iObject(aObject),
     iEngine(aEngine)
 {
-    HDEBUG(iPrefix);
+    QOpenGLContext ctx;
+    if (ctx.create()) {
+        QOffscreenSurface surface;
+        surface.setFormat( ctx.format() );
+        surface.create();
+        ctx.makeCurrent(&surface);
+        glEnable(GL_TEXTURE_2D);
+        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &iMaxSize);
+    }
+    HDEBUG(iPrefix << iMaxSize);
     HASSERT(iEngine);
     qRegisterMetaType<FoilPicsImageRequest>("FoilPicsImageRequest");
     if (iEngine) {
@@ -112,6 +125,17 @@ QImage FoilPicsImageProvider::requestImage(const QString& aId, QSize* aSize,
             Q_ARG(FoilPicsImageRequest, req))) {
             HDEBUG("Waiting for" << aId << "=>" << qPrintable(path));
             image = req.wait();
+        }
+        const int width = image.width();
+        const int height = image.height();
+        if (width > height) {
+            if (width > iMaxSize) {
+                HDEBUG(aId << image.size() << "(scaling)");
+                image = image.scaledToWidth(iMaxSize, Qt::SmoothTransformation);
+            }
+        } else if (height > iMaxSize) {
+            HDEBUG(aId << image.size() << "(scaling)");
+            image = image.scaledToHeight(iMaxSize, Qt::SmoothTransformation);
         }
         if (aSize) {
             *aSize = image.size();
