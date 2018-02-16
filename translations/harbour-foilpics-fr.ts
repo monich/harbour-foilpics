@@ -26,7 +26,7 @@
     <message id="foilpics-menu-group">
         <source>Group</source>
         <extracomment>Generic menu item</extracomment>
-        <translation type="unfinished">Groupe</translation>
+        <translation>Groupe</translation>
     </message>
     <message id="foilpics-menu-delete">
         <source>Delete</source>
@@ -46,24 +46,24 @@
     <message id="foilpics-pulley_menu-select_photos">
         <source>Select photos</source>
         <extracomment>Pulley menu item</extracomment>
-        <translation type="unfinished">Sélectionnez des photos</translation>
+        <translation>Sélectionner des photos</translation>
     </message>
     <message id="foilpics-pulley_menu-select_all">
         <source>Select all</source>
         <extracomment>Pulley menu item</extracomment>
-        <translation type="unfinished">Tout sélectionner</translation>
+        <translation>Tout sélectionner</translation>
     </message>
     <message id="foilpics-pulley_menu-select_none">
         <source>Select none</source>
         <extracomment>Pulley menu item</extracomment>
-        <translation type="unfinished">Tout désélectionner</translation>
+        <translation>Tout désélectionner</translation>
     </message>
     <message id="foilpics-remorse-deleting_selected" numerus="yes">
         <source>Deleting %0 selected pictures</source>
         <extracomment>Generic remorse popup text</extracomment>
         <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+            <numerusform>Supression de l’image sélectionnée</numerusform>
+            <numerusform>Supression des %0 images sélectionnées</numerusform>
         </translation>
     </message>
     <message id="foilpics-file_size-bytes">
@@ -222,7 +222,7 @@
     <message id="foilpics-gallery_grid-selection_title">
         <source>Select photos</source>
         <extracomment>Gallery grid title in selection mode</extracomment>
-        <translation type="unfinished">Sélectionnez des photos</translation>
+        <translation>Sélectionner des photos</translation>
     </message>
     <message id="foilpics-gallery_view-placeholder-no_pictures">
         <source>The photo gallery seems to be empty</source>
@@ -233,8 +233,8 @@
         <source>Encrypting %0 selected pictures</source>
         <extracomment>Remorse popup text</extracomment>
         <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+            <numerusform>Chiffrement de l’image sélecionnée</numerusform>
+            <numerusform>Chiffrement des %0 images sélecionnées</numerusform>
         </translation>
     </message>
     <message id="foilpics-gallery_fullscreen_view-header">
@@ -250,7 +250,7 @@
     <message id="foilpics-encrypted_grid-selection_title">
         <source>Select photos</source>
         <extracomment>Encrypted grid title in selection mode</extracomment>
-        <translation type="unfinished">Sélectionnez des photos</translation>
+        <translation>Sélectionner des photos</translation>
     </message>
     <message id="foilpics-thumbnail_image-loading_failed">
         <source>Oops, can&apos;t display the thumbnail!</source>
@@ -286,8 +286,8 @@
         <source>Decrypting %0 selected pictures</source>
         <extracomment>Remorse popup text</extracomment>
         <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+            <numerusform>Déchiffrement de l’image sélectionnée</numerusform>
+            <numerusform>Déchiffrement des %0 images sélectionnées</numerusform>
         </translation>
     </message>
     <message id="foilpics-confirm_password_page-info_label">
@@ -298,7 +298,7 @@
     <message id="foilpics-confirm_password_page-description">
         <source>Make sure you don&apos;t forget your password. It&apos;s impossible to either recover it or to access the encrypted pictures without knowing it. Better take it seriously.</source>
         <extracomment>Password confirmation description</extracomment>
-        <translation>Faites en sorte de ne pas oublier votre mot de passe. C&apos;est impossible de le récupérer ou d&apos;accèder au contenu chiffré sans le connaître. Prenez ceci au sérieux</translation>
+        <translation>Faites en sorte de ne pas oublier votre mot de passe. Il est impossible de le récupérer ou d&apos;accèder au contenu chiffré sans le connaître. Prenez ceci au sérieux</translation>
     </message>
     <message id="foilpics-confirm_password_page-text_field_placeholder-new_password">
         <source>New password again</source>
@@ -433,7 +433,7 @@
     <message id="foilpics-selection_panel-done_button">
         <source>Done</source>
         <extracomment>Button that exits selection mode</extracomment>
-        <translation type="unfinished">Terminé</translation>
+        <translation>Terminé</translation>
     </message>
 </context>
 </TS>
