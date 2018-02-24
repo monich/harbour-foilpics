@@ -1785,6 +1785,8 @@ public:
     static size_t maxBytesToDecrypt();
     void queueSignal(Signal aSignal);
     void emitQueuedSignals();
+    void connectGroupModel();
+    bool disconnectGroupModel();
     bool checkPassword(QString aPassword);
     bool changePassword(QString aOldPassword, QString aNewPassword);
     void setKeys(FoilPrivateKey* aPrivate, FoilKey* aPublic = NULL);
@@ -1845,7 +1847,7 @@ public:
     QList<EncryptTask*> iEncryptTasks;
     QList<ImageRequestTask*> iImageRequestTasks;
     FoilPicsGroupModel* iGroupModel;
-    bool iIgnoreGroupModelChange;
+    bool iGroupModelConnected;
 };
 
 FoilPicsModel::Private::Private(FoilPicsModel* aParent) :
@@ -1869,7 +1871,7 @@ FoilPicsModel::Private::Private(FoilPicsModel* aParent) :
     iGenerateKeyTask(NULL),
     iDecryptPicsTask(NULL),
     iGroupModel(new FoilPicsGroupModel(aParent)),
-    iIgnoreGroupModelChange(false)
+    iGroupModelConnected(false)
 {
     // Serialize the tasks:
     iThreadPool->setMaxThreadCount(1);
@@ -1918,16 +1920,7 @@ FoilPicsModel::Private::Private(FoilPicsModel* aParent) :
     iCheckPicsTask->submit(this, SLOT(onCheckPicsTaskDone()));
 
     // Save the info whenever group model changes
-    connect(iGroupModel, SIGNAL(modelReset()),
-        SLOT(onGroupModelChanged()));
-    connect(iGroupModel, SIGNAL(rowsInserted(QModelIndex,int,int)),
-        SLOT(onGroupModelChanged()));
-    connect(iGroupModel, SIGNAL(rowsRemoved(QModelIndex,int,int)),
-        SLOT(onGroupModelChanged()));
-    connect(iGroupModel, SIGNAL(rowsMoved(QModelIndex,int,int,QModelIndex,int)),
-        SLOT(onGroupModelChanged()));
-    connect(iGroupModel, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)),
-        SLOT(onGroupModelChanged()));
+    connectGroupModel();
 }
 
 FoilPicsModel::Private::~Private()
@@ -2017,6 +2010,36 @@ void FoilPicsModel::Private::emitQueuedSignals()
                 iQueuedSignals &= ~signalBit;
                 Q_EMIT (model->*(emitSignal[i]))();
             }
+        }
+    }
+}
+
+bool FoilPicsModel::Private::disconnectGroupModel()
+{
+    if (iGroupModelConnected) {
+        iGroupModelConnected = false;
+        iGroupModel->disconnect(this);
+        return true;
+    } else {
+        return false;
+    }
+}
+
+void FoilPicsModel::Private::connectGroupModel()
+{
+    if (!iGroupModelConnected) {
+        static const char* modelSignals[] = {
+            SIGNAL(modelReset()),
+            SIGNAL(rowsInserted(QModelIndex,int,int)),
+            SIGNAL(rowsRemoved(QModelIndex,int,int)),
+            SIGNAL(rowsMoved(QModelIndex,int,int,QModelIndex,int)),
+            SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>))
+        };
+
+        // Save the info whenever group model changes
+        iGroupModelConnected = true;
+        for (unsigned int i = 0; i < G_N_ELEMENTS(modelSignals); i++) {
+            connect(iGroupModel, modelSignals[i], SLOT(onGroupModelChanged()));
         }
     }
 }
@@ -2279,10 +2302,9 @@ void FoilPicsModel::Private::removeFiles(QList<int> aRows)
 
 void FoilPicsModel::Private::clearGroupModel()
 {
-    const bool prevIgnoreGroupModelChange = iIgnoreGroupModelChange;
-    iIgnoreGroupModelChange = true;
+    const bool wasConnected = disconnectGroupModel();
     iGroupModel->clear();
-    iIgnoreGroupModelChange = prevIgnoreGroupModelChange;
+    if (wasConnected) connectGroupModel();
 }
 
 void FoilPicsModel::Private::clearModel()
@@ -2324,10 +2346,9 @@ void FoilPicsModel::Private::onCheckPicsTaskDone()
 
 void FoilPicsModel::Private::onGroupModelChanged()
 {
-    if (!iIgnoreGroupModelChange) {
-        sortModel();
-        saveInfo();
-    }
+    // Save the info whenever group model changes
+    sortModel();
+    saveInfo();
 }
 
 void FoilPicsModel::Private::saveInfo()
@@ -2622,7 +2643,9 @@ void FoilPicsModel::Private::decryptTaskDone(DecryptTask* aTask, bool aLast)
         data->iDecryptTask = NULL;
         task->iData = NULL;
         task->release(this);
+        const bool wasConnected = disconnectGroupModel();
         destroyItemAt(iData.indexOf(data));
+        if (wasConnected) connectGroupModel();
         if (aLast) {
             saveInfo();
         }
@@ -2706,9 +2729,9 @@ void FoilPicsModel::Private::onDecryptAllProgress()
 void FoilPicsModel::Private::onGroupsDecrypted(FoilPicsGroupModel::GroupList aGroups)
 {
     HDEBUG(aGroups.count() << "group(s)");
-    iIgnoreGroupModelChange = true;
+    const bool wasConnected = disconnectGroupModel();
     iGroupModel->setGroups(aGroups);
-    iIgnoreGroupModelChange = false;
+    if (wasConnected) connectGroupModel();
 }
 
 void FoilPicsModel::Private::onDecryptPicsProgress(DecryptPicsTask::Progress::Ptr aProgress)
