@@ -79,7 +79,6 @@ HEADERS += \
     src/FoilPicsRole.h \
     src/FoilPicsSelection.h \
     src/FoilPicsSelectionState.h \
-    src/FoilPicsTask.h \
     src/FoilPicsThumbnailerPlugin.h \
     src/FoilPicsThumbnailProvider.h
 
@@ -96,7 +95,6 @@ SOURCES += \
     src/FoilPicsRole.cpp \
     src/FoilPicsSelection.cpp \
     src/FoilPicsSelectionState.cpp \
-    src/FoilPicsTask.cpp \
     src/FoilPicsThumbnailerPlugin.cpp \
     src/FoilPicsThumbnailProvider.cpp \
     src/main.cpp

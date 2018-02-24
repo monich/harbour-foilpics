@@ -36,7 +36,6 @@
 #include "FoilPicsImageProvider.h"
 #include "FoilPicsGroupModel.h"
 #include "FoilPicsRole.h"
-#include "FoilPicsTask.h"
 #include "FoilPicsThumbnailProvider.h"
 
 #include "foil_private_key.h"
@@ -47,6 +46,7 @@
 #include "foilmsg.h"
 
 #include "HarbourDebug.h"
+#include "HarbourTask.h"
 
 #include <errno.h>
 #include <unistd.h>
@@ -190,9 +190,9 @@ public:
     double* iLatitude;
     double* iLongitude;
     double* iAltitude;
-    FoilPicsTask* iDecryptTask;
-    FoilPicsTask* iSetTitleTask;
-    FoilPicsTask* iSetGroupTask;
+    HarbourTask* iDecryptTask;
+    HarbourTask* iSetTitleTask;
+    HarbourTask* iSetGroupTask;
     QVariantMap iVariant;
 };
 
@@ -608,7 +608,7 @@ void FoilPicsModel::ModelInfo::save(QString aDir, FoilPrivateKey* aPrivate,
 // FoilPicsModel::BaseTask
 // ==========================================================================
 
-class FoilPicsModel::BaseTask : public FoilPicsTask {
+class FoilPicsModel::BaseTask : public HarbourTask {
     Q_OBJECT
 
 public:
@@ -634,7 +634,7 @@ public:
 
 FoilPicsModel::BaseTask::BaseTask(QThreadPool* aPool,
     FoilPrivateKey* aPrivateKey, FoilKey* aPublicKey) :
-    FoilPicsTask(aPool),
+    HarbourTask(aPool),
     iPrivateKey(foil_private_key_ref(aPrivateKey)),
     iPublicKey(foil_key_ref(aPublicKey))
 {
@@ -1156,7 +1156,7 @@ void FoilPicsModel::SaveInfoTask::performTask()
 // ==========================================================================
 // FoilPicsModel::CheckPicsTask
 // ==========================================================================
-class FoilPicsModel::CheckPicsTask : public FoilPicsTask {
+class FoilPicsModel::CheckPicsTask : public HarbourTask {
     Q_OBJECT
 public:
     CheckPicsTask(QThreadPool* aPool, QString aDir);
@@ -1169,7 +1169,7 @@ public:
 };
 
 FoilPicsModel::CheckPicsTask::CheckPicsTask(QThreadPool* aPool, QString aDir) :
-    FoilPicsTask(aPool), iDir(aDir), iMayHaveEncryptedPictures(false)
+    HarbourTask(aPool), iDir(aDir), iMayHaveEncryptedPictures(false)
 {
 }
 
