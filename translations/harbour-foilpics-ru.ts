@@ -58,6 +58,16 @@
         <extracomment>Pulley menu item</extracomment>
         <translation>Сбросить отметки</translation>
     </message>
+    <message id="foilpics-password_field-placeholder">
+        <source>Password</source>
+        <extracomment>Default placeholder for password field</extracomment>
+        <translation>Пароль</translation>
+    </message>
+    <message id="foilpics-password_field-label">
+        <source>Password</source>
+        <extracomment>Default label for password field</extracomment>
+        <translation>Пароль</translation>
+    </message>
     <message id="foilpics-remorse-deleting_selected" numerus="yes">
         <source>Deleting %0 selected pictures</source>
         <extracomment>Generic remorse popup text</extracomment>

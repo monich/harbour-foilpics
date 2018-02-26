@@ -51,7 +51,7 @@ class FoilPicsModel : public QAbstractListModel {
     Q_PROPERTY(FoilState foilState READ foilState NOTIFY foilStateChanged)
     Q_PROPERTY(QSize thumbnailSize READ thumbnailSize WRITE setThumbnailSize NOTIFY thumbnailSizeChanged)
     Q_PROPERTY(bool mayHaveEncryptedPictures READ mayHaveEncryptedPictures NOTIFY mayHaveEncryptedPicturesChanged)
-    Q_PROPERTY(QAbstractItemModel* groupModel READ groupModel CONSTANT)
+    Q_PROPERTY(QObject* groupModel READ groupModel CONSTANT)
 
     class Private;
     class ModelData;

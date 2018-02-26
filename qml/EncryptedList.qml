@@ -142,7 +142,6 @@ SilicaListView {
             cancelText: qsTrId("foilpics-encrypted_grid-remorse-cancel_decrypt")
             wrapMode: Text.Wrap
             horizontalAlignment: Text.AlignHCenter
-            font.pixelSize: Theme.fontSizeSmallBase
         }
     }
 

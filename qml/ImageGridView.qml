@@ -88,7 +88,6 @@ SilicaGridView {
             cancelText: qsTrId("foilpics-image_grid_view-remorse-cancel_deletion")
             wrapMode: Text.Wrap
             horizontalAlignment: Text.AlignHCenter
-            font.pixelSize: Theme.fontSizeSmallBase
         }
     }
 }

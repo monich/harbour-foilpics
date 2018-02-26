@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2017 Jolla Ltd.
- * Copyright (C) 2017 Slava Monich <slava@monich.com>
+ * Copyright (C) 2017-2018 Jolla Ltd.
+ * Copyright (C) 2017-2018 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -39,7 +39,7 @@
 
 class FoilPicsModelWatch : public QObject {
     Q_OBJECT
-    Q_PROPERTY(QAbstractItemModel* model READ model WRITE setModel NOTIFY modelChanged)
+    Q_PROPERTY(QObject* model READ model WRITE setModel NOTIFY modelChanged)
     Q_PROPERTY(QString keyRole READ keyRole WRITE setKeyRole NOTIFY keyRoleChanged)
     Q_PROPERTY(QString keyValue READ keyValue WRITE setKeyValue NOTIFY keyValueChanged)
     Q_PROPERTY(QString role READ watchRole WRITE setWatchRole NOTIFY watchRoleChanged)
@@ -50,7 +50,7 @@ public:
     explicit FoilPicsModelWatch(QObject* aParent = NULL);
 
     QAbstractItemModel* model() const;
-    void setModel(QAbstractItemModel* aModel);
+    void setModel(QObject* aModel);
 
     QString keyRole() const;
     void setKeyRole(QString aRole);

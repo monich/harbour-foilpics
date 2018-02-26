@@ -312,9 +312,9 @@ QAbstractItemModel* FoilPicsModelWatch::model() const
     return iPrivate->iModel;
 }
 
-void FoilPicsModelWatch::setModel(QAbstractItemModel* aModel)
+void FoilPicsModelWatch::setModel(QObject* aModel)
 {
-    iPrivate->setModel(aModel);
+    iPrivate->setModel(qobject_cast<QAbstractItemModel*>(aModel));
 }
 
 QString FoilPicsModelWatch::keyRole() const

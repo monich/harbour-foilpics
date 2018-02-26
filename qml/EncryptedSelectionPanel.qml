@@ -46,7 +46,7 @@ Item {
             topMargin: Theme.paddingMedium
         }
         enabled: enableActions
-        iconSource: "image://theme/icon-m-file-folder"
+        iconSource: "image://theme/icon-m-folder"
         onClicked: panel.groupSelected()
         onPressAndHold: panel.groupHint()
     }

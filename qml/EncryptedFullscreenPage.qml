@@ -88,7 +88,7 @@ Page {
                 width: parent.width
                 PageHeader {
                     id: portraitHeader
-                    title: imageList.itemTitle
+                    title: currentImageItem ? currentImageItem.title : ""
                     rightMargin: Theme.horizontalPageMargin
                     description: currentImageItem ? currentImageItem.imageWidth + "×" + currentImageItem.imageHeight : ""
                     visible: page.isPortrait

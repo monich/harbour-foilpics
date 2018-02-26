@@ -25,7 +25,7 @@ SlideshowView {
         id: delegate
         readonly property alias itemScaled: imageViewer.scaled
         readonly property bool itemTouchingVerticalEdge: imageViewer.atXBeginning || imageViewer.atXEnd
-        readonly property string itemTitle: title
+        readonly property string itemTitle: model.title
 
         width: view.width
         height: view.height
