@@ -46,7 +46,7 @@ Item {
             topMargin: Theme.paddingMedium
         }
         enabled: enableActions
-        iconSource: "image://theme/icon-m-folder"
+        iconSource: "image://harbour/" + Qt.resolvedUrl("images/folder.svg")
         onClicked: panel.groupSelected()
         onPressAndHold: panel.groupHint()
     }

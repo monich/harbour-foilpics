@@ -36,7 +36,7 @@ MouseArea {
                 return ""
             }
         }
-        sourceSize.width: Theme.itemSizeSmall
+        sourceSize: Qt.size(Theme.itemSizeSmall, Theme.itemSizeSmall)
         source: highlighted ? highlightSource : imageSource
         opacity: parent.enabled ? 1.0 : 0.4
         anchors {

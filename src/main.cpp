@@ -44,6 +44,7 @@
 
 #include "HarbourDebug.h"
 #include "HarbourLib.h"
+#include "HarbourImageProvider.h"
 #include "HarbourTransferMethodsModel.h"
 
 #include <sailfishapp.h>
@@ -106,12 +107,16 @@ int main(int argc, char *argv[])
     // Create ans show the view
     QQuickView* view = SailfishApp::createView();
     QQmlContext* context = view->rootContext();
+    QQmlEngine* engine = context->engine();
 
     // Re-register some types
     FoilPicsGalleryPlugin::registerTypes(context->engine(),
         FOILPICS_GALLERY_QML_IMPORT, 1, 0);
     FoilPicsThumbnailerPlugin::registerTypes(context->engine(),
         FOILPICS_THUMBNAILER_QML_IMPORT, 1, 0);
+
+    // Register our image provider
+    engine->addImageProvider("harbour", new HarbourImageProvider);
 
     // Initialize the view and the global properties
     view->setTitle(qtTrId("foilpics-app_name"));
