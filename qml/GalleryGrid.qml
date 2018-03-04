@@ -106,7 +106,7 @@ ImageGridView {
         onPressAndHold: {
             if (!selecting) {
                 grid.expandItem = delegate
-                grid.contextMenu.show(delegate)
+                contextMenuItem.openMenu(delegate)
             }
         }
 
@@ -120,13 +120,31 @@ ImageGridView {
 
     onSelectingChanged: {
         if (selecting) {
-            grid.contextMenu.hide()
+            contextMenuItem.closeMenu()
         }
     }
 
     ContextMenu {
         id: contextMenuItem
         x: parent !== null ? -parent.x : 0.0
+
+        function openMenu(item) {
+            // ContextMenu::show is deprecated in Sailfish Silica package 0.25.6 (Dec 2017)
+            if ("open" in contextMenuItem) {
+                open(item)
+            } else {
+                show(item)
+            }
+        }
+
+        function closeMenu() {
+            // ContextMenu::hide is deprecated in Sailfish Silica package 0.25.6 (Dec 2017)
+            if ("close" in contextMenuItem) {
+                close()
+            } else {
+                hide()
+            }
+        }
 
         MenuItem {
             //: Generic menu item

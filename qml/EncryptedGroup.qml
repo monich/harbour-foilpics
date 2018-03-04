@@ -97,7 +97,7 @@ Item {
             onPressAndHold: {
                 if (!selecting) {
                     grid.expandItem = delegate
-                    grid.contextMenu.show(delegate)
+                    contextMenuItem.openMenu(delegate)
                 }
             }
 
@@ -112,6 +112,15 @@ Item {
         ContextMenu {
             id: contextMenuItem
             x: parent !== null ? -parent.x : 0.0
+
+            function openMenu(item) {
+                // ContextMenu::show is deprecated in Sailfish Silica package 0.25.6 (Dec 2017)
+                if ("open" in contextMenuItem) {
+                    open(item)
+                } else {
+                    show(item)
+                }
+            }
 
             // ContextMenu positioning is slightly broken because it takes
             // ImageGridView as a flickable but doesn't consider that it's

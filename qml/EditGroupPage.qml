@@ -30,8 +30,7 @@ Page {
             highlighted: down && !dragging
             property int modelIndex: index
 
-            menu:
-                Component {
+            menu: Component {
                 ContextMenu {
                     MenuItem {
                         //: Group context menu item
