@@ -71,7 +71,7 @@
     <message id="foilpics-remorse-deleting_selected" numerus="yes">
         <source>Deleting %0 selected pictures</source>
         <extracomment>Generic remorse popup text</extracomment>
-        <translation type="unfinished">
+        <translation>
             <numerusform>Supression de l’image sélectionnée</numerusform>
             <numerusform>Supression des %0 images sélectionnées</numerusform>
         </translation>
@@ -129,7 +129,7 @@
     <message id="foilpics-generate_key_warning-text">
         <source>You seem to have some encrypted files in the storage folder. Once you have generated a new key, you are going to lose access to those files. If you have forgotten your password, then keep in mind that most likely it&apos;s computationally easier to brute-force your password and recover the old key than to crack the new key.</source>
         <extracomment>Warning shown prior to generating the new key</extracomment>
-        <translation>Il semble que vous ayez des fichiers chiffrés dans le dossier. Une fois une nouvellela clef générée, vous perdrez l&apos;accès à ces fichiers. Si vous avez oublié votre mot de passe, gardez à l&apos;esprit qu&apos;il est plus simple de brute-forcer votre mot de passe que de récupérer votre ancienne clef..</translation>
+        <translation>Il semble que vous ayez des fichiers chiffrés dans le dossier. Une fois une nouvelle clef générée, vous perdrez l&apos;accès à ces fichiers. Si vous avez oublié votre mot de passe, gardez à l&apos;esprit qu&apos;il est plus simple de brute-forcer votre mot de passe que de récupérer votre ancienne clef..</translation>
     </message>
     <message id="foilpics-generate_key_page-title">
         <source>You are about to generate a new key</source>
@@ -242,7 +242,7 @@
     <message id="foilpics-gallery_view-remorse-encrypting_selected" numerus="yes">
         <source>Encrypting %0 selected pictures</source>
         <extracomment>Remorse popup text</extracomment>
-        <translation type="unfinished">
+        <translation>
             <numerusform>Chiffrement de l’image sélecionnée</numerusform>
             <numerusform>Chiffrement des %0 images sélecionnées</numerusform>
         </translation>
@@ -413,7 +413,7 @@
     <message id="foilpics-edit_group_page-header">
         <source>Groups</source>
         <extracomment>Page header</extracomment>
-        <translation type="unfinished">Groupes</translation>
+        <translation>Groupes</translation>
     </message>
     <message id="foilpics-edit_group_page-menu-rename">
         <source>Rename</source>
