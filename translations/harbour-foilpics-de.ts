@@ -72,8 +72,8 @@
         <source>Deleting %0 selected pictures</source>
         <extracomment>Generic remorse popup text</extracomment>
         <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+            <numerusform>Lösche %0 ausgewählte Bilder</numerusform>
+            <numerusform>Lösche %0 ausgewählte Bilder</numerusform>
         </translation>
     </message>
     <message id="foilpics-file_size-bytes">
@@ -243,14 +243,14 @@
         <source>Encrypting %0 selected pictures</source>
         <extracomment>Remorse popup text</extracomment>
         <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+            <numerusform>Verschlüssel %0 ausgewählte Bilder</numerusform>
+            <numerusform>Verschlüssel %0 ausgewählte Bilder</numerusform>
         </translation>
     </message>
     <message id="foilpics-gallery_fullscreen_view-header">
         <source>Share</source>
         <extracomment>Page header</extracomment>
-        <translation>Teile</translation>
+        <translation>Teilen</translation>
     </message>
     <message id="foilpics-encrypted_grid-title">
         <source>Encrypted</source>
@@ -296,8 +296,8 @@
         <source>Decrypting %0 selected pictures</source>
         <extracomment>Remorse popup text</extracomment>
         <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+            <numerusform>Entschlüssel %0 ausgewählte Bilder</numerusform>
+            <numerusform>Entschlüssel %0 ausgewählte Bilder</numerusform>
         </translation>
     </message>
     <message id="foilpics-confirm_password_page-info_label">
