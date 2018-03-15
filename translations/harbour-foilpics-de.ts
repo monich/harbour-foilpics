@@ -250,7 +250,7 @@
     <message id="foilpics-gallery_fullscreen_view-header">
         <source>Share</source>
         <extracomment>Page header</extracomment>
-        <translation>Teile</translation>
+        <translation>Teilen</translation>
     </message>
     <message id="foilpics-encrypted_grid-title">
         <source>Encrypted</source>
