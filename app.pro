@@ -15,6 +15,8 @@ QT += qml quick dbus
 QMAKE_CXXFLAGS += -Wno-unused-parameter -Wno-psabi
 QMAKE_CFLAGS += -Wno-unused-parameter
 
+LIBS += -ldl
+
 app_settings {
     # This path is hardcoded in jolla-settings
     TRANSLATIONS_PATH = /usr/share/translations
@@ -29,6 +31,8 @@ CONFIG(debug, debug|release) {
 # Directories
 HARBOUR_LIB_REL = harbour-lib
 HARBOUR_LIB_DIR = $${_PRO_FILE_PWD_}/$${HARBOUR_LIB_REL}
+HARBOUR_LIB_INCLUDE = $${HARBOUR_LIB_DIR}/include
+HARBOUR_LIB_SRC = $${HARBOUR_LIB_DIR}/src
 
 LIBGLIBUTIL_DIR = $${_PRO_FILE_PWD_}/libglibutil
 LIBGLIBUTIL_INCLUDE = $${LIBGLIBUTIL_DIR}/include
@@ -41,14 +45,6 @@ LIBFOIL_SRC = $${LIBFOIL_DIR}/src
 LIBFOILMSG_DIR = $${FOIL_DIR}/libfoilmsg
 LIBFOILMSG_INCLUDE = $${LIBFOILMSG_DIR}/include
 LIBFOILMSG_SRC = $${LIBFOILMSG_DIR}/src
-
-# Libraries
-HARBOUR_LIB = $${OUT_PWD}/$${HARBOUR_LIB_REL}/libharbour-lib.a
-
-PRE_TARGETDEPS += \
-    $$HARBOUR_LIB
-
-LIBS += $$HARBOUR_LIB -ldl
 
 OTHER_FILES += \
     *.desktop \
@@ -63,7 +59,7 @@ INCLUDEPATH += \
     $${LIBFOIL_INCLUDE} \
     $${LIBFOILMSG_INCLUDE} \
     $${LIBGLIBUTIL_INCLUDE} \
-    $${HARBOUR_LIB_DIR}/include
+    $${HARBOUR_LIB_INCLUDE}
 
 HEADERS += \
     src/FoilPicsBusyState.h \
@@ -109,6 +105,27 @@ HEADERS += \
     $${LIBFOIL_INCLUDE}/*.h \
     $${LIBFOILMSG_INCLUDE}/*.h \
     $${LIBGLIBUTIL_INCLUDE}/*.h
+
+# harbour-lib
+
+HEADERS += \
+    $${HARBOUR_LIB_INCLUDE}/HarbourDebug.h \
+    $${HARBOUR_LIB_INCLUDE}/HarbourImageProvider.h \
+    $${HARBOUR_LIB_INCLUDE}/HarbourPluginLoader.h \
+    $${HARBOUR_LIB_INCLUDE}/HarbourSystemState.h \
+    $${HARBOUR_LIB_INCLUDE}/HarbourTask.h \
+    $${HARBOUR_LIB_INCLUDE}/HarbourTransferMethodInfo.h \
+    $${HARBOUR_LIB_INCLUDE}/HarbourTransferMethodsModel.h \
+    $${HARBOUR_LIB_SRC}/HarbourMce.h
+
+SOURCES += \
+    $${HARBOUR_LIB_SRC}/HarbourImageProvider.cpp \
+    $${HARBOUR_LIB_SRC}/HarbourMce.cpp \
+    $${HARBOUR_LIB_SRC}/HarbourPluginLoader.cpp \
+    $${HARBOUR_LIB_SRC}/HarbourSystemState.cpp \
+    $${HARBOUR_LIB_SRC}/HarbourTask.cpp \
+    $${HARBOUR_LIB_SRC}/HarbourTransferMethodInfo.cpp \
+    $${HARBOUR_LIB_SRC}/HarbourTransferMethodsModel.cpp
 
 # Icons
 ICON_SIZES = 86 108 128 256

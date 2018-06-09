@@ -43,8 +43,8 @@
 #include "FoilPicsFileUtil.h"
 
 #include "HarbourDebug.h"
-#include "HarbourLib.h"
 #include "HarbourImageProvider.h"
+#include "HarbourSystemState.h"
 #include "HarbourTransferMethodsModel.h"
 
 #include <sailfishapp.h>
@@ -55,7 +55,8 @@
 
 static void register_types(const char* uri, int v1 = 1, int v2 = 0)
 {
-    HarbourLib::registerTypes(uri, v1, v2);
+    qmlRegisterType<HarbourSystemState>(uri, v1, v2, "SystemState");
+    qmlRegisterType<HarbourTransferMethodsModel>(uri, v1, v2, "TransferMethodsModel");
     qmlRegisterType<FoilPicsBusyState>(uri, v1, v2, "FoilPicsBusyState");
     qmlRegisterType<FoilPicsHints>(uri, v1, v2, "FoilPicsHints");
     qmlRegisterType<FoilPicsModel>(uri, v1, v2, "FoilPicsModel");

@@ -1,9 +1,4 @@
 TEMPLATE = subdirs
-SUBDIRS = app harbour-lib
-
+SUBDIRS = app
 app.file = app.pro
-app.depends = harbour-lib-target
-
-harbour-lib.target = harbour-lib-target
-
 OTHER_FILES += README.md LICENSE rpm/*.spec
