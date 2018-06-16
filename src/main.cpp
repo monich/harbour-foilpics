@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
     app->setApplicationName(FOILPICS_APP_NAME);
 
     register_types(FOILPICS_QML_IMPORT, 1, 0);
-    HarbourTransferMethodInfo::registerTypes();
+    HarbourTransferMethodInfo2::registerTypes();
 
     // Load translations
     QLocale locale;
