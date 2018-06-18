@@ -3,15 +3,20 @@ import Sailfish.Silica 1.0
 import harbour.foilpics 1.0
 import org.nemomobile.notifications 1.0
 
-Item {
-    id: view
-    property Page mainPage
+Page {
+    id: page
     property var hints
     property var foilModel
-    property bool isCurrentView
+
+    // nextPage is either
+    // a) our attached page; or
+    // b) the page we pushed to the stack
+    readonly property Page nextPage: pageStack.nextPage(page)
+    readonly property bool isCurrentPage: status === PageStatus.Active || status === PageStatus.Activating ||
+        (nextPage && page.parent && nextPage.parent !== page.parent.attachedContainer)
 
     Connections {
-        target: view.foilModel
+        target: page.foilModel
         property int lastFoilState
         onFoilStateChanged: {
             // Don't let the progress screens disappear too fast
@@ -25,7 +30,7 @@ Item {
             }
             if (lastFoilState === FoilPicsModel.FoilPicsReady &&
                     target.foilState !== FoilPicsModel.FoilPicsReady) {
-                pageStack.pop(mainPage, true)
+                pageStack.pop(page, true)
             }
             lastFoilState = target.foilState
         }
@@ -41,11 +46,6 @@ Item {
             notification.previewBody = qsTrId("foilpics-notification-password_changed")
             notification.publish()
         }
-    }
-
-    Connections {
-        target: parent
-        onIsCurrentItemChanged: isCurrentView = target.isCurrentItem
     }
 
     Notification {
@@ -72,7 +72,7 @@ Item {
             anchors.fill: parent
             active: opacity > 0
             opacity: (foilModel.foilState === FoilPicsModel.FoilKeyMissing) ? 1 : 0
-            sourceComponent: Component { GenerateKeyView { foilModel: view.foilModel } }
+            sourceComponent: Component { GenerateKeyView { foilModel: page.foilModel } }
             Behavior on opacity { FadeAnimation {} }
         }
 
@@ -92,7 +92,7 @@ Item {
             active: opacity > 0
             opacity: (foilModel.foilState === FoilPicsModel.FoilLocked ||
                         foilModel.foilState === FoilPicsModel.FoilLockedTimedOut) ? 1 : 0
-            sourceComponent: Component { EnterPasswordView { foilModel: view.foilModel } }
+            sourceComponent: Component { EnterPasswordView { foilModel: page.foilModel } }
             Behavior on opacity { FadeAnimation {} }
         }
 
@@ -102,7 +102,7 @@ Item {
             active: opacity > 0
             opacity: (foilModel.foilState === FoilPicsModel.FoilDecrypting ||
                       decryptingTimer.running) ? 1 : 0
-            sourceComponent: Component { DecryptingView { foilModel: view.foilModel } }
+            sourceComponent: Component { DecryptingView { foilModel: page.foilModel } }
             Behavior on opacity { FadeAnimation {} }
         }
 
@@ -112,15 +112,43 @@ Item {
             active: opacity > 0
             opacity: (foilModel.foilState === FoilPicsModel.FoilPicsReady &&
                       !generatingKeyTimer.running && !decryptingTimer.running) ? 1 : 0
-            readonly property bool isCurrentItem: isCurrentView
+            readonly property bool isCurrentItem: page.isCurrentPage
             sourceComponent: Component {
                 EncryptedPicsView {
-                    hints: view.hints
-                    foilModel: view.foilModel
+                    hints: page.hints
+                    foilModel: page.foilModel
                     pulleyFlickable: flickable
                 }
             }
             Behavior on opacity { FadeAnimation {} }
         }
+    }
+
+    Loader {
+        id: leftSwipeToGalleryHintLoader
+        anchors.fill: parent
+        active: opacity > 0
+        opacity: (hints.leftSwipeToGallery < MaximumHintCount | running) ? 1 : 0
+        property bool running
+        sourceComponent: Component {
+            LeftRightSwipeHint {
+                //: Left swipe hint text
+                //% "Swipe left to access the picture gallery"
+                text: qsTrId("foilpics-hint-swipe_left_to_gallery")
+                property bool hintCanBeEnabled: page.isCurrentPage &&
+                    foilModel.foilState === FoilPicsModel.FoilPicsReady &&
+                    hints.leftSwipeToGallery < MaximumHintCount
+                hintEnabled: hintCanBeEnabled && !hintDelayTimer.running
+                onHintShown: hints.leftSwipeToGallery++
+                onHintRunningChanged: leftSwipeToGalleryHintLoader.running = hintRunning
+                onHintCanBeEnabledChanged: if (hintCanBeEnabled) hintDelayTimer.restart()
+                Component.onCompleted: if (hintCanBeEnabled) hintDelayTimer.restart()
+                Timer {
+                    id: hintDelayTimer
+                    interval: 1000
+                }
+            }
+        }
+        Behavior on opacity { FadeAnimation {} }
     }
 }

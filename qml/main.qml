@@ -23,16 +23,34 @@ ApplicationWindow {
         filter: "image/*"
     }
 
+    SystemState {
+        onLockModeChanged: if (locked) appFoilModel.lock(false);
+    }
+
     //: Application title
     //% "Foil Pics"
     readonly property string appTitle: qsTrId("foilpics-app_name")
 
-    initialPage: Component {
-        MainPage {
+    initialPage: encryptedPageComponent
+
+    Component.onCompleted: pageStack.pushAttached(galleryPageComponent)
+
+    Component {
+        id: encryptedPageComponent
+        EncryptedPage {
             hints: appHints
             foilModel: appFoilModel
-            foilTransferMethodsModel: appTransferMethodsModel
             allowedOrientations: appAllowedOrientations
+        }
+    }
+
+    Component {
+        id: galleryPageComponent
+        GalleryPage {
+            hints: appHints
+            foilModel: appFoilModel
+            allowedOrientations: appAllowedOrientations
+            transferMethodsModel: appTransferMethodsModel
         }
     }
 
