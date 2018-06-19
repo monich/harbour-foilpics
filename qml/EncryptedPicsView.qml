@@ -138,6 +138,11 @@ SilicaFlickable {
         foilModel: view.foilModel
         model: view.foilModel.groupModel
         busy: foilModel.busy || progressTimer.running
+        // cacheBuffer is just a rough estimate just to keep all delegate
+        // instantiated, so that scroll indicator shows the actual position.
+        cacheBuffer: cellSize * (Math.floor(foilModel.count / columnCount) + model.count)
+        readonly property real cellSize: Math.floor(width / columnCount)
+        readonly property int columnCount: Math.floor(width / Theme.itemSizeHuge)
     }
 
     EncryptedSelectionPanel {

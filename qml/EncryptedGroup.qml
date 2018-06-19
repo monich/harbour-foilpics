@@ -38,7 +38,9 @@ Item {
         y: headerVisible ? groupHeader.height : 0
         width: parent.width
         height: contentHeight + expandHeight
+        contentHeight: grid.cellWidth * Math.floor((modelCount + columnCount - 1)/columnCount)
 
+        readonly property int modelCount: model ? model.count : 0
         property alias contextMenu: contextMenuItem
         property Item expandItem
         property real expandHeight: contextMenu.height
@@ -61,6 +63,8 @@ Item {
             Image {
                 y: contentYOffset
                 x: contentXOffset
+                asynchronous: true
+                cache: false
                 fillMode: Image.PreserveAspectCrop
                 source: thumbnail
                 width:  grid.cellWidth
