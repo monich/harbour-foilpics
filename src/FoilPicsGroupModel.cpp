@@ -315,7 +315,7 @@ FoilPicsGroupModel::ModelData::ModelData(FoilPicsModel* aPicsModel,
 void FoilPicsGroupModel::ModelData::init()
 {
     iProxyModel = NULL;
-    iLastKnownFirstGroup = false;
+    iLastKnownFirstGroup = isFirstGroup();
 }
 
 QAbstractProxyModel* FoilPicsGroupModel::ModelData::proxyModel() const

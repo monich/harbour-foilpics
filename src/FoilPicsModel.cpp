@@ -70,7 +70,7 @@
 #define HEADER_TITLE                "Title"
 #define HEADER_GROUP                "Group"
 
-/* Thumbnail specific headers */
+// Thumbnail specific headers
 #define HEADER_THUMB_FULL_WIDTH     "Full-Width"
 #define HEADER_THUMB_FULL_HEIGHT    "Full-Height"
 
@@ -81,6 +81,11 @@
 #define INFO_ORDER_DELIMITER_S ","
 #define INFO_ORDER_THUMB_DELIMITER ':'
 #define INFO_GROUPS_HEADER "Groups"
+
+// Directories relative to home
+#define FOIL_PICS_DIR               "Documents/FoilPics"
+#define FOIL_KEY_DIR                ".local/share/foil"
+#define FOIL_KEY_FILE               "foil.key"
 
 // Keys for metadata passed to encryptFile:
 const QString FoilPicsModel::MetaUrl("url");                 // QUrl
@@ -1384,6 +1389,8 @@ void FoilPicsModel::DecryptPicsTask::performTask()
                 }
             }
             if (!decryptFile(imagePath, thumbPath)) {
+                HDEBUG(qPrintable(image) << ":" <<
+                    qPrintable(thumb) << "oops!");
                 iSaveInfo = true;
             }
         }
@@ -1391,6 +1398,7 @@ void FoilPicsModel::DecryptPicsTask::performTask()
         // Followed by the remaining files in no particular order
         if (!fileMap.isEmpty()) {
             QStringList remainingFiles = fileMap.values();
+            HDEBUG("Remaining file(s)" << remainingFiles);
             for (i=0; i<remainingFiles.count() && !isCanceled(); i++) {
                 if (decryptFile(remainingFiles.at(i), QString())) {
                     HDEBUG(remainingFiles.at(i) << "was not expected");
@@ -1766,6 +1774,9 @@ public:
         LessThan(Private* aThis) : obj(aThis) {}
     };
 
+Q_SIGNALS:
+    void stopIgnoringGroupModelChanges();
+
 public Q_SLOTS:
     void onCheckPicsTaskDone();
     void onGroupsDecrypted(FoilPicsGroupModel::GroupList aGroups);
@@ -1780,6 +1791,7 @@ public Q_SLOTS:
     void onSaveInfoDone();
     void onImageRequestDone();
     void onGroupModelChanged();
+    void onStopIgnoringGroupModelChanges();
 
 public:
     static size_t maxBytesToDecrypt();
@@ -1809,6 +1821,7 @@ public:
     void decryptFiles(QList<int> aRows);
     void decryptAll();
     void decryptTaskDone(DecryptTask* aTask, bool aLast);
+    void ignoreGroupModelChange();
     void setTitleAt(int aIndex, QString aTitle);
     bool setGroupId(ModelData* aData, QByteArray aId);
     void clearGroup(QByteArray aId);
@@ -1848,6 +1861,7 @@ public:
     QList<ImageRequestTask*> iImageRequestTasks;
     FoilPicsGroupModel* iGroupModel;
     bool iGroupModelConnected;
+    int iIgnoreGroupModelChanges;
 };
 
 FoilPicsModel::Private::Private(FoilPicsModel* aParent) :
@@ -1860,9 +1874,9 @@ FoilPicsModel::Private::Private(FoilPicsModel* aParent) :
     iThumbnailProvider(NULL),
     iThumbSize(32,32),
     iFoilState(FoilKeyMissing),
-    iFoilPicsDir(QDir::homePath() + "/Documents/FoilPics"),
-    iFoilKeyDir(QDir::homePath() + "/.local/share/foil"),
-    iFoilKeyFile(iFoilKeyDir + "/foil.key"),
+    iFoilPicsDir(QDir::homePath() + "/" FOIL_PICS_DIR),
+    iFoilKeyDir(QDir::homePath() + "/" FOIL_KEY_DIR),
+    iFoilKeyFile(iFoilKeyDir + "/" + FOIL_KEY_FILE),
     iPrivateKey(NULL),
     iPublicKey(NULL),
     iThreadPool(new QThreadPool(this)),
@@ -1870,8 +1884,9 @@ FoilPicsModel::Private::Private(FoilPicsModel* aParent) :
     iSaveInfoTask(NULL),
     iGenerateKeyTask(NULL),
     iDecryptPicsTask(NULL),
-    iGroupModel(new FoilPicsGroupModel(aParent)),
-    iGroupModelConnected(false)
+    iGroupModel(NULL), // FoilPicsModel::FoilPicsModel will create it
+    iGroupModelConnected(false),
+    iIgnoreGroupModelChanges(0)
 {
     // Serialize the tasks:
     iThreadPool->setMaxThreadCount(1);
@@ -1919,8 +1934,11 @@ FoilPicsModel::Private::Private(FoilPicsModel* aParent) :
     iCheckPicsTask = new CheckPicsTask(iThreadPool, iFoilPicsDir);
     iCheckPicsTask->submit(this, SLOT(onCheckPicsTaskDone()));
 
-    // Save the info whenever group model changes
-    connectGroupModel();
+    // A trick to stop one queued group model change:
+    connect(this,
+        SIGNAL(stopIgnoringGroupModelChanges()),
+        SLOT(onStopIgnoringGroupModelChanges()),
+        Qt::QueuedConnection);
 }
 
 FoilPicsModel::Private::~Private()
@@ -2146,8 +2164,39 @@ void FoilPicsModel::Private::setFoilState(FoilState aState)
 {
     if (iFoilState != aState) {
         iFoilState = aState;
+        if (iFoilState == FoilPicsReady) {
+            // Save the info whenever group model changes
+            connectGroupModel();
+            // onDecryptPicsTaskDone may be queued before the last
+            // picture has been inserted into to the model which may
+            // generate a few stray group model change events resulting
+            // in an unnecessary overwrite of the info file. So we ignore
+            // group model changes until queued stopIgnoringGroupModelChanges
+            // event arrives.
+            ignoreGroupModelChange();
+        } else {
+            // Group model is changing whenever the pictures are being
+            // decrypted, we don't want to rewrite the info file every
+            // time we are decrypting the pictures. Flash memory has
+            // a limited number of write cycles.
+            disconnectGroupModel();
+        }
         queueSignal(SignalFoilStateChanged);
     }
+}
+
+void FoilPicsModel::Private::ignoreGroupModelChange()
+{
+    iIgnoreGroupModelChanges++;
+    Q_EMIT stopIgnoringGroupModelChanges();
+    HDEBUG(iIgnoreGroupModelChanges);
+}
+
+void FoilPicsModel::Private::onStopIgnoringGroupModelChanges()
+{
+    iIgnoreGroupModelChanges--;
+    HDEBUG(iIgnoreGroupModelChanges);
+    HASSERT(iIgnoreGroupModelChanges >= 0);
 }
 
 int FoilPicsModel::Private::compare(const ModelData* aData1, const ModelData* aData2) const
@@ -2346,9 +2395,13 @@ void FoilPicsModel::Private::onCheckPicsTaskDone()
 
 void FoilPicsModel::Private::onGroupModelChanged()
 {
-    // Save the info whenever group model changes
-    sortModel();
-    saveInfo();
+    if (iIgnoreGroupModelChanges > 0) {
+        HDEBUG("Ignoring group model change");
+    } else {
+        // Save the info whenever group model changes
+        sortModel();
+        saveInfo();
+    }
 }
 
 void FoilPicsModel::Private::saveInfo()
@@ -2433,6 +2486,8 @@ void FoilPicsModel::Private::lock(bool aTimeout)
     }
     iEncryptTasks.clear();
     iImageRequestTasks.clear();
+    // Disconnect the signals before clearing the model
+    disconnectGroupModel();
     // Destroy decrypted pictures
     if (!iData.isEmpty()) {
         FoilPicsModel* model = parentModel();
@@ -2748,12 +2803,13 @@ void FoilPicsModel::Private::onDecryptPicsTaskDone()
 {
     HDEBUG(iData.count() << "picture(s) decrypted");
     if (sender() == iDecryptPicsTask) {
-        if (iDecryptPicsTask->iSaveInfo) saveInfo();
+        bool intoUpdated = iDecryptPicsTask->iSaveInfo;
         iDecryptPicsTask->release(this);
         iDecryptPicsTask = NULL;
         if (iFoilState == FoilDecrypting) {
             setFoilState(FoilPicsReady);
         }
+        if (intoUpdated) saveInfo();
         if (!busy()) {
             // We know we were busy when we received this signal
             queueSignal(SignalBusyChanged);
@@ -3126,6 +3182,10 @@ FoilPicsModel::FoilPicsModel(QObject* aParent) :
     QAbstractListModel(aParent),
     iPrivate(new Private(this))
 {
+    // FoilPicsGroupModel has to be created after iPrivate pointer
+    // has been set up because it will call FoilPicsModel::rowCount
+    // from the constructor.
+    iPrivate->iGroupModel = new FoilPicsGroupModel(this);
 }
 
 bool FoilPicsModel::busy() const
