@@ -10,6 +10,7 @@ Item {
     property bool active
     property real visiblePart: active ? height : 0
     property bool enableActions
+    readonly property string imageProvider: HarbourTheme.darkOnLight ? HarbourImageProviderDarkOnLight : HarbourImageProviderDefault
 
     signal done()
     signal doneHint()
@@ -46,7 +47,7 @@ Item {
             topMargin: Theme.paddingMedium
         }
         enabled: enableActions
-        iconSource: "image://harbour/" + Qt.resolvedUrl("images/folder.svg")
+        iconSource: "image://" + imageProvider + "/" + Qt.resolvedUrl("images/folder.svg")
         onClicked: panel.groupSelected()
         onPressAndHold: panel.groupHint()
     }

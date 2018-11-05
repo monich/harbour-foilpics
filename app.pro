@@ -114,6 +114,7 @@ HEADERS += \
     $${HARBOUR_LIB_INCLUDE}/HarbourPluginLoader.h \
     $${HARBOUR_LIB_INCLUDE}/HarbourSystemState.h \
     $${HARBOUR_LIB_INCLUDE}/HarbourTask.h \
+    $${HARBOUR_LIB_INCLUDE}/HarbourTheme.h \
     $${HARBOUR_LIB_INCLUDE}/HarbourTransferMethodInfo.h \
     $${HARBOUR_LIB_INCLUDE}/HarbourTransferMethodsModel.h \
     $${HARBOUR_LIB_SRC}/HarbourMce.h
@@ -124,6 +125,7 @@ SOURCES += \
     $${HARBOUR_LIB_SRC}/HarbourPluginLoader.cpp \
     $${HARBOUR_LIB_SRC}/HarbourSystemState.cpp \
     $${HARBOUR_LIB_SRC}/HarbourTask.cpp \
+    $${HARBOUR_LIB_SRC}/HarbourTheme.cpp \
     $${HARBOUR_LIB_SRC}/HarbourTransferMethodInfo.cpp \
     $${HARBOUR_LIB_SRC}/HarbourTransferMethodsModel.cpp
 
