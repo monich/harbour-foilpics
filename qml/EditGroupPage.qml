@@ -87,7 +87,7 @@ Page {
                         var i = Math.floor((y + list.contentY + height/2)/height)
                         if (i >= 0 && i !== modelIndex) {
                             // Swap the items
-                            groupModel.moveGroup(modelIndex, i)
+                            groupModel.setDragPos(i)
                         }
                         if ((y + height) > list.height) {
                             // Scroll the list down
@@ -144,9 +144,11 @@ Page {
                 editItem = null
                 dragStartY = mouseY
                 dragItem = delegate
+                groupModel.setDragIndex(modelIndex)
             }
 
             function stopDrag() {
+                groupModel.setDragIndex(-1)
                 if (dragItem === delegate) {
                     dragItem = null
                 }

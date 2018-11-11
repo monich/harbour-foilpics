@@ -11,12 +11,12 @@
  *   1. Redistributions of source code must retain the above copyright
  *      notice, this list of conditions and the following disclaimer.
  *   2. Redistributions in binary form must reproduce the above copyright
- *      notice, this list of conditions and the following disclaimer in
- *      the documentation and/or other materials provided with the
+ *      notice, this list of conditions and the following disclaimer
+ *      in the documentation and/or other materials provided with the
  *      distribution.
- *   3. Neither the name of Jolla Ltd nor the names of its contributors
- *      may be used to endorse or promote products derived from this
- *      software without specific prior written permission.
+ *   3. Neither the names of the copyright holders nor the names of its
+ *      contributors may be used to endorse or promote products derived
+ *      from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -2050,7 +2050,6 @@ void FoilPicsModel::Private::connectGroupModel()
             SIGNAL(modelReset()),
             SIGNAL(rowsInserted(QModelIndex,int,int)),
             SIGNAL(rowsRemoved(QModelIndex,int,int)),
-            SIGNAL(rowsMoved(QModelIndex,int,int,QModelIndex,int)),
             SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>))
         };
 
@@ -2059,6 +2058,12 @@ void FoilPicsModel::Private::connectGroupModel()
         for (unsigned int i = 0; i < G_N_ELEMENTS(modelSignals); i++) {
             connect(iGroupModel, modelSignals[i], SLOT(onGroupModelChanged()));
         }
+        // rowsMoved is ignored because it's being emitted when groups
+        // are being dragged. When the drag is finished and rows have
+        // actually been moved, rowsActuallyMoved signal is emitted.
+        connect(iGroupModel,
+            SIGNAL(rowsActuallyMoved()),
+            SLOT(onGroupModelChanged()));
     }
 }
 

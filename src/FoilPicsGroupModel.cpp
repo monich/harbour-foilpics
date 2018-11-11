@@ -11,12 +11,12 @@
  *   1. Redistributions of source code must retain the above copyright
  *      notice, this list of conditions and the following disclaimer.
  *   2. Redistributions in binary form must reproduce the above copyright
- *      notice, this list of conditions and the following disclaimer in
- *      the documentation and/or other materials provided with the
+ *      notice, this list of conditions and the following disclaimer
+ *      in the documentation and/or other materials provided with the
  *      distribution.
- *   3. Neither the name of Jolla Ltd nor the names of its contributors
- *      may be used to endorse or promote products derived from this
- *      software without specific prior written permission.
+ *   3. Neither the names of the copyright holders nor the names of its
+ *      contributors may be used to endorse or promote products derived
+ *      from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -390,8 +390,12 @@ public:
     int findId(QByteArray aId) const;
     void appendDefaultGroup();
     void clear();
+    void setDragIndex(int aIndex);
+    void setDragPos(int aPos);
+    void stopDrag();
+    int mapRow(int aRow) const;
+    void moveGroup(int aFrom, int aTo);
     QByteArray generateUniqueId() const;
-    GroupList groups() const;
     void setGroups(GroupList aGroups);
     bool equalGroups(GroupList aGroups);
     void dataChanged(int aRow, QVector<int> aRoles);
@@ -408,11 +412,15 @@ public:
     QList<ModelData*> iData;
     QHash<QByteArray,int> iMap;
     int iLastKnownCount;
+    int iDragIndex;
+    int iDragPos;
 };
 
 FoilPicsGroupModel::Private::Private(FoilPicsGroupModel* aParent,
     FoilPicsModel* aPicsModel) : QObject(aParent), iPicsModel(aPicsModel),
-    iLastKnownCount(0)
+    iLastKnownCount(0),
+    iDragIndex(-1),
+    iDragPos(-1)
 {
     appendDefaultGroup();
     connect(aParent,
@@ -444,10 +452,11 @@ inline FoilPicsGroupModel* FoilPicsGroupModel::Private::parentModel() const
     return qobject_cast<FoilPicsGroupModel*>(parent());
 }
 
-FoilPicsGroupModel::ModelData* FoilPicsGroupModel::Private::dataAt(int aIndex) const
+FoilPicsGroupModel::ModelData* FoilPicsGroupModel::Private::dataAt(int aRow) const
 {
-    if (aIndex >= 0 && aIndex < iData.count()) {
-        return iData.at(aIndex);
+    const int index = mapRow(aRow);
+    if (index >= 0 && index < iData.count()) {
+        return iData.at(index);
     } else {
         return NULL;
     }
@@ -481,16 +490,6 @@ FoilPicsGroupModel::Private::connectData(ModelData* aData) const
         SIGNAL(proxyModelCountChanged()),
         SLOT(onProxyModelCountChanged()));
     return aData;
-}
-
-QList<FoilPicsGroupModel::Group> FoilPicsGroupModel::Private::groups() const
-{
-    GroupList list;
-    const int n = iData.count();
-    for (int i = 0; i < n; i++) {
-        list.append(iData.at(i)->iGroup);
-    }
-    return list;
 }
 
 bool FoilPicsGroupModel::Private::equalGroups(GroupList aGroups)
@@ -566,6 +565,82 @@ void FoilPicsGroupModel::Private::clear()
     if (!defaultData) {
         appendDefaultGroup();
     }
+    iDragIndex = iDragPos = -1;
+}
+
+void FoilPicsGroupModel::Private::setDragIndex(int aIndex)
+{
+    HDEBUG(aIndex);
+    if (aIndex < 0) {
+        // Drag is finished
+        if (iDragPos != iDragIndex) {
+            const int dragIndex = iDragIndex;
+            const int dragPos = iDragPos;
+            iDragPos = iDragIndex = -1;
+            moveGroup(dragIndex, dragPos);
+            Q_EMIT parentModel()->rowsActuallyMoved();
+            updateFirstGroup();
+        } else {
+            iDragPos = iDragIndex = -1;
+        }
+    } else if (aIndex < iData.count()) {
+        // Drag is starting
+        iDragPos = iDragIndex = aIndex;
+    }
+}
+
+inline void FoilPicsGroupModel::Private::stopDrag()
+{
+    setDragIndex(-1);
+}
+
+void FoilPicsGroupModel::Private::setDragPos(int aPos)
+{
+    const int n = iData.count();
+    if (aPos >= 0 && aPos < n && iDragIndex >= 0 && iDragPos != aPos) {
+        HDEBUG(aPos);
+        const int dest = (aPos > iDragPos) ? (aPos + 1) : aPos;
+        FoilPicsGroupModel* model = parentModel();
+        QModelIndex parent;
+        model->beginMoveRows(parent, iDragPos, iDragPos, parent, dest);
+        iDragPos = aPos;
+        model->endMoveRows();
+    }
+}
+
+void FoilPicsGroupModel::Private::moveGroup(int aFrom, int aTo)
+{
+    // The caller has already checked the indices
+    iData.move(aFrom, aTo);
+
+    // Update damaged map entries
+    const int i1 = qMin(aFrom, aTo);
+    const int i2 = qMax(aFrom, aTo);
+    for (int i = i1; i <= i2; i++) {
+        iMap.insert(iData.at(i)->iGroup.iId, i);
+    }
+}
+
+int FoilPicsGroupModel::Private::mapRow(int aRow) const
+{
+    if (iDragIndex < iDragPos) {
+        if (aRow < iDragIndex || aRow > iDragPos) {
+            return aRow;
+        } else if (aRow == iDragPos) {
+            return iDragIndex;
+        } else {
+            return aRow + 1;
+        }
+    } else if (iDragPos < iDragIndex) {
+        if (aRow < iDragPos || aRow > iDragIndex) {
+            return aRow;
+        } else if (aRow == iDragPos) {
+            return iDragIndex;
+        } else {
+            return aRow - 1;
+        }
+    }
+    return aRow;
 }
 
 QByteArray FoilPicsGroupModel::Private::generateRandomId()
@@ -701,7 +776,7 @@ QList<FoilPicsGroupModel::Group> FoilPicsGroupModel::groups() const
     GroupList list;
     const int n = iPrivate->iData.count();
     for (int i = 0; i < n; i++) {
-        list.append(iPrivate->iData.at(i)->iGroup);
+        list.append(iPrivate->dataAt(i)->iGroup);
     }
     return list;
 }
@@ -787,6 +862,7 @@ int FoilPicsGroupModel::offsetWithinGroup(int aIndex, int aSource) const
 void FoilPicsGroupModel::addGroup(QString aName)
 {
     const int pos = iPrivate->iData.count();
+    iPrivate->stopDrag();
     beginInsertRows(QModelIndex(), pos, pos);
     QByteArray id(iPrivate->generateUniqueId());
     ModelData* data = iPrivate->createData(id, aName);
@@ -812,6 +888,7 @@ void FoilPicsGroupModel::removeGroupAt(int aIndex)
     // UI makes sure that the group is empty before it's removed
     ModelData* data = iPrivate->dataAt(aIndex);
     if (data && !data->iGroup.isDefault()) {
+        iPrivate->stopDrag();
         beginRemoveRows(QModelIndex(), aIndex, aIndex);
         iPrivate->iData.removeAt(aIndex);
         iPrivate->iMap.remove(data->iGroup.iId);
@@ -826,27 +903,26 @@ void FoilPicsGroupModel::moveGroup(int aFrom, int aTo)
     if (aFrom != aTo && aFrom >= 0 && aFrom < n && aTo >= 0 && aTo < n) {
         QModelIndex parent;
         const int dest = (aTo > aFrom) ? (aTo + 1) : aTo;
+        iPrivate->stopDrag();
         if (beginMoveRows(parent, aFrom, aFrom, parent, dest)) {
-            iPrivate->iData.move(aFrom, aTo);
-            // Update damaged map entries
-            const int i1 = qMin(aFrom, aTo);
-            const int i2 = qMax(aFrom, aTo);
-            for (int i = i1; i <= i2; i++) {
-                iPrivate->iMap.insert(iPrivate->iData.at(i)->iGroup.iId, i);
-            }
+            iPrivate->moveGroup(aFrom, aTo);
             endMoveRows();
-
-            // "firstGroup" may have changed
-            QVector<int> roles;
-            roles.append(ModelData::FirstGroupRole);
-            for (int i = i1; i <= i2; i++) {
-                QModelIndex modelIndex(index(i));
-                Q_EMIT dataChanged(modelIndex, modelIndex, roles);
-            }
+            Q_EMIT rowsActuallyMoved();
+            iPrivate->updateFirstGroup();
         } else {
             HDEBUG("oops, can't move" << aFrom << "->" << aTo);
         }
     }
+}
+
+void FoilPicsGroupModel::setDragIndex(int aIndex)
+{
+    iPrivate->setDragIndex(aIndex);
+}
+
+void FoilPicsGroupModel::setDragPos(int aPos)
+{
+    iPrivate->setDragPos(aPos);
 }
 
 #include "FoilPicsGroupModel.moc"
