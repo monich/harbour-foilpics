@@ -11,6 +11,7 @@ Item {
     property real visiblePart: active ? height : 0
     property alias canDelete: deleteButton.enabled
     property alias canEncrypt: encryptButton.enabled
+    readonly property string imageProvider: HarbourTheme.darkOnLight ? HarbourImageProviderDarkOnLight : HarbourImageProviderDefault
 
     signal done()
     signal doneHint()
@@ -55,7 +56,7 @@ Item {
             top: parent.top
             topMargin: Theme.paddingMedium
         }
-        iconSource: "image://theme/icon-m-dismiss"
+        iconSource: "image://" + imageProvider + "/" + Qt.resolvedUrl("images/close.svg")
         onClicked: panel.done()
         onPressAndHold: panel.doneHint()
     }

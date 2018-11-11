@@ -72,7 +72,7 @@ Item {
             top: parent.top
             topMargin: Theme.paddingMedium
         }
-        iconSource: "image://theme/icon-m-dismiss"
+        iconSource: "image://" + imageProvider + "/" + Qt.resolvedUrl("images/close.svg")
         onClicked: panel.done()
         onPressAndHold: panel.doneHint()
     }
