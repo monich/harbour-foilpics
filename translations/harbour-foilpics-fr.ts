@@ -129,7 +129,7 @@
     <message id="foilpics-generate_key_warning-text">
         <source>You seem to have some encrypted files in the storage folder. Once you have generated a new key, you are going to lose access to those files. If you have forgotten your password, then keep in mind that most likely it&apos;s computationally easier to brute-force your password and recover the old key than to crack the new key.</source>
         <extracomment>Warning shown prior to generating the new key</extracomment>
-        <translation>Il semble que vous ayez des fichiers chiffrés dans le dossier. Une fois une nouvelle clef générée, vous perdrez l&apos;accès à ces fichiers. Si vous avez oublié votre mot de passe, gardez à l&apos;esprit qu&apos;il est plus simple de brute-forcer votre mot de passe que de récupérer votre ancienne clef..</translation>
+        <translation>Il semble que vous ayez des fichiers chiffrés dans le dossier. Une fois une nouvelle clef générée, vous perdrez l&apos;accès à ces fichiers. Si vous avez oublié votre mot de passe, gardez à l&apos;esprit qu&apos;il est plus simple de brute-forcer votre mot de passe que de récupérer votre ancienne clef.</translation>
     </message>
     <message id="foilpics-generate_key_page-title">
         <source>You are about to generate a new key</source>
