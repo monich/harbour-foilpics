@@ -56,7 +56,6 @@ CoverBackground {
         enabled: cover.foilModel.keyAvailable
         CoverAction {
             iconSource: Qt.resolvedUrl("images/" + (HarbourTheme.darkOnLight ? "cover-lock-dark.svg" :  "cover-lock.svg"))
-            onIconSourceChanged: console.log(iconSource)
             onTriggered: cover.foilModel.lock(false)
         }
     }

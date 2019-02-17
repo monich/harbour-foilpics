@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2017-2018 Jolla Ltd.
- * Copyright (C) 2017-2018 Slava Monich <slava@monich.com>
+ * Copyright (C) 2017-2019 Jolla Ltd.
+ * Copyright (C) 2017-2019 Slava Monich <slava@monich.com>
  *
- * You may use this file under the terms of the BSD license as follows:
+ * You may use this file under the terms of BSD license as follows:
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -497,7 +497,7 @@ FoilPicsModel::ModelInfo::ModelInfo(const ModelData::List aData,
     iGroups(aGroups)
 {
     const int n = aData.count();
-    for (int i=0; i<n; i++) {
+    for (int i = 0; i < n; i++) {
         const ModelData* data = aData.at(i);
         QString name(QFileInfo(data->iPath).fileName());
         iOrder.append(name);
@@ -566,7 +566,7 @@ void FoilPicsModel::ModelInfo::save(QString aDir, FoilPrivateKey* aPrivate,
     if (out) {
         QString buf;
         const int n = iOrder.count();
-        for (int i=0; i<n; i++) {
+        for (int i = 0; i < n; i++) {
             if (!buf.isEmpty()) buf += QChar(INFO_ORDER_DELIMITER);
             QString img(iOrder.at(i));
             QString thumb(iThumbMap.value(img));
@@ -629,7 +629,7 @@ public:
     static bool removeFile(QString aPath);
     static QImage toImage(const FoilMsg* aMsg);
     static FoilOutput* createFoilFile(QString aDestDir, GString* aOutPath);
-    static bool addHeader(FoilMsgHeader* aHeader,
+    static bool getHeader(FoilMsgHeader* aHeader,
         const FoilMsgHeaders* aHeaders, const char* aKey);
 
 public:
@@ -679,7 +679,7 @@ FoilMsg* FoilPicsModel::BaseTask::decryptAndVerify(const char* aFileName) const
         FoilMsg* msg = foilmsg_decrypt_file(iPrivateKey, aFileName, NULL);
         if (msg) {
 #if HARBOUR_DEBUG
-            for (uint i=0; i<msg->headers.count; i++) {
+            for (uint i = 0; i < msg->headers.count; i++) {
                 const FoilMsgHeader* header = msg->headers.header + i;
                 HDEBUG(" " << header->name << ":" << header->value);
             }
@@ -712,11 +712,11 @@ QImage FoilPicsModel::BaseTask::toImage(const FoilMsg* aMsg)
     return QImage();
 }
 
-bool FoilPicsModel::BaseTask::addHeader(FoilMsgHeader* aHeader,
+bool FoilPicsModel::BaseTask::getHeader(FoilMsgHeader* aHeader,
     const FoilMsgHeaders* aHeaders, const char* aKey)
 {
     if (aHeaders) {
-        for (uint i=0; i<aHeaders->count; i++) {
+        for (uint i = 0; i < aHeaders->count; i++) {
             if (!strcmp(aHeaders->header[i].name, aKey)) {
                 aHeader->value = aHeaders->header[i].value;
                 aHeader->name = aKey;
@@ -737,7 +737,7 @@ FoilOutput* FoilPicsModel::BaseTask::createFoilFile(QString aDestDir,
     g_string_append_len(aOutPath, dir.constData(), dir.size());
     g_string_append_c(aOutPath, '/');
     const gsize prefix_len = aOutPath->len;
-    for (int i=0; i<100 && !out; i++) {
+    for (int i = 0; i < 100 && !out; i++) {
         guint8 data[8];
         foil_random_generate(FOIL_RANDOM_DEFAULT, data, sizeof(data));
         g_string_truncate(aOutPath, prefix_len);
@@ -783,7 +783,7 @@ QString FoilPicsModel::BaseTask::writeThumb(QImage aImage,
 
         // Copy the headers
         for (uint i = 0; i < G_N_ELEMENTS(keys); i++) {
-            if (addHeader(header + headers.count, aHeaders, keys[i])) {
+            if (getHeader(header + headers.count, aHeaders, keys[i])) {
                 headers.count++;
             }
         }
@@ -1188,7 +1188,7 @@ void FoilPicsModel::CheckPicsTask::performTask()
         QDir::Dirs | QDir::NoDotAndDotDot, QDir::NoSort);
 
     const QString infoFile(INFO_FILE);
-    for (int i=0; i<list.count() && !iMayHaveEncryptedPictures; i++) {
+    for (int i = 0; i < list.count() && !iMayHaveEncryptedPictures; i++) {
         const QFileInfo& info = list.at(i);
         if (info.isFile() && info.fileName() != infoFile) {
             const QByteArray fileNameBytes(info.filePath().toUtf8());
@@ -1357,7 +1357,7 @@ void FoilPicsModel::DecryptPicsTask::performTask()
         const QString infoFile(INFO_FILE);
         QHash<QString,QString> fileMap;
         int i;
-        for (i=0; i<list.count(); i++) {
+        for (i = 0; i < list.count(); i++) {
             const QFileInfo& info = list.at(i);
             if (info.isFile()) {
                 const QString name(info.fileName());
@@ -1368,7 +1368,7 @@ void FoilPicsModel::DecryptPicsTask::performTask()
         }
 
         // First decrypt files in known order
-        for (i=0; i<info.iOrder.count() && !isCanceled(); i++) {
+        for (i = 0; i < info.iOrder.count() && !isCanceled(); i++) {
             const QString image(info.iOrder.at(i));
             const QString thumb(info.iThumbMap.value(image));
             QString imagePath, thumbPath;
@@ -1399,7 +1399,7 @@ void FoilPicsModel::DecryptPicsTask::performTask()
         if (!fileMap.isEmpty()) {
             QStringList remainingFiles = fileMap.values();
             HDEBUG("Remaining file(s)" << remainingFiles);
-            for (i=0; i<remainingFiles.count() && !isCanceled(); i++) {
+            for (i = 0; i < remainingFiles.count() && !isCanceled(); i++) {
                 if (decryptFile(remainingFiles.at(i), QString())) {
                     HDEBUG(remainingFiles.at(i) << "was not expected");
                     iSaveInfo = true;
@@ -1950,11 +1950,11 @@ FoilPicsModel::Private::~Private()
     if (iGenerateKeyTask) iGenerateKeyTask->release(this);
     if (iDecryptPicsTask) iDecryptPicsTask->release(this);
     int i;
-    for (i=0; i<iEncryptTasks.count(); i++) {
+    for (i = 0; i < iEncryptTasks.count(); i++) {
         iEncryptTasks.at(i)->release(this);
     }
     iEncryptTasks.clear();
-    for (i=0; i<iImageRequestTasks.count(); i++) {
+    for (i = 0; i < iImageRequestTasks.count(); i++) {
         iImageRequestTasks.at(i)->release(this);
     }
     iImageRequestTasks.clear();
@@ -2291,10 +2291,9 @@ void FoilPicsModel::Private::destroyItemAt(int aIndex)
         iThumbnailProvider->releaseThumbnail(data->iImageId);
         iImageProvider->releaseImage(data->iImageId);
         model->beginRemoveRows(QModelIndex(), aIndex, aIndex);
-        iData.removeAt(aIndex);
-        delete data;
-        // We no longer have any decryptable pictures:
-        if (iMayHaveEncryptedPictures) {
+        delete iData.takeAt(aIndex);
+        if (iData.isEmpty() && iMayHaveEncryptedPictures) {
+            // We no longer have any decryptable pictures
             iMayHaveEncryptedPictures = false;
             queueSignal(SignalMayHaveEncryptedPicturesChanged);
         }
@@ -2483,10 +2482,10 @@ void FoilPicsModel::Private::lock(bool aTimeout)
         iDecryptPicsTask = NULL;
     }
     int i;
-    for (i=0; i<iEncryptTasks.count(); i++) {
+    for (i = 0; i < iEncryptTasks.count(); i++) {
         iEncryptTasks.at(i)->release(this);
     }
-    for (i=0; i<iImageRequestTasks.count(); i++) {
+    for (i = 0; i < iImageRequestTasks.count(); i++) {
         iImageRequestTasks.at(i)->release(this);
     }
     iEncryptTasks.clear();
@@ -2625,19 +2624,19 @@ void FoilPicsModel::Private::encryptFiles(QAbstractItemModel* aModel, QList<int>
             FoilPicsRole latitudeRole(aModel, MetaLatitude);
             FoilPicsRole longitudeRole(aModel, MetaLongitude);
             FoilPicsRole altitudeRole(aModel, MetaAltitude);
-            const FoilPicsRole* roles[] = {&orientationRole,  &imageDateRole,
+            const FoilPicsRole* roles[] = {&orientationRole, &imageDateRole,
                 &cameraManufacturerRole, &cameraModelRole, &latitudeRole,
                 &longitudeRole, &altitudeRole
             };
             // Start from the end of the list, in an attempt to disturb
             // the model less
-            for (int i=aRows.count()-1; i>=0; i--) {
+            for (int i = aRows.count()-1; i >= 0; i--) {
                 const int row = aRows.at(i);
                 QUrl url(urlRole.valueAt(row).toUrl());
                 if (url.isLocalFile()) {
                     // Pull metadata out of the model
                     QVariantMap metadata;
-                    for (uint k=0; k<G_N_ELEMENTS(roles); k++) {
+                    for (uint k = 0; k < G_N_ELEMENTS(roles); k++) {
                         const FoilPicsRole* role = roles[k];
                         QVariant value(role->valueAt(row));
                         if (value.isValid()) {
@@ -2808,13 +2807,13 @@ void FoilPicsModel::Private::onDecryptPicsTaskDone()
 {
     HDEBUG(iData.count() << "picture(s) decrypted");
     if (sender() == iDecryptPicsTask) {
-        bool intoUpdated = iDecryptPicsTask->iSaveInfo;
+        bool infoUpdated = iDecryptPicsTask->iSaveInfo;
         iDecryptPicsTask->release(this);
         iDecryptPicsTask = NULL;
         if (iFoilState == FoilDecrypting) {
             setFoilState(FoilPicsReady);
         }
-        if (intoUpdated) saveInfo();
+        if (infoUpdated) saveInfo();
         if (!busy()) {
             // We know we were busy when we received this signal
             queueSignal(SignalBusyChanged);
@@ -3101,7 +3100,7 @@ void FoilPicsModel::Private::onImageRequestDone()
 int FoilPicsModel::Private::findPath(QString aPath)
 {
     const int n = iData.count();
-    for (int i=0; i<n; i++) {
+    for (int i = 0; i < n; i++) {
         if (iData.at(i)->iPath == aPath) {
             return i;
         }
@@ -3115,7 +3114,7 @@ bool FoilPicsModel::Private::dropDecryptedData(int aDontTouch)
     int maxDistance = -1;
     const int n = iData.count();
     // Find the index furthest away from the one we don't touch
-    for (int i=0; i<n; i++) {
+    for (int i = 0; i < n; i++) {
         if (i != aDontTouch && !iData.at(i)->iBytes.isEmpty()) {
             // The distance is calculated assuming that the list is circular
             const int distance = (aDontTouch > indexToDrop) ?
@@ -3142,7 +3141,7 @@ bool FoilPicsModel::Private::tooMuchDataDecrypted()
     int count = 0;
     size_t totalSize = 0;
     const int n = iData.count();
-    for (int i=0; i<n; i++) {
+    for (int i = 0; i < n; i++) {
         ModelData* data = iData.at(i);
         if (!data->iBytes.isEmpty()) {
             count++;
@@ -3167,7 +3166,7 @@ bool FoilPicsModel::Private::busy() const
     } else {
         // Hmm... This is not very scalable
         const int n = iData.count();
-        for (int i=0; i<n; i++) {
+        for (int i = 0; i < n; i++) {
             ModelData* data = iData.at(i);
             if (data->iDecryptTask ||
                 data->iSetTitleTask ||
