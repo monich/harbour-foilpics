@@ -36,43 +36,43 @@
     <message id="foilpics-pulley_menu-generate_key">
         <source>Generate a new key</source>
         <extracomment>Pulley menu item</extracomment>
-        <translation>生成新密匙</translation>
+        <translation>生成新密钥</translation>
     </message>
     <message id="foilpics-pulley_menu-change_password">
         <source>Change password</source>
         <extracomment>Pulley menu item</extracomment>
-        <translation>滚轮菜单项目</translation>
+        <translation>更改密码</translation>
     </message>
     <message id="foilpics-pulley_menu-select_photos">
         <source>Select photos</source>
         <extracomment>Pulley menu item</extracomment>
-        <translation>滚轮菜单项目</translation>
+        <translation>选择照片</translation>
     </message>
     <message id="foilpics-pulley_menu-select_all">
         <source>Select all</source>
         <extracomment>Pulley menu item</extracomment>
-        <translation>Отметить все</translation>
+        <translation>全选</translation>
     </message>
     <message id="foilpics-pulley_menu-select_none">
         <source>Select none</source>
         <extracomment>Pulley menu item</extracomment>
-        <translation>滚轮菜单项目</translation>
+        <translation>取消选择</translation>
     </message>
     <message id="foilpics-password_field-placeholder">
         <source>Password</source>
         <extracomment>Default placeholder for password field</extracomment>
-        <translation>密码字段的默认占位符</translation>
+        <translation>密码</translation>
     </message>
     <message id="foilpics-password_field-label">
         <source>Password</source>
         <extracomment>Default label for password field</extracomment>
-        <translation>密码字段的默认标签</translation>
+        <translation>密码</translation>
     </message>
     <message id="foilpics-remorse-deleting_selected" numerus="yes">
         <source>Deleting %0 selected pictures</source>
         <extracomment>Generic remorse popup text</extracomment>
         <translation>
-            <numerusform>%0 图片将被删除</numerusform>
+            <numerusform> %0 选择的照片将被删除</numerusform>
         </translation>
     </message>
     <message id="foilpics-file_size-bytes">
@@ -98,12 +98,12 @@
     <message id="foilpics-notification-generated_key">
         <source>Generated new key</source>
         <extracomment>Pop-up notification</extracomment>
-        <translation>弹出通知</translation>
+        <translation>生成新密钥</translation>
     </message>
     <message id="foilpics-notification-password_changed">
         <source>Password changed</source>
         <extracomment>Pop-up notification</extracomment>
-        <translation>弹出通知</translation>
+        <translation>密码已修改</translation>
     </message>
     <message id="foilpics-hint-swipe_left_to_gallery">
         <source>Swipe left to access the picture gallery</source>
@@ -113,12 +113,12 @@
     <message id="foilpics-hint-swipe_right_to_encrypted">
         <source>Encrypted pictures are moved there to the left</source>
         <extracomment>Right swipe hint text</extracomment>
-        <translation>加密的图片被移动到左边</translation>
+        <translation>加密的图片移动到左边</translation>
     </message>
     <message id="foilpics-hint-swipe_left_to_decrypted">
         <source>Decrypted pictures are moved back to the gallery</source>
         <extracomment>Left swipe hint text</extracomment>
-        <translation>解密的图片将被移回图库</translation>
+        <translation>解密的图片移回图库</translation>
     </message>
     <message id="foilpics-generate_key_warning-title">
         <source>Warning</source>
@@ -133,39 +133,39 @@
     <message id="foilpics-generate_key_page-title">
         <source>You are about to generate a new key</source>
         <extracomment>Label text</extracomment>
-        <translation>即将生成一个新密匙</translation>
+        <translation>即将生成一个新密钥/translation>
     </message>
     <message id="foilpics-generating_key_view-generating_new_key">
         <source>Generating new key...</source>
         <extracomment>Progress view label</extracomment>
-        <translation>生成新秘匙...</translation>
+        <translation>正在生成新密钥...</translation>
     </message>
     <message id="foilpics-generate_key_view-label-key_needed">
         <source>You need to generate the key and select the password before you can encrypt your pictures</source>
         <extracomment>Label text</extracomment>
-        <translation>你需要先生成密匙并选择密码, 然后才能对图片进行加密</translation>
+        <translation>你需要先生成密钥并选择密码, 然后才能对图片进行加密</translation>
     </message>
     <message id="foilpics-generate_key_view-label-key_size">
         <source>Key size</source>
         <extracomment>Combo box label</extracomment>
-        <translation>秘匙大小</translation>
+        <translation>密钥大小</translation>
     </message>
     <message id="foilpics-generate_key_view-label-minimum_length" numerus="yes">
         <source>Type at least %0 character(s)</source>
         <extracomment>Password field label</extracomment>
         <translation>
-            <numerusform>最少% 0字符</numerusform>
+            <numerusform>最少输入 %0 字符</numerusform>
         </translation>
     </message>
     <message id="foilpics-generate_key_view-button-generate_key">
         <source>Generate key</source>
         <extracomment>Button label</extracomment>
-        <translation>生成密匙!</translation>
+        <translation>生成密钥!</translation>
     </message>
     <message id="foilpics-generate_key_view-button-generating_key">
         <source>Generating...</source>
         <extracomment>Button label</extracomment>
-        <translation>生成...</translation>
+        <translation>生成中...</translation>
     </message>
     <message id="foilpics-enter_password_view-label-enter_password">
         <source>Secret pictures are locked. Please enter your password</source>
@@ -175,7 +175,7 @@
     <message id="foilpics-enter_password_view-button-unlocking">
         <source>Unlocking...</source>
         <extracomment>Button label</extracomment>
-        <translation>解锁...</translation>
+        <translation>解锁中...</translation>
     </message>
     <message id="foilpics-enter_password_view-button-unlock">
         <source>Unlock</source>
@@ -185,7 +185,7 @@
     <message id="foilpics-change_password_page-label-enter_passwords">
         <source>Please enter the current and the new password</source>
         <extracomment>Password change prompt</extracomment>
-        <translation>请输入当前密码和新密码</translation>
+        <translation>请输入当前密码以及新密码</translation>
     </message>
     <message id="foilpics-change_password_page-text_field_label-current_password">
         <source>Current password</source>
@@ -205,17 +205,17 @@
     <message id="foilpics-decrypting_view-unlocking">
         <source>Unlocking...</source>
         <extracomment>Progress view label</extracomment>
-        <translation>解锁...</translation>
+        <translation>解锁中...</translation>
     </message>
     <message id="foilpics-decrypting_view-decrypting">
         <source>Decrypting...</source>
         <extracomment>Progress view label</extracomment>
-        <translation>解密...</translation>
+        <translation>解密中...</translation>
     </message>
     <message id="foilpics-image_grid_view-remorse-deleting">
         <source>Deleting</source>
         <extracomment>Deleting image in 5 seconds</extracomment>
-        <translation>删除</translation>
+        <translation>删除中</translation>
     </message>
     <message id="foilpics-image_grid_view-remorse-cancel_deletion">
         <source>Cancel</source>
@@ -241,7 +241,7 @@
         <source>Encrypting %0 selected pictures</source>
         <extracomment>Remorse popup text</extracomment>
         <translation>
-            <numerusform>加密%0选择的图片</numerusform>
+            <numerusform>正在加密 %0 选择的图片</numerusform>
         </translation>
     </message>
     <message id="foilpics-gallery_fullscreen_view-header">
@@ -293,7 +293,7 @@
         <source>Decrypting %0 selected pictures</source>
         <extracomment>Remorse popup text</extracomment>
         <translation>
-            <numerusform>解密%0选择的图片</numerusform>
+            <numerusform>解密 %0 选择的图片</numerusform>
         </translation>
     </message>
     <message id="foilpics-confirm_password_page-info_label">
@@ -349,7 +349,7 @@
     <message id="foilpics-details-mime_type-label">
         <source>Type</source>
         <extracomment>Details label</extracomment>
-        <translation>Формат</translation>
+        <translation>类型</translation>
     </message>
     <message id="foilpics-details-width-label">
         <source>Width</source>
@@ -384,7 +384,7 @@
     <message id="foilpics-details-coordinates-value">
         <source>Latitude %1, Longitude %2, Altitude %3</source>
         <extracomment>Coordinates</extracomment>
-        <translation>纬度% 1, 经度% 2, 海拔度% 30</translation>
+        <translation>纬度 %1, 经度 %2, 海拔 %3</translation>
     </message>
     <message id="foilpics-details-section_header-editable">
         <source>Editable details</source>
