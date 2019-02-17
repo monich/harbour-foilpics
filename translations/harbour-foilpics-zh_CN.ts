@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="zh_cn">
+<TS version="2.1" language="zh_CN">
 <context>
     <name></name>
     <message id="foilpics-app_name">
@@ -70,10 +70,8 @@
     </message>
     <message id="foilpics-remorse-deleting_selected" numerus="yes">
         <source>Deleting %0 selected pictures</source>
-        <extracomment>删除选择的%0照片</extracomment>
+        <extracomment>Generic remorse popup text</extracomment>
         <translation>
-            <numerusform>%0 图片将被删除</numerusform>
-            <numerusform>%0 图片将被删除</numerusform>
             <numerusform>%0 图片将被删除</numerusform>
         </translation>
     </message>
@@ -154,10 +152,8 @@
     </message>
     <message id="foilpics-generate_key_view-label-minimum_length" numerus="yes">
         <source>Type at least %0 character(s)</source>
-        <extracomment>输入至少%0字符</extracomment>
+        <extracomment>Password field label</extracomment>
         <translation>
-            <numerusform>最少% 0字符</numerusform>
-            <numerusform>最少% 0字符</numerusform>
             <numerusform>最少% 0字符</numerusform>
         </translation>
     </message>
@@ -246,8 +242,6 @@
         <extracomment>Remorse popup text</extracomment>
         <translation>
             <numerusform>加密%0选择的图片</numerusform>
-            <numerusform>加密%0选择的图片</numerusform>
-            <numerusform>加密%0选择的图片</numerusform>
         </translation>
     </message>
     <message id="foilpics-gallery_fullscreen_view-header">
@@ -299,8 +293,6 @@
         <source>Decrypting %0 selected pictures</source>
         <extracomment>Remorse popup text</extracomment>
         <translation>
-            <numerusform>解密%0选择的图片</numerusform>
-            <numerusform>解密%0选择的图片</numerusform>
             <numerusform>解密%0选择的图片</numerusform>
         </translation>
     </message>
