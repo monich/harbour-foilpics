@@ -384,7 +384,7 @@
     <message id="foilpics-details-coordinates-value">
         <source>Latitude %1, Longitude %2, Altitude %3</source>
         <extracomment>Coordinates</extracomment>
-        <translation>纬度 %1, 经度 %2, 海拔度 %3</translation>
+        <translation>纬度 %1, 经度 %2, 海拔 %3</translation>
     </message>
     <message id="foilpics-details-section_header-editable">
         <source>Editable details</source>
