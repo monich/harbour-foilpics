@@ -33,6 +33,7 @@ HARBOUR_LIB_REL = harbour-lib
 HARBOUR_LIB_DIR = $${_PRO_FILE_PWD_}/$${HARBOUR_LIB_REL}
 HARBOUR_LIB_INCLUDE = $${HARBOUR_LIB_DIR}/include
 HARBOUR_LIB_SRC = $${HARBOUR_LIB_DIR}/src
+HARBOUR_LIB_QML = $${HARBOUR_LIB_DIR}/qml
 
 LIBGLIBUTIL_DIR = $${_PRO_FILE_PWD_}/libglibutil
 LIBGLIBUTIL_INCLUDE = $${LIBGLIBUTIL_DIR}/include
@@ -128,6 +129,20 @@ SOURCES += \
     $${HARBOUR_LIB_SRC}/HarbourTheme.cpp \
     $${HARBOUR_LIB_SRC}/HarbourTransferMethodInfo.cpp \
     $${HARBOUR_LIB_SRC}/HarbourTransferMethodsModel.cpp
+
+HARBOUR_QML_COMPONENTS = \
+    $${HARBOUR_LIB_QML}/HarbourBadge.qml \
+    $${HARBOUR_LIB_QML}/HarbourFitLabel.qml \
+    $${HARBOUR_LIB_QML}/HarbourHorizontalSwipeHint.qml \
+    $${HARBOUR_LIB_QML}/HarbourIconTextButton.qml \
+    $${HARBOUR_LIB_QML}/HarbourPasswordInputField.qml \
+    $${HARBOUR_LIB_QML}/HarbourShakeAnimation.qml
+
+OTHER_FILES += $${HARBOUR_QML_COMPONENTS}
+
+qml_components.files = $${HARBOUR_QML_COMPONENTS}
+qml_components.path = /usr/share/$${TARGET}/qml/harbour
+INSTALLS += qml_components
 
 # Icons
 ICON_SIZES = 86 108 128 256

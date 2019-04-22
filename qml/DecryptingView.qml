@@ -2,6 +2,8 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import harbour.foilpics 1.0
 
+import "harbour"
+
 Item {
     property var foilModel
     readonly property bool unlocking: !foilModel || !foilModel.count || unlockingTimer.running
@@ -41,7 +43,7 @@ Item {
             qsTrId("foilpics-decrypting_view-decrypting")
     }
 
-    FitLabel {
+    HarbourFitLabel {
         anchors.fill: busyIndicator
         text: (shownCount > 0) ? shownCount : ""
         opacity: (foilModel && foilModel.foilState === FoilPicsModel.FoilDecrypting && !unlocking) ? 1 : 0

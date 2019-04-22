@@ -2,6 +2,8 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import harbour.foilpics 1.0
 
+import "harbour"
+
 ImageGridView {
     id: grid
 
@@ -33,7 +35,7 @@ ImageGridView {
             //: Gallery grid title
             //% "Photos"
             qsTrId("foilpics-gallery_grid-title")
-        Badge {
+        HarbourBadge {
             anchors {
                 left: header.extraContent.left
                 verticalCenter: header.extraContent.verticalCenter
@@ -169,7 +171,7 @@ ImageGridView {
         property bool armed
         property bool running
         sourceComponent: Component {
-            LeftRightSwipeHint {
+            HarbourHorizontalSwipeHint {
                 //: Right swipe hint text
                 //% "Encrypted pictures are moved there to the left"
                 text: qsTrId("foilpics-hint-swipe_right_to_encrypted")

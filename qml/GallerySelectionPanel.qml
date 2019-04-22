@@ -1,6 +1,8 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 
+import "harbour"
+
 Item {
     id: panel
     height: Math.max(deleteButton.height, encryptButton.height, dismissButton.height) + 2 * Theme.paddingMedium
@@ -25,7 +27,7 @@ Item {
         right: parent.right
     }
 
-    IconTextButton {
+    HarbourIconTextButton {
         id: deleteButton
         x: Math.floor(panel.width/6 - width/2)
         anchors {
@@ -37,7 +39,7 @@ Item {
         onPressAndHold: panel.deleteHint()
     }
 
-    IconTextButton {
+    HarbourIconTextButton {
         id: encryptButton
         x: Math.floor(panel.width/2 - width/2)
         anchors {
@@ -49,7 +51,7 @@ Item {
         onPressAndHold: panel.encryptHint()
     }
 
-    IconTextButton {
+    HarbourIconTextButton {
         id: dismissButton
         x: Math.floor(5*panel.width/6 - width/2)
         anchors {

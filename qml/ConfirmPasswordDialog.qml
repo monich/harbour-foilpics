@@ -1,6 +1,8 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 
+import "harbour"
+
 Dialog {
     id: dialog
     allowedOrientations: window.allowedOrientations
@@ -45,7 +47,7 @@ Dialog {
             color: Theme.secondaryColor
             wrapMode: Text.Wrap
         }
-        PasswordInputField {
+        HarbourPasswordInputField {
             id: passwordInput
             //: Placeholder for the password confirmation prompt
             //% "New password again"
@@ -66,7 +68,7 @@ Dialog {
         }
     }
 
-    ShakeAnimation  {
+    HarbourShakeAnimation  {
         id: wrongPasswordAnimation
         target: column
     }

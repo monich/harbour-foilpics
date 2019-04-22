@@ -2,6 +2,8 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import harbour.foilpics 1.0
 
+import "harbour"
+
 Dialog {
     id: dialog
     forwardNavigation: false
@@ -66,7 +68,7 @@ Dialog {
             //% "Please enter the current and the new password"
             text: qsTrId("foilpics-change_password_page-label-enter_passwords")
         }
-        PasswordInputField {
+        HarbourPasswordInputField {
             id: currentPasswordInput
             //: Placeholder and label for the current password prompt
             //% "Current password"
@@ -75,7 +77,7 @@ Dialog {
             EnterKey.onClicked: newPasswordInput.focus = true
             onTextChanged: dialog.wrongPassword = false
         }
-        PasswordInputField {
+        HarbourPasswordInputField {
             id: newPasswordInput
             //: Placeholder and label for the new password prompt
             //% "New password"
@@ -93,7 +95,7 @@ Dialog {
         }
     }
 
-    ShakeAnimation  {
+    HarbourShakeAnimation  {
         id: wrongPasswordAnimation
         target: column
     }

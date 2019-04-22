@@ -2,6 +2,8 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import harbour.foilpics 1.0
 
+import "harbour"
+
 SilicaListView {
     id: view
 
@@ -72,7 +74,7 @@ SilicaListView {
             //: Encrypted grid title
             //% "Encrypted"
             qsTrId("foilpics-encrypted_grid-title")
-        Badge {
+        HarbourBadge {
             id: badge
             anchors {
                 left: header.extraContent.left

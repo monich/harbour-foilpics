@@ -2,6 +2,8 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import harbour.foilpics 1.0
 
+import "harbour"
+
 Item {
     id: view
     property var foilModel
@@ -51,7 +53,7 @@ Item {
             Component.onCompleted: currentIndex = 1 // default
         }
 
-        PasswordInputField {
+        HarbourPasswordInputField {
             id: passphrase
             label: text.length < minPassphraseLen ?
                 //: Password field label

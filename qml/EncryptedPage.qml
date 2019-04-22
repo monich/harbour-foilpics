@@ -3,6 +3,8 @@ import Sailfish.Silica 1.0
 import harbour.foilpics 1.0
 import org.nemomobile.notifications 1.0
 
+import "harbour"
+
 Page {
     id: page
     property var hints
@@ -131,7 +133,7 @@ Page {
         opacity: (hints.leftSwipeToGallery < MaximumHintCount | running) ? 1 : 0
         property bool running
         sourceComponent: Component {
-            LeftRightSwipeHint {
+            HarbourHorizontalSwipeHint {
                 //: Left swipe hint text
                 //% "Swipe left to access the picture gallery"
                 text: qsTrId("foilpics-hint-swipe_left_to_gallery")

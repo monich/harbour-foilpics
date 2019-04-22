@@ -2,6 +2,8 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import harbour.foilpics 1.0
 
+import "harbour"
+
 SilicaFlickable {
     id: view
     property var foilModel
@@ -64,7 +66,7 @@ SilicaFlickable {
             //% "Secret pictures are locked. Please enter your password"
             text: qsTrId("foilpics-enter_password_view-label-enter_password")
         }
-        PasswordInputField {
+        HarbourPasswordInputField {
             id: passphrase
             enabled: !unlocking
             EnterKey.onClicked: view.enterPassword()
@@ -84,7 +86,7 @@ SilicaFlickable {
         }
     }
 
-    ShakeAnimation  {
+    HarbourShakeAnimation  {
         id: wrongPasswordAnimation
         target: column
     }

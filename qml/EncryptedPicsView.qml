@@ -2,6 +2,8 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import harbour.foilpics 1.0
 
+import "harbour"
+
 SilicaFlickable {
     id: view
 
@@ -228,7 +230,7 @@ SilicaFlickable {
         property bool armed
         property bool running
         sourceComponent: Component {
-            LeftRightSwipeHint {
+            HarbourHorizontalSwipeHint {
                 //: Left swipe hint text
                 //% "Decrypted pictures are moved back to the gallery"
                 text: qsTrId("foilpics-hint-swipe_left_to_decrypted")
