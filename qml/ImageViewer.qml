@@ -164,6 +164,7 @@ SilicaFlickable {
 
         Image {
             id: photo
+
             property var errorLabel
 
             smooth: !(flickable.movingVertically || flickable.movingHorizontally)
@@ -232,6 +233,26 @@ SilicaFlickable {
             onMouseXChanged: lastX = mouse.x
             onClicked: flickable.clicked()
         }
+    }
+
+    Timer {
+        id: quickLoadTimer
+
+        interval: 1000
+        running: true
+    }
+
+    Loader {
+        active: opacity > 0
+        opacity: (!quickLoadTimer.running && photo.status === Image.Loading) ? 1 : 0
+        anchors.centerIn: parent
+        sourceComponent: Component {
+            BusyIndicator {
+                size: BusyIndicatorSize.Large
+                running: true
+            }
+        }
+        Behavior on opacity { FadeAnimation {} }
     }
 
     Component {
