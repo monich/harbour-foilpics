@@ -161,8 +161,13 @@
     </message>
     <message id="foilpics-enter_password_view-label-enter_password">
         <source>Secret pictures are locked. Please enter your password</source>
-        <extracomment>Password prompt label</extracomment>
+        <extracomment>Password prompt label (long)</extracomment>
         <translation>Las imágenes secretas están bloqueadas. Por favor, introduzca su contraseña</translation>
+    </message>
+    <message id="foilpics-enter_password_view-label-enter_password_short">
+        <source>Please enter your password</source>
+        <extracomment>Password prompt label (short)</extracomment>
+        <translation type="unfinished">Por favor, introduzca su contraseña</translation>
     </message>
     <message id="foilpics-enter_password_view-button-unlocking">
         <source>Unlocking...</source>

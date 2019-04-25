@@ -159,8 +159,13 @@
     </message>
     <message id="foilpics-enter_password_view-label-enter_password">
         <source>Secret pictures are locked. Please enter your password</source>
-        <extracomment>Password prompt label</extracomment>
+        <extracomment>Password prompt label (long)</extracomment>
         <translation>A titkos képek zárolva vannak. Kérlek add meg a jelszavadat</translation>
+    </message>
+    <message id="foilpics-enter_password_view-label-enter_password_short">
+        <source>Please enter your password</source>
+        <extracomment>Password prompt label (short)</extracomment>
+        <translation type="unfinished">Kérlek add meg a jelszavadat</translation>
     </message>
     <message id="foilpics-enter_password_view-button-unlocking">
         <source>Unlocking...</source>
