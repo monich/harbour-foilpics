@@ -6,10 +6,12 @@ import "harbour"
 
 Item {
     id: view
+
     property var foilModel
     property alias title: title.text
     readonly property int minPassphraseLen: 8
     readonly property bool generating: foilModel.foilState === FoilPicsModel.FoilGeneratingKey
+    readonly property bool landscapeLayout: appLandscapeMode && Screen.sizeCategory < Screen.Large
 
     function generateKey() {
         var dialog = pageStack.push(Qt.resolvedUrl("ConfirmPasswordDialog.qml"), {
@@ -23,17 +25,17 @@ Item {
         })
     }
 
-    Column {
-        id: column
-        spacing: Theme.paddingLarge
-        anchors {
-            verticalCenter: parent.verticalCenter
-            left: parent.left
-            right: parent.right
-        }
+    Item {
+        id: panel
+
+        width: parent.width
+        height: childrenRect.height
+        y: (parent.height > height) ? Math.floor((parent.height - height)/2) : (parent.height - height)
 
         InfoLabel {
             id: title
+
+            height: implicitHeight
             //: Label text
             //% "You need to generate the key and select the password before you can encrypt your pictures"
             text: qsTrId("foilpics-generate_key_view-label-key_needed")
@@ -41,10 +43,16 @@ Item {
 
         ComboBox {
             id: keySize
+
             //: Combo box label
             //% "Key size"
             label: qsTrId("foilpics-generate_key_view-label-key_size")
             enabled: !generating
+            width: parent.width
+            anchors {
+                top: title.bottom
+                topMargin: Theme.paddingLarge
+            }
             menu: ContextMenu {
                 MenuItem { text: "1024" }
                 MenuItem { text: "1500" }
@@ -54,7 +62,13 @@ Item {
         }
 
         HarbourPasswordInputField {
-            id: passphrase
+            id: inputField
+
+            anchors {
+                left: parent.left
+                top: keySize.bottom
+                topMargin: Theme.paddingLarge
+            }
             label: text.length < minPassphraseLen ?
                 //: Password field label
                 //% "Type at least %0 character(s)"
@@ -65,7 +79,9 @@ Item {
         }
 
         Button {
-            anchors.horizontalCenter: parent.horizontalCenter
+            id: button
+
+            anchors.topMargin: Theme.paddingLarge
             text: generating ?
                 //: Button label
                 //% "Generating..."
@@ -73,8 +89,72 @@ Item {
                 //: Button label
                 //% "Generate key"
                 qsTrId("foilpics-generate_key_view-button-generate_key")
-            enabled: passphrase.text.length >= minPassphraseLen && !generating
+            enabled: inputField.text.length >= minPassphraseLen && !generating
             onClicked: generateKey()
         }
+
+        // Theme.paddingLarge pixels below the button in portrait
+        Item {
+            height: landscapeLayout ? 0 : Theme.paddingLarge
+            anchors {
+                top: button.bottom
+                left: button.left
+                right: button.right
+            }
+        }
     }
+
+    states: [
+        State {
+            name: "portrait"
+            when: !landscapeLayout
+            changes: [
+                AnchorChanges {
+                    target: inputField
+                    anchors.right: panel.right
+                },
+                PropertyChanges {
+                    target: inputField
+                    anchors.rightMargin: 0
+                },
+                AnchorChanges {
+                    target: button
+                    anchors {
+                        top: inputField.bottom
+                        horizontalCenter: parent.horizontalCenter
+                    }
+                },
+                PropertyChanges {
+                    target: button
+                    anchors.rightMargin: 0
+                }
+            ]
+        },
+        State {
+            name: "landscape"
+            when: landscapeLayout
+            changes: [
+                AnchorChanges {
+                    target: inputField
+                    anchors.right: button.left
+                },
+                PropertyChanges {
+                    target: inputField
+                    anchors.rightMargin: Theme.horizontalPageMargin
+                },
+                AnchorChanges {
+                    target: button
+                    anchors {
+                        top: keySize.bottom
+                        right: panel.right
+                        horizontalCenter: undefined
+                    }
+                },
+                PropertyChanges {
+                    target: button
+                    anchors.rightMargin: Theme.horizontalPageMargin
+                }
+            ]
+        }
+    ]
 }
