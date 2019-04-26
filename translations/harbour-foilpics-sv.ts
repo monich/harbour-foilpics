@@ -160,7 +160,7 @@ Om du har glömt ditt lösenord, bör du veta att det troligen är datortekniskt
         <extracomment>Button label</extracomment>
         <translation>Genererar...</translation>
     </message>
-    <message id="foilpics-enter_password_view-label-enter_password">
+    <message id="foilpics-enter_password_view-label-enter_password_long">
         <source>Secret pictures are locked. Please enter your password</source>
         <extracomment>Password prompt label (long)</extracomment>
         <translation>Hemliga bilder är låsta. Ange ditt lösenord</translation>

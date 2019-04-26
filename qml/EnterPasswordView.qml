@@ -74,7 +74,7 @@ SilicaFlickable {
             visible: panel.showLongPrompt
             //: Password prompt label (long)
             //% "Secret pictures are locked. Please enter your password"
-            text: qsTrId("foilpics-enter_password_view-label-enter_password")
+            text: qsTrId("foilpics-enter_password_view-label-enter_password_long")
         }
 
         InfoLabel {

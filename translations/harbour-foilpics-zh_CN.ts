@@ -157,7 +157,7 @@
         <extracomment>Button label</extracomment>
         <translation>生成中...</translation>
     </message>
-    <message id="foilpics-enter_password_view-label-enter_password">
+    <message id="foilpics-enter_password_view-label-enter_password_long">
         <source>Secret pictures are locked. Please enter your password</source>
         <extracomment>Password prompt label (long)</extracomment>
         <translation>选择图片已锁定，请输入你的密码</translation>
