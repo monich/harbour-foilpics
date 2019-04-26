@@ -63,7 +63,7 @@ SilicaFlickable {
 
         width: parent.width
         height: childrenRect.height
-        anchors.verticalCenter: parent.verticalCenter
+        y: (parent.height > height) ? Math.floor((parent.height - height)/2) : (parent.height - height)
 
         readonly property bool showLongPrompt: y >= 0
 
