@@ -122,7 +122,7 @@
     </message>
     <message id="foilpics-generate_key_page-title">
         <source>You are about to generate a new key</source>
-        <extracomment>Label text</extracomment>
+        <extracomment>Prompt label</extracomment>
         <translation>Új kulcsot hozol létre</translation>
     </message>
     <message id="foilpics-generating_key_view-generating_new_key">
@@ -132,7 +132,7 @@
     </message>
     <message id="foilpics-generate_key_view-label-key_needed">
         <source>You need to generate the key and select the password before you can encrypt your pictures</source>
-        <extracomment>Label text</extracomment>
+        <extracomment>Prompt label</extracomment>
         <translation>Mielőtt titkosíthatnád a képeidet létre kell hoznod a kulcsot, és ki kell választanod a jelszót.</translation>
     </message>
     <message id="foilpics-generate_key_view-label-key_size">

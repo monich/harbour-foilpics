@@ -124,7 +124,7 @@
     </message>
     <message id="foilpics-generate_key_page-title">
         <source>You are about to generate a new key</source>
-        <extracomment>Label text</extracomment>
+        <extracomment>Prompt label</extracomment>
         <translation>Создание нового ключа</translation>
     </message>
     <message id="foilpics-generating_key_view-generating_new_key">
@@ -134,7 +134,7 @@
     </message>
     <message id="foilpics-generate_key_view-label-key_needed">
         <source>You need to generate the key and select the password before you can encrypt your pictures</source>
-        <extracomment>Label text</extracomment>
+        <extracomment>Prompt label</extracomment>
         <translation>Прежде чем что-нибудь зашифровать, надо создать ключ и выбрать пароль</translation>
     </message>
     <message id="foilpics-generate_key_view-label-key_size">

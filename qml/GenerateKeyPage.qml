@@ -21,9 +21,9 @@ Page {
 
     GenerateKeyView {
         anchors.fill: parent
-        //: Label text
+        //: Prompt label
         //% "You are about to generate a new key"
-        title: qsTrId("foilpics-generate_key_page-title")
+        prompt: qsTrId("foilpics-generate_key_page-title")
         foilModel: page.foilModel
     }
 }

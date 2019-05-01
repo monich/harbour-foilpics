@@ -124,7 +124,7 @@ Om du har glömt ditt lösenord, bör du veta att det troligen är datortekniskt
     </message>
     <message id="foilpics-generate_key_page-title">
         <source>You are about to generate a new key</source>
-        <extracomment>Label text</extracomment>
+        <extracomment>Prompt label</extracomment>
         <translation>Du är på väg att generera en ny nyckel</translation>
     </message>
     <message id="foilpics-generating_key_view-generating_new_key">
@@ -134,7 +134,7 @@ Om du har glömt ditt lösenord, bör du veta att det troligen är datortekniskt
     </message>
     <message id="foilpics-generate_key_view-label-key_needed">
         <source>You need to generate the key and select the password before you can encrypt your pictures</source>
-        <extracomment>Label text</extracomment>
+        <extracomment>Prompt label</extracomment>
         <translation>Du måste skapa en nyckel och ange ett lösenord, innan du kan kryptera dina bilder</translation>
     </message>
     <message id="foilpics-generate_key_view-label-key_size">

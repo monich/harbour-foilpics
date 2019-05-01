@@ -8,7 +8,7 @@ Item {
     id: view
 
     property var foilModel
-    property alias title: title.text
+    property alias prompt: promptLabel.text
     readonly property int minPassphraseLen: 8
     readonly property bool generating: foilModel.foilState === FoilPicsModel.FoilGeneratingKey
     readonly property bool landscapeLayout: appLandscapeMode && Screen.sizeCategory < Screen.Large
@@ -33,12 +33,12 @@ Item {
         y: (parent.height > height) ? Math.floor((parent.height - height)/2) : (parent.height - height)
 
         InfoLabel {
-            id: title
+            id: promptLabel
 
             height: implicitHeight
-            //: Label text
-            //% "You need to generate the key and select the password before you can encrypt your pictures"
-            text: qsTrId("foilpics-generate_key_view-label-key_needed")
+            opacity: (parent.y >= 0) ? 1 : 0
+
+            Behavior on opacity { FadeAnimation { } }
         }
 
         ComboBox {
@@ -50,7 +50,7 @@ Item {
             enabled: !generating
             width: parent.width
             anchors {
-                top: title.bottom
+                top: promptLabel.bottom
                 topMargin: Theme.paddingLarge
             }
             menu: ContextMenu {
@@ -58,7 +58,7 @@ Item {
                 MenuItem { text: "1500" }
                 MenuItem { text: "2048" }
             }
-            Component.onCompleted: currentIndex = 1 // default
+            Component.onCompleted: currentIndex = 2 // default
         }
 
         HarbourPasswordInputField {

@@ -123,7 +123,7 @@
     </message>
     <message id="foilpics-generate_key_page-title">
         <source>You are about to generate a new key</source>
-        <extracomment>Label text</extracomment>
+        <extracomment>Prompt label</extracomment>
         <translation>Je staat op het punt een nieuwe sleutel te genereren</translation>
     </message>
     <message id="foilpics-generating_key_view-generating_new_key">
@@ -133,7 +133,7 @@
     </message>
     <message id="foilpics-generate_key_view-label-key_needed">
         <source>You need to generate the key and select the password before you can encrypt your pictures</source>
-        <extracomment>Label text</extracomment>
+        <extracomment>Prompt label</extracomment>
         <translation>Vooraleer je je foto’s kan versleutelen, moet je de sleutel aanmaken en het wachtwoord selecteren</translation>
     </message>
     <message id="foilpics-generate_key_view-label-key_size">

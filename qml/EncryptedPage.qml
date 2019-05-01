@@ -74,7 +74,14 @@ Page {
             anchors.fill: parent
             active: opacity > 0
             opacity: (foilModel.foilState === FoilPicsModel.FoilKeyMissing) ? 1 : 0
-            sourceComponent: Component { GenerateKeyView { foilModel: page.foilModel } }
+            sourceComponent: Component {
+                GenerateKeyView {
+                    //: Prompt label
+                    //% "You need to generate the key and select the password before you can encrypt your pictures"
+                    prompt: qsTrId("foilpics-generate_key_view-label-key_needed")
+                    foilModel: page.foilModel
+                }
+            }
             Behavior on opacity { FadeAnimation {} }
         }
 
