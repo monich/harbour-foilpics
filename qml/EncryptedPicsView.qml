@@ -163,13 +163,13 @@ Item {
         })
         selectionPage.groupPictures.connect(function(list) {
             var groups = foilModel.groupModel
-            var groupPage = pageStack.replace(Qt.resolvedUrl("EditGroupPage.qml"), {
+            var groupPage = pageStack.push(Qt.resolvedUrl("EditGroupPage.qml"), {
                 groupModel: groups
             })
-            dropSelectionModels()
             groupPage.groupSelected.connect(function(index) {
                 foilModel.setGroupIdForRows(list, groups.groupId(index))
-                pageStack.pop()
+                dropSelectionModels()
+                pageStack.pop(mainPage)
             })
         })
         selectionPage.decryptPictures.connect(function(list) {
@@ -186,14 +186,24 @@ Item {
                 }
             })
         })
-        selectionPage.statusChanged.connect(function() {
-            if (selectionPage.status === PageStatus.Inactive) {
-                if (selectionModel) {
-                    selectionModel.destroy()
-                    selectionModel = null
-                }
-            }
-        })
+    }
+
+    Connections {
+        target: mainPage
+        onStatusChanged: maybeDropSelectionModel()
+    }
+
+    Connections {
+        target: pageStack
+        onCurrentPageChanged: maybeDropSelectionModel()
+    }
+
+    function maybeDropSelectionModel() {
+        if (selectionModel && mainPage.status === PageStatus.Active && pageStack.currentPage === mainPage) {
+            console.log("dropping selection model")
+            selectionModel.destroy()
+            selectionModel = null
+        }
     }
 
     ViewPlaceholder {
