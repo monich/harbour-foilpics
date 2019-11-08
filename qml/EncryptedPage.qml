@@ -126,7 +126,6 @@ Page {
                 EncryptedPicsView {
                     hints: page.hints
                     foilModel: page.foilModel
-                    pulleyFlickable: flickable
                 }
             }
             Behavior on opacity { FadeAnimation {} }

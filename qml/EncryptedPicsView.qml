@@ -4,12 +4,11 @@ import harbour.foilpics 1.0
 
 import "harbour"
 
-SilicaFlickable {
+Item {
     id: view
 
     property var hints
     property var foilModel
-    property var pulleyFlickable
     property bool isCurrentView
     readonly property bool ready: foilModel.foilState === FoilPicsModel.FoilPicsReady
     property alias selectionModel: listView.selectionModel
@@ -27,41 +26,6 @@ SilicaFlickable {
         }
     }
 
-    PullDownMenu {
-        visible: view.ready
-        flickable: pulleyFlickable
-        MenuItem {
-            id: generateKeyMenuItem
-            //: Pulley menu item
-            //% "Generate a new key"
-            text: qsTrId("foilpics-pulley_menu-generate_key")
-            visible: !foilModel.count
-            onClicked: {
-                pageStack.push(Qt.resolvedUrl("GenerateKeyPage.qml"), {
-                    foilModel: foilModel
-                })
-            }
-        }
-        MenuItem {
-            //: Pulley menu item
-            //% "Change password"
-            text: qsTrId("foilpics-pulley_menu-change_password")
-            onClicked: {
-                pageStack.push(Qt.resolvedUrl("ChangePasswordDialog.qml"), {
-                    foilModel: foilModel
-                })
-            }
-        }
-        MenuItem {
-            id: selectPhotosMenuItem
-            //: Pulley menu item
-            //% "Select photos"
-            text: qsTrId("foilpics-pulley_menu-select_photos")
-            visible: foilModel.count > 0
-            onClicked: selectPictures()
-        }
-    }
-
     EncryptedList {
         id: listView
 
@@ -73,6 +37,40 @@ SilicaFlickable {
         //: Encrypted grid title
         //% "Encrypted"
         title: qsTrId("foilpics-encrypted_grid-title")
+
+        PullDownMenu {
+            visible: view.ready
+            MenuItem {
+                id: generateKeyMenuItem
+                //: Pulley menu item
+                //% "Generate a new key"
+                text: qsTrId("foilpics-pulley_menu-generate_key")
+                visible: !foilModel.count
+                onClicked: {
+                    pageStack.push(Qt.resolvedUrl("GenerateKeyPage.qml"), {
+                        foilModel: foilModel
+                    })
+                }
+            }
+            MenuItem {
+                //: Pulley menu item
+                //% "Change password"
+                text: qsTrId("foilpics-pulley_menu-change_password")
+                onClicked: {
+                    pageStack.push(Qt.resolvedUrl("ChangePasswordDialog.qml"), {
+                        foilModel: foilModel
+                    })
+                }
+            }
+            MenuItem {
+                id: selectPhotosMenuItem
+                //: Pulley menu item
+                //% "Select photos"
+                text: qsTrId("foilpics-pulley_menu-select_photos")
+                visible: foilModel.count > 0
+                onClicked: selectPictures()
+            }
+        }
     }
 
     Connections {

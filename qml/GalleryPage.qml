@@ -42,9 +42,12 @@ Page {
         }
     }
 
-    SilicaFlickable {
-        contentHeight: height
+    GalleryGrid {
+        id: grid
+
+        clip: true
         anchors.fill: parent
+        model: galleryModel
 
         PullDownMenu {
             visible: galleryModel.count > 0
@@ -54,14 +57,6 @@ Page {
                 text: qsTrId("foilpics-pulley_menu-select_photos")
                 onClicked: selectPictures()
             }
-        }
-
-        GalleryGrid {
-            id: grid
-
-            clip: true
-            anchors.fill: parent
-            model: galleryModel
         }
 
         ViewPlaceholder {

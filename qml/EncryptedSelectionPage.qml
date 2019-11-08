@@ -20,9 +20,21 @@ Page {
         }
     }
 
-    SilicaFlickable {
-        contentHeight: height
-        anchors.fill: parent
+    EncryptedList {
+        id: listView
+
+        anchors {
+            left: parent.left
+            right: parent.right
+            top: parent.top
+            bottom: selectionPanel.top
+        }
+        //: Encrypted grid title in selection mode
+        //% "Select photos"
+        title: qsTrId("foilpics-encrypted_grid-selection_title")
+        model: foilModel.groupModel
+        selectable: true
+        clip: true
 
         PullDownMenu {
             MenuItem {
@@ -50,60 +62,43 @@ Page {
                 }
             }
         }
+    }
 
-        EncryptedList {
-            id: listView
+    EncryptedSelectionPanel {
+        id: selectionPanel
 
-            anchors {
-                left: parent.left
-                right: parent.right
-                top: parent.top
-                bottom: selectionPanel.top
-            }
-            //: Encrypted grid title in selection mode
-            //% "Select photos"
-            title: qsTrId("foilpics-encrypted_grid-selection_title")
-            model: foilModel.groupModel
-            selectable: true
-            clip: true
+        active: selectionModel.count > 0
+        //: Generic menu item
+        //% "Delete"
+        onDeleteHint: showHint(qsTrId("foilpics-menu-delete"))
+        onDeleteSelected: page.deletePictures(selectionModel.makeSelectionBusy())
+        //: Generic menu item
+        //% "Group"
+        onGroupHint: showHint(qsTrId("foilpics-menu-group"))
+        onGroupSelected: page.groupPictures(selectionModel.makeSelectionBusy())
+        //: Generic menu item
+        //% "Decrypt"
+        onDecryptHint: showHint(qsTrId("foilpics-menu-decrypt"))
+        onDecryptSelected: page.decryptPictures(selectionModel.makeSelectionBusy())
+
+        function showHint(text) {
+            selectionHint.text = text
+            selectionHintTimer.restart()
         }
+    }
 
-        EncryptedSelectionPanel {
-            id: selectionPanel
+    InteractionHintLabel {
+        id: selectionHint
 
-            active: selectionModel.count > 0
-            //: Generic menu item
-            //% "Delete"
-            onDeleteHint: showHint(qsTrId("foilpics-menu-delete"))
-            onDeleteSelected: page.deletePictures(selectionModel.makeSelectionBusy())
-            //: Generic menu item
-            //% "Group"
-            onGroupHint: showHint(qsTrId("foilpics-menu-group"))
-            onGroupSelected: page.groupPictures(selectionModel.makeSelectionBusy())
-            //: Generic menu item
-            //% "Decrypt"
-            onDecryptHint: showHint(qsTrId("foilpics-menu-decrypt"))
-            onDecryptSelected: page.decryptPictures(selectionModel.makeSelectionBusy())
+        invert: true
+        anchors.fill: listView
+        visible: opacity > 0
+        opacity: selectionHintTimer.running ? 1.0 : 0.0
+        Behavior on opacity { FadeAnimation { duration: 1000 } }
+    }
 
-            function showHint(text) {
-                selectionHint.text = text
-                selectionHintTimer.restart()
-            }
-        }
-
-        InteractionHintLabel {
-            id: selectionHint
-
-            invert: true
-            anchors.fill: listView
-            visible: opacity > 0
-            opacity: selectionHintTimer.running ? 1.0 : 0.0
-            Behavior on opacity { FadeAnimation { duration: 1000 } }
-        }
-
-        Timer {
-            id: selectionHintTimer
-            interval: 1000
-        }
+    Timer {
+        id: selectionHintTimer
+        interval: 1000
     }
 }
