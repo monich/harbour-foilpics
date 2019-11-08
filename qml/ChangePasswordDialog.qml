@@ -6,6 +6,7 @@ import "harbour"
 
 Dialog {
     id: dialog
+
     forwardNavigation: false
     allowedOrientations: window.allowedOrientations
     property var foilModel
@@ -13,9 +14,8 @@ Dialog {
     property alias currentPassword: currentPasswordInput.text
     property alias newPassword: newPasswordInput.text
 
-    function canChangePassword() {
-        return currentPassword.length > 0 && newPassword.length > 0 && currentPassword !== newPassword && !wrongPassword
-    }
+    readonly property bool canChangePassword: currentPassword.length > 0 && newPassword.length > 0 &&
+                            currentPassword !== newPassword && !wrongPassword
 
     function invalidPassword() {
         wrongPassword = true
@@ -24,7 +24,7 @@ Dialog {
     }
 
     function changePassword() {
-        if (canChangePassword()) {
+        if (canChangePassword) {
             if (foilModel.checkPassword(currentPassword)) {
                 pageStack.push(Qt.resolvedUrl("ConfirmPasswordDialog.qml"), {
                     password: newPassword
@@ -59,6 +59,7 @@ Dialog {
 
     Column {
         id: column
+
         width: parent.width
         anchors.verticalCenter: parent.verticalCenter
         spacing: Theme.paddingLarge
@@ -70,33 +71,38 @@ Dialog {
         }
         HarbourPasswordInputField {
             id: currentPasswordInput
+
             //: Placeholder and label for the current password prompt
             //% "Current password"
             label: qsTrId("foilpics-change_password_page-text_field_label-current_password")
             placeholderText: label
-            EnterKey.onClicked: newPasswordInput.focus = true
             onTextChanged: dialog.wrongPassword = false
+            EnterKey.onClicked: newPasswordInput.focus = true
+            EnterKey.enabled: text.length > 0
         }
         HarbourPasswordInputField {
             id: newPasswordInput
+
             //: Placeholder and label for the new password prompt
             //% "New password"
             placeholderText: qsTrId("foilpics-change_password_page-text_field_label-new_password")
             label: placeholderText
             EnterKey.onClicked: dialog.changePassword()
+            EnterKey.enabled: dialog.canChangePassword
         }
         Button {
             anchors.horizontalCenter: parent.horizontalCenter
             //: Button label
             //% "Change password"
             text: qsTrId("foilpics-change_password_page-button-change_password")
-            enabled: canChangePassword()
+            enabled: dialog.canChangePassword
             onClicked: dialog.changePassword()
         }
     }
 
     HarbourShakeAnimation  {
         id: wrongPasswordAnimation
+
         target: column
     }
 }

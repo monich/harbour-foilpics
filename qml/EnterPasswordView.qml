@@ -13,6 +13,8 @@ SilicaFlickable {
     readonly property bool landscapeLayout: appLandscapeMode && Screen.sizeCategory < Screen.Large
     readonly property bool unlocking: foilModel.foilState !== FoilPicsModel.FoilLocked &&
                                     foilModel.foilState !== FoilPicsModel.FoilLockedTimedOut
+    readonly property bool canEnterPassword: inputField.text.length > 0 && !unlocking &&
+                                    !wrongPasswordAnimation.running && !wrongPassword
 
     function enterPassword() {
         if (!foilModel.unlock(inputField.text)) {
@@ -95,8 +97,9 @@ SilicaFlickable {
                 topMargin: Theme.paddingLarge
             }
             enabled: !unlocking
-            EnterKey.onClicked: view.enterPassword()
             onTextChanged: view.wrongPassword = false
+            EnterKey.onClicked: view.enterPassword()
+            EnterKey.enabled: view.canEnterPassword
         }
 
         Button {
@@ -110,7 +113,7 @@ SilicaFlickable {
                 //: Button label
                 //% "Unlock"
                 qsTrId("foilpics-enter_password_view-button-unlock")
-            enabled: inputField.text.length > 0 && !unlocking && !wrongPasswordAnimation.running && !wrongPassword
+            enabled: view.canEnterPassword
             onClicked: view.enterPassword()
         }
     }
