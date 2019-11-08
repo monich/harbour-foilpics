@@ -9,13 +9,23 @@ SilicaListView {
 
     property var foilModel
     property var selectionModel
-    property bool selecting
+    property string title
+    property bool selectable
     property bool busy
 
     property int requestedGroupIndex: -1
     property var requestedGroup
 
-    function jumpToIndex(index, cellSize, columnCount) {
+    readonly property real cellSize: Math.floor(width / columnCount)
+    readonly property int columnCount: Math.floor(width / Theme.itemSizeHuge)
+
+    function maximizeCacheBuffer() {
+        // cacheBuffer is just a rough estimate just to keep all delegate
+        // instantiated, so that scroll indicator shows the actual position.
+        cacheBuffer = cellSize * (Math.floor(foilModel.count / columnCount) + model.count)
+    }
+
+    function jumpToIndex(index) {
         requestedGroupIndex = foilModel.groupIndexAt(index)
         var groupIndex = model.offsetWithinGroup(requestedGroupIndex, index)
         var count = model.groupPicsCountAt(requestedGroupIndex)
@@ -35,8 +45,8 @@ SilicaListView {
         }
     }
 
-    function decryptItem(index, cellSize, columnCount) {
-        jumpToIndex(index, cellSize, columnCount)
+    function decryptItem(index) {
+        jumpToIndex(index)
         pageStack.pop()
         var item = requestedGroup.currentItem
         if (item) {
@@ -50,8 +60,8 @@ SilicaListView {
         }
     }
 
-    function deleteItem(index, cellSize, columnCount) {
-        jumpToIndex(index, cellSize, columnCount)
+    function deleteItem(index) {
+        jumpToIndex(index)
         pageStack.pop()
         var item = requestedGroup.currentItem
         if (item) {
@@ -67,20 +77,15 @@ SilicaListView {
 
     header: PageHeader {
         id: header
-        title: view.selecting ?
-            //: Encrypted grid title in selection mode
-            //% "Select photos"
-            qsTrId("foilpics-encrypted_grid-selection_title") :
-            //: Encrypted grid title
-            //% "Encrypted"
-            qsTrId("foilpics-encrypted_grid-title")
+
+        title: view.title
         HarbourBadge {
             id: badge
+
             anchors {
                 left: header.extraContent.left
                 verticalCenter: header.extraContent.verticalCenter
             }
-            maxWidth: header.extraContent.width
             text: foilModel.count ? foilModel.count : ""
         }
         ProgressBar {
@@ -99,6 +104,7 @@ SilicaListView {
 
     delegate: EncryptedGroup {
         id: delegate
+
         width: parent.width
         flickable: view
         foilModel: view.foilModel
@@ -107,12 +113,12 @@ SilicaListView {
         picsCount: groupPicsCount
         isFirstGroup: firstGroup
         isDefault: defaultGroup
-        onDecryptItem: view.decryptItem(globalIndex, cellSize, columnCount)
-        onDeleteItem: view.deleteItem(globalIndex, cellSize, columnCount)
-        onRequestIndex: view.jumpToIndex(globalIndex, cellSize, columnCount)
+        onDecryptItem: view.decryptItem(globalIndex)
+        onDeleteItem: view.deleteItem(globalIndex)
+        onRequestIndex: view.jumpToIndex(globalIndex)
         modelIndex: model.index
         selectionModel: view.selectionModel
-        selecting: view.selecting
+        selectable: view.selectable
 
         Connections {
             target: view
@@ -129,6 +135,7 @@ SilicaListView {
     // at the same time.
     Component {
         id: remorseContainerComponent
+
         Item {
             y: parent.contentYOffset
             width: parent.width
@@ -138,6 +145,7 @@ SilicaListView {
 
     Component {
         id: decryptRemorseComponent
+
         RemorseItem {
             //: RemorseItem cancel help text
             //% "Cancel"

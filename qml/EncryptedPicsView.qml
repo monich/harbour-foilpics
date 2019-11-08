@@ -12,10 +12,20 @@ SilicaFlickable {
     property var pulleyFlickable
     property bool isCurrentView
     readonly property bool ready: foilModel.foilState === FoilPicsModel.FoilPicsReady
+    property alias selectionModel: listView.selectionModel
+    property bool dropSelectionModelWhenDecryptionDone
 
-    property alias selecting: list.selecting
-    property alias selectionModel: list.selectionModel
-    readonly property int selectedPicturesCount: selectionModel ? selectionModel.count : 0
+    Component.onCompleted: {
+        isCurrentView = parent.isCurrentItem
+        listView.maximizeCacheBuffer()
+    }
+
+    onIsCurrentViewChanged: {
+        if (!isCurrentView) {
+            bulkActionRemorse.cancelNicely()
+            dropSelectionModel()
+        }
+    }
 
     PullDownMenu {
         visible: view.ready
@@ -25,7 +35,7 @@ SilicaFlickable {
             //: Pulley menu item
             //% "Generate a new key"
             text: qsTrId("foilpics-pulley_menu-generate_key")
-            visible: !foilModel.count && !selecting
+            visible: !foilModel.count
             onClicked: {
                 pageStack.push(Qt.resolvedUrl("GenerateKeyPage.qml"), {
                     foilModel: foilModel
@@ -47,33 +57,22 @@ SilicaFlickable {
             //: Pulley menu item
             //% "Select photos"
             text: qsTrId("foilpics-pulley_menu-select_photos")
-            visible: !selecting && foilModel.count > 0
-            onClicked: selecting = true
-        }
-        MenuItem {
-            id: selectNoneMenuItem
-            //: Pulley menu item
-            //% "Select none"
-            text: qsTrId("foilpics-pulley_menu-select_none")
-            visible: selecting && selectedPicturesCount > 0
-            onClicked: selectionModel.clearSelection()
-        }
-        MenuItem {
-            id: selectAllMenuItem
-            //: Pulley menu item
-            //% "Select all"
-            text: qsTrId("foilpics-pulley_menu-select_all")
-            visible: selecting && selectedPicturesCount < foilModel.count
-            onClicked: selectionModel.selectAll()
+            visible: foilModel.count > 0
+            onClicked: selectPictures()
         }
     }
 
-    RemorsePopup {
-        id: bulkActionRemorse
-        function cancelNicely() {
-            // To avoid flickering, do it only when really necessary
-            if (visible) cancel()
-        }
+    EncryptedList {
+        id: listView
+
+        clip: true
+        anchors.fill: parent
+        foilModel: view.foilModel
+        model: foilModel.groupModel
+        busy: foilModel.busy || progressTimer.running
+        //: Encrypted grid title
+        //% "Encrypted"
+        title: qsTrId("foilpics-encrypted_grid-title")
     }
 
     Connections {
@@ -82,133 +81,102 @@ SilicaFlickable {
             if (foilModel.busy) {
                 // Look busy for at least a second
                 progressTimer.start()
+            } else if (dropSelectionModelWhenDecryptionDone) {
+                dropSelectionModelWhenDecryptionDone = false
+                dropSelectionModel()
             }
         }
-        onCountChanged: if (!foilModel.count) selecting = false
         onDecryptionStarted: leftSwipeToDecryptedHintLoader.armed = true
     }
 
     // The parent loader is supposed to have isCurrentItem property
-
     Connections {
         target: parent
         onIsCurrentItemChanged: isCurrentView = target.isCurrentItem
     }
 
-    Component.onCompleted: isCurrentView = parent.isCurrentItem
-    onIsCurrentViewChanged: if (!isCurrentView) selecting = false
+    Timer {
+        id: progressTimer
+
+        interval: 1000
+        running: true
+    }
 
     // Selection model is fairly expensive, we create and maintain it
     // only in selection mode
-
     Component {
         id: selectionModelComponent
+
         FoilPicsSelection {
             model: foilModel
             role: "imageId"
             duplicatesAllowed: false
-            onSelectionChanged: bulkActionRemorse.cancelNicely()
-            onSelectionCleared: bulkActionRemorse.cancelNicely()
         }
     }
 
-    onSelectingChanged: {
-        if (selecting) {
-            selectionModel = selectionModelComponent.createObject(view)
-        } else {
-            bulkActionRemorse.cancelNicely()
+    RemorsePopup {
+        id: bulkActionRemorse
+
+        function cancelNicely() {
+            // To avoid flickering, do it only when really necessary
+            if (visible) cancel()
+        }
+        onCanceled: dropSelectionModel()
+    }
+
+    function dropSelectionModel() {
+        if (selectionModel) {
             selectionModel.destroy()
             selectionModel = null
         }
     }
 
-    Timer {
-        id: progressTimer
-        interval: 1000
-        running: true
-    }
-
-    EncryptedList {
-        id: list
-        clip: true
-        anchors {
-            left: parent.left
-            right: parent.right
-            top: parent.top
-            bottom: selectionPanel.top
-        }
-        foilModel: view.foilModel
-        model: view.foilModel.groupModel
-        busy: foilModel.busy || progressTimer.running
-        // cacheBuffer is just a rough estimate just to keep all delegate
-        // instantiated, so that scroll indicator shows the actual position.
-        cacheBuffer: cellSize * (Math.floor(foilModel.count / columnCount) + model.count)
-        readonly property real cellSize: Math.floor(width / columnCount)
-        readonly property int columnCount: Math.floor(width / Theme.itemSizeHuge)
-    }
-
-    EncryptedSelectionPanel {
-        id: selectionPanel
-        active: selecting
-        enableActions: selectedPicturesCount > 0
-        //: Generic menu item
-        //% "Delete"
-        onDeleteHint: showHint(qsTrId("foilpics-menu-delete"))
-        onDeleteSelected: bulkActionRemorse.execute(
+    function selectPictures() {
+        dropSelectionModel()
+        bulkActionRemorse.cancelNicely()
+        selectionModel = selectionModelComponent.createObject(view, { model: foilModel })
+        var selectionPage = pageStack.push(Qt.resolvedUrl("EncryptedSelectionPage.qml"), {
+            allowedOrientations: page.allowedOrientations,
+            selectionModel: view.selectionModel,
+            foilModel: view.foilModel
+        })
+        selectionPage.deletePictures.connect(function(list) {
+            pageStack.pop()
+            listView.jumpToIndex(list[0])
             //: Generic remorse popup text
             //% "Deleting %0 selected pictures"
-            qsTrId("foilpics-remorse-deleting_selected", selectedPicturesCount).arg(selectedPicturesCount),
-            function() {
-                foilModel.removeFiles(selectionModel.makeSelectionBusy())
+            bulkActionRemorse.execute(qsTrId("foilpics-remorse-deleting_selected", list.length).arg(list.length), function() {
+                foilModel.removeFiles(list)
+                dropSelectionModel()
             })
-        //: Generic menu item
-        //% "Group"
-        onGroupHint: showHint(qsTrId("foilpics-menu-group"))
-        onGroupSelected: {
-            var groupPage = pageStack.push(Qt.resolvedUrl("EditGroupPage.qml"), {
-                groupModel: foilModel.groupModel
+        })
+        selectionPage.groupPictures.connect(function(list) {
+            var groups = foilModel.groupModel
+            var groupPage = pageStack.replace(Qt.resolvedUrl("EditGroupPage.qml"), {
+                groupModel: groups
             })
             groupPage.groupSelected.connect(function(index) {
-                if (selectionModel) {
-                    var rows = selectionModel.getSelectedRows()
-                    selectionModel.clearSelection()
-                    foilModel.setGroupIdForRows(rows, foilModel.groupModel.groupId(index))
-                }
+                foilModel.setGroupIdForRows(list, groups.groupId(index))
                 pageStack.pop()
+                dropSelectionModel()
             })
-        }
-        //: Generic menu item
-        //% "Decrypt"
-        onDecryptHint: showHint(qsTrId("foilpics-menu-decrypt"))
-        onDecryptSelected: bulkActionRemorse.execute(
+        })
+        selectionPage.decryptPictures.connect(function(list) {
+            pageStack.pop()
+            listView.jumpToIndex(list[0])
             //: Remorse popup text
             //% "Decrypting %0 selected pictures"
-            qsTrId("foilpics-encrypted_pics_view-remorse-decrypting_selected", selectedPicturesCount).arg(selectedPicturesCount),
-            function() {
-                foilModel.decryptFiles(selectionModel.makeSelectionBusy())
+            bulkActionRemorse.execute(qsTrId("foilpics-encrypted_pics_view-remorse-decrypting_selected", list.length).arg(list.length), function() {
+                console.log(list)
+                foilModel.decryptFiles(list)
+                if (foilModel.busy) {
+                    dropSelectionModelWhenDecryptionDone = true
+                } else {
+                    // Well, this shouldn't happen but just in case...
+                    dropSelectionModel()
+                }
             })
-        //: Button that exits selection mode
-        //% "Done"
-        onDoneHint: showHint(qsTrId("foilpics-selection_panel-done_button"))
-        onDone: selecting = false
-    }
-
-    function showHint(text) {
-        selectionHint.text = text
-        selectionHintTimer.restart()
-    }
-
-    InteractionHintLabel {
-        id: selectionHint
-        anchors.fill: list
-        visible: opacity > 0
-        opacity: selectionHintTimer.running ? 1.0 : 0.0
-        Behavior on opacity { FadeAnimation { duration: 1000 } }
-    }
-
-    Timer {
-        id: selectionHintTimer
-        interval: 1000
+        })
     }
 
     ViewPlaceholder {
@@ -224,6 +192,7 @@ SilicaFlickable {
 
     Loader {
         id: leftSwipeToDecryptedHintLoader
+
         anchors.fill: parent
         active: opacity > 0
         opacity: ((hints.leftSwipeToDecrypted < MaximumHintCount && armed) | running) ? 1 : 0

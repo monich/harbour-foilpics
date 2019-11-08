@@ -431,10 +431,5 @@
         <extracomment>Name for the newly created group</extracomment>
         <translation>新群组</translation>
     </message>
-    <message id="foilpics-selection_panel-done_button">
-        <source>Done</source>
-        <extracomment>Button that exits selection mode</extracomment>
-        <translation>完成</translation>
-    </message>
 </context>
 </TS>

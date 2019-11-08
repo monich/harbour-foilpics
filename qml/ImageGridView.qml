@@ -9,7 +9,7 @@ SilicaGridView {
     property bool highlightEnabled: true
     property bool unfocusHighlightEnabled
     property bool forceUnfocusHighlight
-    property real _unfocusedOpacity: unfocusHighlightEnabled && (currentItem != null && currentItem.pressedAndHolded)
+    property real _unfocusedOpacity: unfocusHighlightEnabled && (currentItem != null && currentItem.pressedAndHeld)
                                      || forceUnfocusHighlight
                                      ? 0.2 : 1.0
     Behavior on _unfocusedOpacity { FadeAnimation {} }

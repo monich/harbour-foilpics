@@ -10,12 +10,8 @@ Page {
     property alias hints: grid.hints
     property alias foilModel: grid.foilModel
     property alias transferMethodsModel: grid.transferMethodsModel
-    property alias selecting: grid.selecting
     property alias selectionModel: grid.selectionModel
-    readonly property int selectedPicturesCount: selectionModel ? selectionModel.count : 0
-    readonly property bool haveAnyPictures: galleryModel.count > 0
-
-    onStatusChanged: if (status !== PageStatus.Active) selecting = false
+    property bool dropSelectionModelWhenEncryptionDone
 
     DocumentGalleryModel {
         id: galleryModel
@@ -33,29 +29,16 @@ Page {
             value: StandardPaths.music
             negated: true
         }
-        onCountChanged: if (!count) selecting = false
     }
 
     // Selection model is fairly expensive, we create and maintain it
     // only in selection mode
-
     Component {
         id: selectionModelComponent
+
         FoilPicsSelection {
             model: galleryModel
             role: galleryModel.keyRole
-            onSelectionChanged: bulkActionRemorse.cancelNicely()
-            onSelectionCleared: bulkActionRemorse.cancelNicely()
-        }
-    }
-
-    onSelectingChanged: {
-        if (selecting) {
-            selectionModel = selectionModelComponent.createObject(page)
-        } else {
-            bulkActionRemorse.cancelNicely()
-            selectionModel.destroy()
-            selectionModel = null
         }
     }
 
@@ -64,101 +47,21 @@ Page {
         anchors.fill: parent
 
         PullDownMenu {
-            id: pullDownMenu
-            visible: haveAnyPictures
+            visible: galleryModel.count > 0
             MenuItem {
-                id: selectPhotosMenuItem
                 //: Pulley menu item
                 //% "Select photos"
                 text: qsTrId("foilpics-pulley_menu-select_photos")
-                visible: !selecting && haveAnyPictures
-                onClicked: selecting = true
-            }
-            MenuItem {
-                id: selectNoneMenuItem
-                //: Pulley menu item
-                //% "Select none"
-                text: qsTrId("foilpics-pulley_menu-select_none")
-                visible: selecting && selectedPicturesCount > 0
-                onClicked: selectionModel.clearSelection()
-            }
-            MenuItem {
-                id: selectAllMenuItem
-                //: Pulley menu item
-                //% "Select all"
-                text: qsTrId("foilpics-pulley_menu-select_all")
-                visible: selecting && selectedPicturesCount < galleryModel.count
-                onClicked: selectionModel.selectAll()
-            }
-        }
-
-        RemorsePopup {
-            id: bulkActionRemorse
-            function cancelNicely() {
-                // To avoid flickering, do it only when really necessary
-                if (visible) cancel()
+                onClicked: selectPictures()
             }
         }
 
         GalleryGrid {
             id: grid
+
             clip: true
-            anchors {
-                left: parent.left
-                right: parent.right
-                top: parent.top
-                bottom: selectionPanel.top
-            }
+            anchors.fill: parent
             model: galleryModel
-        }
-
-        GallerySelectionPanel {
-            id: selectionPanel
-            active: selecting
-            canDelete: selectedPicturesCount > 0
-            canEncrypt: selectedPicturesCount > 0 && foilModel.keyAvailable
-            //: Generic menu item
-            //% "Delete"
-            onDeleteHint: showHint(qsTrId("foilpics-menu-delete"))
-            onDeleteSelected: bulkActionRemorse.execute(
-                //: Generic remorse popup text
-                //% "Deleting %0 selected pictures"
-                qsTrId("foilpics-remorse-deleting_selected", selectedPicturesCount).arg(selectedPicturesCount),
-                function() {
-                    FileUtil.deleteLocalFilesFromModel(galleryModel, galleryModel.keyRole, selectionModel.makeSelectionBusy())
-                })
-            //: Generic menu item
-            //% "Encrypt"
-            onEncryptHint: showHint(qsTrId("foilpics-menu-encrypt"))
-            onEncryptSelected: bulkActionRemorse.execute(
-                //: Remorse popup text
-                //% "Encrypting %0 selected pictures"
-                qsTrId("foilpics-gallery_view-remorse-encrypting_selected", selectedPicturesCount).arg(selectedPicturesCount),
-                function() {
-                    foilModel.encryptFiles(galleryModel, selectionModel.makeSelectionBusy())
-                })
-            //: Button that exits selection mode
-            //% "Done"
-            onDoneHint: showHint(qsTrId("foilpics-selection_panel-done_button"))
-            onDone: selecting = false
-
-            function showHint(text) {
-                selectionHint.text = text
-                selectionHintTimer.restart()
-            }
-        }
-
-        InteractionHintLabel {
-            id: selectionHint
-            anchors.fill: grid
-            visible: opacity > 0
-            opacity: selectionHintTimer.running ? 1.0 : 0.0
-            Behavior on opacity { FadeAnimation { duration: 1000 } }
-        }
-
-        Timer {
-            id: selectionHintTimer
-            interval: 1000
         }
 
         ViewPlaceholder {
@@ -167,5 +70,70 @@ Page {
             text: qsTrId("foilpics-gallery_view-placeholder-no_pictures")
             enabled: !galleryModel.count
         }
+    }
+
+    // This is to drop selection mode when encryption is done:
+    Connections {
+        target: foilModel
+        onBusyChanged: {
+            if (dropSelectionModelWhenEncryptionDone && !foilModel.busy) {
+                dropSelectionModelWhenEncryptionDone = false
+                dropSelectionModel()
+            }
+        }
+    }
+
+    function dropSelectionModel() {
+        if (selectionModel) {
+            selectionModel.destroy()
+            selectionModel = null
+        }
+    }
+
+    function selectPictures() {
+        dropSelectionModel()
+        bulkActionRemorse.cancelNicely()
+        selectionModel = selectionModelComponent.createObject(page)
+        var selectionPage = pageStack.push(Qt.resolvedUrl("GallerySelectionPage.qml"), {
+            allowedOrientations: page.allowedOrientations,
+            foilModel: grid.foilModel,
+            dataModel: galleryModel,
+            selectionModel: selectionModel
+        })
+        selectionPage.deletePictures.connect(function(list) {
+            pageStack.pop()
+            grid.positionViewAtIndex(list[0], GridView.Visible)
+            //: Generic remorse popup text
+            //% "Deleting %0 selected pictures"
+            bulkActionRemorse.execute(qsTrId("foilpics-remorse-deleting_selected", list.length).arg(list.length), function() {
+                FileUtil.deleteLocalFilesFromModel(galleryModel, galleryModel.keyRole, list)
+                dropSelectionModel()
+            })
+        })
+        selectionPage.encryptPictures.connect(function(list) {
+            pageStack.pop()
+            grid.positionViewAtIndex(list[0], GridView.Visible)
+            //: Remorse popup text
+            //% "Encrypting %0 selected pictures"
+            bulkActionRemorse.execute(qsTrId("foilpics-gallery_view-remorse-encrypting_selected", list.length).arg(list.length), function() {
+                foilModel.encryptFiles(galleryModel, list)
+                if (foilModel.busy) {
+                    dropSelectionModelWhenEncryptionDone = true
+                } else {
+                    // Well, this shouldn't happen but just in case...
+                    dropSelectionModel()
+                }
+            })
+        })
+    }
+
+    RemorsePopup {
+        id: bulkActionRemorse
+
+        function cancelNicely() {
+            // To avoid flickering, do it only when really necessary
+            if (visible) cancel()
+        }
+        onCanceled: dropSelectionModel()
     }
 }

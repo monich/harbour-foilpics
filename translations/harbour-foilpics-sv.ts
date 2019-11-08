@@ -436,10 +436,5 @@ Om du har glömt ditt lösenord, bör du veta att det troligen är datortekniskt
         <extracomment>Name for the newly created group</extracomment>
         <translation type="unfinished">Ny grupp</translation>
     </message>
-    <message id="foilpics-selection_panel-done_button">
-        <source>Done</source>
-        <extracomment>Button that exits selection mode</extracomment>
-        <translation type="unfinished">Klart</translation>
-    </message>
 </context>
 </TS>

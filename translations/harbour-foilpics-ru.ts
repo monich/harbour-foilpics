@@ -439,10 +439,5 @@
         <extracomment>Name for the newly created group</extracomment>
         <translation>Новая группа</translation>
     </message>
-    <message id="foilpics-selection_panel-done_button">
-        <source>Done</source>
-        <extracomment>Button that exits selection mode</extracomment>
-        <translation>Готово</translation>
-    </message>
 </context>
 </TS>

@@ -20,9 +20,8 @@ Item {
     property bool isDefault
     property bool isFirstGroup
     property int modelIndex
-
     property var selectionModel
-    property bool selecting
+    property bool selectable
 
     signal decryptItem(int globalIndex)
     signal deleteItem(int globalIndex)
@@ -49,6 +48,7 @@ Item {
 
         delegate: ThumbnailBase {
             id: delegate
+
             width: grid.cellWidth
             height: isItemExpanded ? grid.contextMenu.height + grid.cellHeight : grid.cellHeight
             contentYOffset: index >= grid.minOffsetIndex ? grid.expandHeight : 0.0
@@ -63,7 +63,6 @@ Item {
             Image {
                 y: contentYOffset
                 x: contentXOffset
-                asynchronous: true
                 cache: false
                 fillMode: Image.PreserveAspectCrop
                 source: thumbnail
@@ -81,9 +80,9 @@ Item {
             }
 
             onClicked: {
-                if (selecting) {
+                if (selectable) {
                     selectionModel.toggleSelection(selectionKey)
-                } else if (!grid.contextMenu.active) {
+                } else if (!grid.contextMenu.active && !delegate.isBusy) {
                     var sourceIndex = picsModel.mapToSource(modelIndex)
                     var page = pageStack.push(Qt.resolvedUrl("EncryptedFullscreenPage.qml"),{
                         currentIndex: sourceIndex,
@@ -99,7 +98,7 @@ Item {
             }
 
             onPressAndHold: {
-                if (!selecting) {
+                if (!selectable && !delegate.isBusy) {
                     grid.expandItem = delegate
                     contextMenuItem.openMenu(delegate)
                 }

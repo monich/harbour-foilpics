@@ -2,22 +2,25 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import harbour.foilpics 1.0
 
-// Base item for thumbnails in a Grid to get default behavior for free.
-// Make sure that this is a top level delegate item for a grid or
-// some functionality (opacity, ...) will be lost
 MouseArea {
     id: thumbnail
 
     property url source
     property bool down: pressed && containsMouse
     property string mimeType: model && model.mimeType ? model.mimeType : ""
-    property bool pressedAndHolded
+    property bool pressedAndHeld
     property int size: GridView.view.cellSize
     property real contentYOffset
     property real contentXOffset
     property GridView grid: GridView.view
     property var selectionModel
     property string selectionKey
+
+    property var selectionState
+    property var busyState
+
+    readonly property bool isBusy: busyState ? busyState.busy : false
+    readonly property bool isSelected: selectionState ? selectionState.selected : false
 
     width: size
     height: size
@@ -26,27 +29,47 @@ MouseArea {
 
     // Default behavior for each thumbnail
     onPressed: if (grid) grid.currentIndex = index
-    onPressAndHold: pressedAndHolded = true
-    onReleased: pressedAndHolded = false
-    onCanceled: pressedAndHolded = false
+    onPressAndHold: pressedAndHeld = true
+    onReleased: pressedAndHeld = false
+    onCanceled: pressedAndHeld = false
 
-    FoilPicsSelectionState {
-        id: selectionState
-        model: selectionModel ? selectionModel : null
-        key: selectionKey
+    onSelectionModelChanged: selectionStateCheck()
+    onSelectionKeyChanged: selectionStateCheck()
+
+    function selectionStateCheck() {
+        if (selectionState) {
+            selectionState.destroy()
+            selectionState = null
+            busyState.destroy()
+            busyState = null
+        }
+        if (selectionModel && selectionKey) {
+            selectionState = selectionStateComponent.createObject(thumbnail, {
+                model: selectionModel,
+                key: selectionKey})
+            busyState = busyStateComponent.createObject(thumbnail, {
+                model: selectionModel,
+                key: selectionKey})
+        }
     }
 
-    FoilPicsBusyState {
-        id: busyState
-        model: selectionModel ? selectionModel : null
-        key: selectionKey
+    Component {
+        id: selectionStateComponent
+
+        FoilPicsSelectionState { }
+    }
+
+    Component {
+        id: busyStateComponent
+
+        FoilPicsBusyState { }
     }
 
     Loader {
         z: thumbnail.z + 1
         anchors.fill: parent
         active: opacity > 0
-        opacity: selectionState.selected ? 1 : 0
+        opacity: isSelected ? 1 : 0
         sourceComponent: Component {
             Item {
                 anchors.fill: parent
@@ -73,7 +96,7 @@ MouseArea {
         z: thumbnail.z + 2
         anchors.fill: parent
         active: opacity > 0
-        opacity: busyState.busy ? 1 : 0
+        opacity: isBusy ? 1 : 0
         sourceComponent: Component {
             Item {
                 anchors.fill: parent
@@ -87,7 +110,7 @@ MouseArea {
                 BusyIndicator {
                     size: BusyIndicatorSize.Medium
                     anchors.centerIn: background
-                    running: busyState.busy
+                    running: isBusy
                 }
             }
         }

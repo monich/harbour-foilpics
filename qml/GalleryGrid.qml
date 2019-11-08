@@ -10,14 +10,12 @@ ImageGridView {
     property var hints
     property var foilModel
     property var transferMethodsModel
+    property var selectionModel
     property alias contextMenu: contextMenuItem
     property Item expandItem
     property real expandHeight: contextMenu.height
     property int minOffsetIndex: expandItem != null ?
         expandItem.modelIndex + columnCount - (expandItem.modelIndex % columnCount) : 0
-
-    property var selectionModel
-    property bool selecting
 
     function encryptItem(index) {
         pageStack.pop()
@@ -28,27 +26,23 @@ ImageGridView {
 
     header: PageHeader {
         id: header
-        title: grid.selecting ?
-            //: Gallery grid title in selection mode
-            //% "Select photos"
-            qsTrId("foilpics-gallery_grid-selection_title") :
-            //: Gallery grid title
-            //% "Photos"
-            qsTrId("foilpics-gallery_grid-title")
+
+        //: Gallery grid title
+        //% "Photos"
+        title: qsTrId("foilpics-gallery_grid-title")
         HarbourBadge {
             anchors {
                 left: header.extraContent.left
                 verticalCenter: header.extraContent.verticalCenter
             }
             maxWidth: header.extraContent.width
-            height: Theme.itemSizeSmall/2
             text: model.count ? model.count : ""
-            opacity: model.count ? 1 : 0
         }
     }
 
     delegate: ThumbnailImage {
         id: delegate
+
         source: mediaUrl
         size: grid.cellSize
         height: isItemExpanded ? grid.contextMenu.height + grid.cellSize : grid.cellSize
@@ -56,7 +50,7 @@ ImageGridView {
         z: isItemExpanded ? 1000 : 1
         enabled: isItemExpanded || !grid.contextMenu.active
         selectionModel: grid.selectionModel
-        selectionKey: url
+        selectionKey: mediaUrl
 
         readonly property url mediaUrl: url
         readonly property bool isItemExpanded: grid.expandItem === delegate
@@ -88,9 +82,7 @@ ImageGridView {
         }
 
         onClicked: {
-            if (selecting) {
-                selectionModel.toggleSelection(selectionKey)
-            } else if (!grid.contextMenu.active) {
+            if (!isBusy && !grid.contextMenu.active) {
                 var page = pageStack.push(Qt.resolvedUrl("GalleryFullscreenPage.qml"), {
                     currentIndex: index,
                     model: grid.model,
@@ -106,7 +98,7 @@ ImageGridView {
         }
 
         onPressAndHold: {
-            if (!selecting) {
+            if (!isBusy) {
                 grid.expandItem = delegate
                 contextMenuItem.openMenu(delegate)
             }
@@ -120,14 +112,9 @@ ImageGridView {
         }
     }
 
-    onSelectingChanged: {
-        if (selecting) {
-            contextMenuItem.closeMenu()
-        }
-    }
-
     ContextMenu {
         id: contextMenuItem
+
         x: parent !== null ? -parent.x : 0.0
 
         function openMenu(item) {
@@ -165,6 +152,7 @@ ImageGridView {
 
     Loader {
         id: rightSwipeToEncryptedHintLoader
+
         anchors.fill: parent
         active: opacity > 0
         opacity: ((hints.rightSwipeToEncrypted < MaximumHintCount && armed) | running) ? 1 : 0
