@@ -10,8 +10,9 @@ Page {
     property alias hints: grid.hints
     property alias foilModel: grid.foilModel
     property alias transferMethodsModel: grid.transferMethodsModel
-    property alias selectionModel: grid.selectionModel
-    property bool dropSelectionModelWhenEncryptionDone
+    property alias remorseSelectionModel: grid.selectionModel
+    property var selectionModel
+    property bool dropSelectionModelsWhenEncryptionDone
 
     DocumentGalleryModel {
         id: galleryModel
@@ -71,22 +72,34 @@ Page {
     Connections {
         target: foilModel
         onBusyChanged: {
-            if (dropSelectionModelWhenEncryptionDone && !foilModel.busy) {
-                dropSelectionModelWhenEncryptionDone = false
-                dropSelectionModel()
+            if (dropSelectionModelsWhenEncryptionDone && !foilModel.busy) {
+                dropSelectionModelsWhenEncryptionDone = false
+                dropSelectionModels()
             }
         }
     }
 
-    function dropSelectionModel() {
+    function dropSelectionModels() {
+        if (remorseSelectionModel) {
+            remorseSelectionModel.destroy()
+            remorseSelectionModel = null
+        }
         if (selectionModel) {
             selectionModel.destroy()
             selectionModel = null
         }
     }
 
+    function bulkAction(text, list, callback) {
+        grid.positionViewAtIndex(list[0], GridView.Visible)
+        remorseSelectionModel = selectionModelComponent.createObject(page)
+        remorseSelectionModel.makeBusy(list)
+        pageStack.pop()
+        bulkActionRemorse.execute(text, callback)
+    }
+
     function selectPictures() {
-        dropSelectionModel()
+        dropSelectionModels()
         bulkActionRemorse.cancelNicely()
         selectionModel = selectionModelComponent.createObject(page)
         var selectionPage = pageStack.push(Qt.resolvedUrl("GallerySelectionPage.qml"), {
@@ -96,29 +109,33 @@ Page {
             selectionModel: selectionModel
         })
         selectionPage.deletePictures.connect(function(list) {
-            pageStack.pop()
-            grid.positionViewAtIndex(list[0], GridView.Visible)
             //: Generic remorse popup text
             //% "Deleting %0 selected pictures"
-            bulkActionRemorse.execute(qsTrId("foilpics-remorse-deleting_selected", list.length).arg(list.length), function() {
+            bulkAction(qsTrId("foilpics-remorse-deleting_selected", list.length).arg(list.length), list, function() {
                 FileUtil.deleteLocalFilesFromModel(galleryModel, galleryModel.keyRole, list)
-                dropSelectionModel()
+                dropSelectionModels()
             })
         })
         selectionPage.encryptPictures.connect(function(list) {
-            pageStack.pop()
-            grid.positionViewAtIndex(list[0], GridView.Visible)
             //: Remorse popup text
             //% "Encrypting %0 selected pictures"
-            bulkActionRemorse.execute(qsTrId("foilpics-gallery_view-remorse-encrypting_selected", list.length).arg(list.length), function() {
+            bulkAction(qsTrId("foilpics-gallery_view-remorse-encrypting_selected", list.length).arg(list.length), list, function() {
                 foilModel.encryptFiles(galleryModel, list)
                 if (foilModel.busy) {
-                    dropSelectionModelWhenEncryptionDone = true
+                    dropSelectionModelsWhenEncryptionDone = true
                 } else {
                     // Well, this shouldn't happen but just in case...
-                    dropSelectionModel()
+                    dropSelectionModels()
                 }
             })
+        })
+        selectionPage.statusChanged.connect(function() {
+            if (selectionPage.status === PageStatus.Inactive) {
+                if (selectionModel) {
+                    selectionModel.destroy()
+                    selectionModel = null
+                }
+            }
         })
     }
 
@@ -129,6 +146,6 @@ Page {
             // To avoid flickering, do it only when really necessary
             if (visible) cancel()
         }
-        onCanceled: dropSelectionModel()
+        onCanceled: dropSelectionModels()
     }
 }

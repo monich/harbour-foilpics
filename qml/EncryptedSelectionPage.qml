@@ -14,11 +14,15 @@ Page {
     signal groupPictures(var list)
     signal decryptPictures(var list)
 
+    readonly property int selectionCount: selectionModel ? selectionModel.count : 0
+
     onStatusChanged: {
+        // Maximize cache buffer once slide-in animation has completed
         if (status === PageStatus.Active) {
             listView.maximizeCacheBuffer()
         }
     }
+
 
     EncryptedList {
         id: listView
@@ -37,13 +41,16 @@ Page {
         clip: true
 
         PullDownMenu {
+            id: pullDownMenu
+
             MenuItem {
                 id: selectNoneMenuItem
 
                 //: Pulley menu item
                 //% "Select none"
                 text: qsTrId("foilpics-pulley_menu-select_none")
-                visible: selectionModel.count > 0
+                enabled: selectionCount > 0
+                onEnabledChanged: if (!pullDownMenu.active) visible = enabled
                 onClicked: selectionModel.clearSelection()
             }
             MenuItem {
@@ -52,10 +59,15 @@ Page {
                 //: Pulley menu item
                 //% "Select all"
                 text: qsTrId("foilpics-pulley_menu-select_all")
-                visible: selectionModel.count < foilModel.count
+                enabled: selectionCount < foilModel.count
+                onEnabledChanged: if (!pullDownMenu.active) visible = enabled
                 onClicked: selectionModel.selectAll()
             }
-            onActiveChanged: {
+
+            Component.onCompleted: updateMenuItems()
+            onActiveChanged: updateMenuItems()
+
+            function updateMenuItems() {
                 if (!active) {
                     selectNoneMenuItem.visible = selectNoneMenuItem.enabled
                     selectAllMenuItem.visible = selectAllMenuItem.enabled
@@ -67,19 +79,19 @@ Page {
     EncryptedSelectionPanel {
         id: selectionPanel
 
-        active: selectionModel.count > 0
+        active: selectionCount > 0
         //: Generic menu item
         //% "Delete"
         onDeleteHint: showHint(qsTrId("foilpics-menu-delete"))
-        onDeleteSelected: page.deletePictures(selectionModel.makeSelectionBusy())
+        onDeleteSelected: page.deletePictures(selectionModel.getSelectedRows())
         //: Generic menu item
         //% "Group"
         onGroupHint: showHint(qsTrId("foilpics-menu-group"))
-        onGroupSelected: page.groupPictures(selectionModel.makeSelectionBusy())
+        onGroupSelected: page.groupPictures(selectionModel.getSelectedRows())
         //: Generic menu item
         //% "Decrypt"
         onDecryptHint: showHint(qsTrId("foilpics-menu-decrypt"))
-        onDecryptSelected: page.decryptPictures(selectionModel.makeSelectionBusy())
+        onDecryptSelected: page.decryptPictures(selectionModel.getSelectedRows())
 
         function showHint(text) {
             selectionHint.text = text

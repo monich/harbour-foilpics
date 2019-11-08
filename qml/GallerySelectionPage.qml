@@ -14,6 +14,8 @@ Page {
     signal deletePictures(var list)
     signal encryptPictures(var list)
 
+    readonly property int selectionCount: selectionModel ? selectionModel.count : 0
+
     ImageGridView {
         id: grid
 
@@ -27,13 +29,16 @@ Page {
         clip: true
 
         PullDownMenu {
+            id: pullDownMenu
+
             MenuItem {
                 id: selectNoneMenuItem
 
                 //: Pulley menu item
                 //% "Select none"
                 text: qsTrId("foilpics-pulley_menu-select_none")
-                enabled: selectionModel.count > 0
+                enabled: selectionCount > 0
+                onEnabledChanged: if (!pullDownMenu.active) visible = enabled
                 onClicked: selectionModel.clearSelection()
             }
             MenuItem {
@@ -42,10 +47,15 @@ Page {
                 //: Pulley menu item
                 //% "Select all"
                 text: qsTrId("foilpics-pulley_menu-select_all")
-                enabled: selectionModel.count < dataModel.count
+                enabled: selectionCount < dataModel.count
+                onEnabledChanged: if (!pullDownMenu.active) visible = enabled
                 onClicked: selectionModel.selectAll()
             }
-            onActiveChanged: {
+
+            Component.onCompleted: updateMenuItems()
+            onActiveChanged: updateMenuItems()
+
+            function updateMenuItems() {
                 if (!active) {
                     selectNoneMenuItem.visible = selectNoneMenuItem.enabled
                     selectAllMenuItem.visible = selectAllMenuItem.enabled
@@ -93,17 +103,17 @@ Page {
     GallerySelectionPanel {
         id: selectionPanel
 
-        active: selectionModel.count > 0
+        active: selectionCount > 0
         canDelete: active
         canEncrypt: foilModel.keyAvailable
         //: Generic menu item
         //% "Delete"
         onDeleteHint: showHint(qsTrId("foilpics-menu-delete"))
-        onDeleteSelected: page.deletePictures(selectionModel.makeSelectionBusy())
+        onDeleteSelected: page.deletePictures(selectionModel.getSelectedRows())
         //: Generic menu item
         //% "Encrypt"
         onEncryptHint: showHint(qsTrId("foilpics-menu-encrypt"))
-        onEncryptSelected: page.encryptPictures(selectionModel.makeSelectionBusy())
+        onEncryptSelected: page.encryptPictures(selectionModel.getSelectedRows())
 
         function showHint(text) {
             selectionHint.text = text

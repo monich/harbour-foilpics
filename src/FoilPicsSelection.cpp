@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2018 Jolla Ltd.
- * Copyright (C) 2018 Slava Monich <slava@monich.com>
+ * Copyright (C) 2018-2019 Jolla Ltd.
+ * Copyright (C) 2018-2019 Slava Monich <slava@monich.com>
  *
- * You may use this file under the terms of the BSD license as follows:
+ * You may use this file under the terms of BSD license as follows:
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -14,9 +14,9 @@
  *      notice, this list of conditions and the following disclaimer in
  *      the documentation and/or other materials provided with the
  *      distribution.
- *   3. Neither the name of Jolla Ltd nor the names of its contributors
- *      may be used to endorse or promote products derived from this
- *      software without specific prior written permission.
+ *   3. Neither the names of the copyright holders nor the names of its
+ *      contributors may be used to endorse or promote products derived
+ *      from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -71,7 +71,7 @@ public:
     void refreshModelAndEmitSignals();
     void selectAll();
     void clearSelection();
-    QList<int> makeSelectionBusy();
+    void makeBusy(QList<int> aList);
 
 public Q_SLOTS:
     void onModelDestroyed(QObject* aModel);
@@ -86,7 +86,7 @@ public Q_SLOTS:
 public:
     SignalMask iQueuedSignals;
     int iFirstQueuedSignal;
-    QList<QString> iKeyList;
+    QStringList iKeyList;
     QHash<QString,int> iKeys;
     QSet<QString> iSelected;
     QSet<QString> iBusy;
@@ -331,29 +331,32 @@ void FoilPicsSelection::Private::clearSelection()
     }
 }
 
-QList<int> FoilPicsSelection::Private::makeSelectionBusy()
+void FoilPicsSelection::Private::makeBusy(QList<int> aList)
 {
-    QList<int> selection;
-    QStringList changed;
-    const QStringList keys = iSelected.values();
-    const int n = keys.count();
-    if (n > 0) {
-        iBusy.unite(iSelected);
-        iSelected.clear();
-        queueSignal(SignalSelectionCountChanged);
-        queueSignal(SignalBusyCountChanged);
-        for (int i = 0; i < n; i++) {
-            const QString key(keys.at(i));
-            selection.append(iKeys.value(key));
-            changed.append(key);
+    const int n = aList.count();
+    const int count = iKeyList.count();
+    QStringList busyChanged, selectionChanged;
+    for (int i = 0; i < n; i++) {
+        const int pos = aList.at(i);
+        if (pos >= 0 && pos < count) {
+            const QString key = iKeyList.at(pos);
+            if (!iBusy.contains(key)) {
+                iBusy.insert(key);
+                busyChanged.append(key);
+                queueSignal(SignalBusyCountChanged);
+            }
+            if (iSelected.contains(key)) {
+                iSelected.remove(key);
+                selectionChanged.append(key);
+                queueSignal(SignalSelectionCountChanged);
+            }
+        } else {
+            HWARN("Invalid index" << pos);
         }
-        emitSelectionChanged(changed);
-        emitBusyChanged(changed);
-        emitQueuedSignals();
-        qSort(selection);
-        HDEBUG(selection);
     }
-    return selection;
+    emitSelectionChanged(selectionChanged);
+    emitBusyChanged(busyChanged);
+    emitQueuedSignals();
 }
 
 void FoilPicsSelection::Private::onModelDestroyed(QObject* aModel)
@@ -613,9 +616,9 @@ QList<int> FoilPicsSelection::getSelectedRows()
     return selection;
 }
 
-QList<int> FoilPicsSelection::makeSelectionBusy()
+void FoilPicsSelection::makeBusy(QList<int> aList)
 {
-    return iPrivate->makeSelectionBusy();
+    return iPrivate->makeBusy(aList);
 }
 
 #include "FoilPicsSelection.moc"

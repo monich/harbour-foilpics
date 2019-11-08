@@ -12,8 +12,9 @@ Item {
     property var foilModel
     property bool isCurrentView
     readonly property bool ready: foilModel.foilState === FoilPicsModel.FoilPicsReady
-    property alias selectionModel: listView.selectionModel
-    property bool dropSelectionModelWhenDecryptionDone
+    property alias remorseSelectionModel: listView.selectionModel
+    property var selectionModel
+    property bool dropSelectionModelsWhenDecryptionDone
 
     Component.onCompleted: {
         isCurrentView = parent.isCurrentItem
@@ -23,7 +24,7 @@ Item {
     onIsCurrentViewChanged: {
         if (!isCurrentView) {
             bulkActionRemorse.cancelNicely()
-            dropSelectionModel()
+            dropSelectionModels()
         }
     }
 
@@ -81,9 +82,9 @@ Item {
             if (foilModel.busy) {
                 // Look busy for at least a second
                 progressTimer.start()
-            } else if (dropSelectionModelWhenDecryptionDone) {
-                dropSelectionModelWhenDecryptionDone = false
-                dropSelectionModel()
+            } else if (dropSelectionModelsWhenDecryptionDone) {
+                dropSelectionModelsWhenDecryptionDone = false
+                dropSelectionModels()
             }
         }
         onDecryptionStarted: leftSwipeToDecryptedHintLoader.armed = true
@@ -121,33 +122,43 @@ Item {
             // To avoid flickering, do it only when really necessary
             if (visible) cancel()
         }
-        onCanceled: dropSelectionModel()
+        onCanceled: dropSelectionModels()
     }
 
-    function dropSelectionModel() {
+    function dropSelectionModels() {
+        if (remorseSelectionModel) {
+            remorseSelectionModel.destroy()
+            remorseSelectionModel = null
+        }
         if (selectionModel) {
             selectionModel.destroy()
             selectionModel = null
         }
     }
 
+    function bulkAction(text, list, callback) {
+        listView.jumpToIndex(list[0])
+        remorseSelectionModel = selectionModelComponent.createObject(page)
+        remorseSelectionModel.makeBusy(list)
+        pageStack.pop()
+        bulkActionRemorse.execute(text, callback)
+    }
+
     function selectPictures() {
-        dropSelectionModel()
+        dropSelectionModels()
         bulkActionRemorse.cancelNicely()
-        selectionModel = selectionModelComponent.createObject(view, { model: foilModel })
+        selectionModel = selectionModelComponent.createObject(page)
         var selectionPage = pageStack.push(Qt.resolvedUrl("EncryptedSelectionPage.qml"), {
             allowedOrientations: page.allowedOrientations,
             selectionModel: view.selectionModel,
             foilModel: view.foilModel
         })
         selectionPage.deletePictures.connect(function(list) {
-            pageStack.pop()
-            listView.jumpToIndex(list[0])
             //: Generic remorse popup text
             //% "Deleting %0 selected pictures"
-            bulkActionRemorse.execute(qsTrId("foilpics-remorse-deleting_selected", list.length).arg(list.length), function() {
+            bulkAction(qsTrId("foilpics-remorse-deleting_selected", list.length).arg(list.length), list, function() {
                 foilModel.removeFiles(list)
-                dropSelectionModel()
+                dropSelectionModels()
             })
         })
         selectionPage.groupPictures.connect(function(list) {
@@ -155,27 +166,33 @@ Item {
             var groupPage = pageStack.replace(Qt.resolvedUrl("EditGroupPage.qml"), {
                 groupModel: groups
             })
+            dropSelectionModels()
             groupPage.groupSelected.connect(function(index) {
                 foilModel.setGroupIdForRows(list, groups.groupId(index))
                 pageStack.pop()
-                dropSelectionModel()
             })
         })
         selectionPage.decryptPictures.connect(function(list) {
-            pageStack.pop()
-            listView.jumpToIndex(list[0])
             //: Remorse popup text
             //% "Decrypting %0 selected pictures"
-            bulkActionRemorse.execute(qsTrId("foilpics-encrypted_pics_view-remorse-decrypting_selected", list.length).arg(list.length), function() {
+            bulkAction(qsTrId("foilpics-encrypted_pics_view-remorse-decrypting_selected", list.length).arg(list.length), list, function() {
                 console.log(list)
                 foilModel.decryptFiles(list)
                 if (foilModel.busy) {
-                    dropSelectionModelWhenDecryptionDone = true
+                    dropSelectionModelsWhenDecryptionDone = true
                 } else {
                     // Well, this shouldn't happen but just in case...
-                    dropSelectionModel()
+                    dropSelectionModels()
                 }
             })
+        })
+        selectionPage.statusChanged.connect(function() {
+            if (selectionPage.status === PageStatus.Inactive) {
+                if (selectionModel) {
+                    selectionModel.destroy()
+                    selectionModel = null
+                }
+            }
         })
     }
 
