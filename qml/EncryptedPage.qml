@@ -7,6 +7,7 @@ import "harbour"
 
 Page {
     id: page
+
     property var hints
     property var foilModel
 
@@ -56,16 +57,19 @@ Page {
 
     Timer {
         id: generatingKeyTimer
+
         interval: 1000
     }
 
     Timer {
         id: decryptingTimer
+
         interval: 1000
     }
 
     SilicaFlickable {
         id: flickable
+
         anchors.fill: parent
         contentHeight: height
 
@@ -124,6 +128,7 @@ Page {
             readonly property bool isCurrentItem: page.isCurrentPage
             sourceComponent: Component {
                 EncryptedPicsView {
+                    mainPage: page
                     hints: page.hints
                     foilModel: page.foilModel
                 }
@@ -134,6 +139,7 @@ Page {
 
     Loader {
         id: leftSwipeToGalleryHintLoader
+
         anchors.fill: parent
         active: opacity > 0
         opacity: (hints.leftSwipeToGallery < MaximumHintCount | running) ? 1 : 0

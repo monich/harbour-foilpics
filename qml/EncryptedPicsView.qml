@@ -7,6 +7,7 @@ import "harbour"
 Item {
     id: view
 
+    property Page mainPage
     property var hints
     property var foilModel
     property bool isCurrentView
@@ -57,7 +58,8 @@ Item {
                 //% "Change password"
                 text: qsTrId("foilpics-pulley_menu-change_password")
                 onClicked: {
-                    pageStack.push(Qt.resolvedUrl("ChangePasswordDialog.qml"), {
+                    pageStack.push(Qt.resolvedUrl("ChangePasswordPage.qml"), {
+                        mainPage: view.mainPage,
                         foilModel: foilModel
                     })
                 }
