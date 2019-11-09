@@ -74,6 +74,17 @@ Item {
                 onClicked: selectPictures()
             }
         }
+
+        ViewPlaceholder {
+            text: hints.letsEncryptSomething < MaximumHintCount ?
+                //: Placeholder text with a hint
+                //% "Why not to encrypt something?"
+                qsTrId("foilpics-encrypted_grid-placeholder-no_pictures_hint") :
+                //: Placeholder text
+                //% "You don't have any encrypted pictures"
+                qsTrId("foilpics-encrypted_grid-placeholder-no_pictures")
+            enabled: !view.busy && foilModel && foilModel.count === 0
+        }
     }
 
     Connections {
@@ -204,17 +215,6 @@ Item {
             selectionModel.destroy()
             selectionModel = null
         }
-    }
-
-    ViewPlaceholder {
-        text: hints.letsEncryptSomething < MaximumHintCount ?
-            //: Placeholder text with a hint
-            //% "Why not to encrypt something?"
-            qsTrId("foilpics-encrypted_grid-placeholder-no_pictures_hint") :
-            //: Placeholder text
-            //% "You don't have any encrypted pictures"
-            qsTrId("foilpics-encrypted_grid-placeholder-no_pictures")
-        enabled: !view.busy && foilModel && foilModel.count === 0
     }
 
     Loader {
