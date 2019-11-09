@@ -62,7 +62,7 @@
         <source>Deleting %0 selected pictures</source>
         <extracomment>Generic remorse popup text</extracomment>
         <translation>
-            <numerusform> %0 选择的照片将被删除</numerusform>
+            <numerusform> %0 张选择的照片将被删除</numerusform>
         </translation>
     </message>
     <message id="foilpics-file_size-bytes">
@@ -144,7 +144,7 @@
         <source>Type at least %0 character(s)</source>
         <extracomment>Password field label</extracomment>
         <translation>
-            <numerusform>最少输入 %0 字符</numerusform>
+            <numerusform>最少输入 %0 个字符</numerusform>
         </translation>
     </message>
     <message id="foilpics-generate_key_view-button-generate_key">
@@ -165,12 +165,12 @@
     <message id="foilpics-enter_password_view-label-enter_password_short">
         <source>Please enter your password</source>
         <extracomment>Password prompt label (short)</extracomment>
-        <translation type="unfinished">请输入你的密码</translation>
+        <translation>请输入你的密码</translation>
     </message>
     <message id="foilpics-enter_password_view-button-unlocking">
         <source>Unlocking...</source>
         <extracomment>Button label</extracomment>
-        <translation>解锁中...</translation>
+        <translation>正在解锁...</translation>
     </message>
     <message id="foilpics-enter_password_view-button-unlock">
         <source>Unlock</source>
@@ -180,7 +180,7 @@
     <message id="foilpics-change_password_page-label-enter_passwords">
         <source>Please enter the current and the new password</source>
         <extracomment>Password change prompt</extracomment>
-        <translation>请输入当前密码以及新密码</translation>
+        <translation>请输入当前密码及新密码</translation>
     </message>
     <message id="foilpics-change_password_page-text_field_label-current_password">
         <source>Current password</source>
@@ -200,17 +200,17 @@
     <message id="foilpics-decrypting_view-unlocking">
         <source>Unlocking...</source>
         <extracomment>Progress view label</extracomment>
-        <translation>解锁中...</translation>
+        <translation>正在解锁...</translation>
     </message>
     <message id="foilpics-decrypting_view-decrypting">
         <source>Decrypting...</source>
         <extracomment>Progress view label</extracomment>
-        <translation>解密中...</translation>
+        <translation>正在解密...</translation>
     </message>
     <message id="foilpics-image_grid_view-remorse-deleting">
         <source>Deleting</source>
         <extracomment>Deleting image in 5 seconds</extracomment>
-        <translation>删除中</translation>
+        <translation>删除</translation>
     </message>
     <message id="foilpics-image_grid_view-remorse-cancel_deletion">
         <source>Cancel</source>
@@ -272,7 +272,7 @@
     <message id="foilpics-encrypted_grid-placeholder-no_pictures_hint">
         <source>Why not to encrypt something?</source>
         <extracomment>Placeholder text with a hint</extracomment>
-        <translation>何不加密什么?</translation>
+        <translation>何不加密点什么?</translation>
     </message>
     <message id="foilpics-encrypted_grid-placeholder-no_pictures">
         <source>You don&apos;t have any encrypted pictures</source>
@@ -288,7 +288,7 @@
         <source>Decrypting %0 selected pictures</source>
         <extracomment>Remorse popup text</extracomment>
         <translation>
-            <numerusform>解密 %0 选择的图片</numerusform>
+            <numerusform>解密 %0 张选择的图片</numerusform>
         </translation>
     </message>
     <message id="foilpics-confirm_password_page-info_label">
