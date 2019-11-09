@@ -60,6 +60,32 @@ SilicaFlickable {
         }
     }
 
+    Rectangle {
+        id: circle
+
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: Theme.itemSizeHuge
+        y: (panel.y > height) ? Math.floor((panel.y - height)/2) : (panel.y - height)
+        height: width
+        color: Theme.primaryColor
+        radius: width/2
+        visible: opacity > 0
+
+        // Hide it when it's only partially visible (i.e. in langscape)
+        readonly property real maxOpacity: HarbourTheme.opacityFaint * HarbourTheme.opacityLow
+        opacity: (y < 0) ? 0 : maxOpacity
+        Behavior on opacity { FadeAnimation { duration: landscapeLayout ? 0 : 100 } }
+    }
+
+    Image {
+        source: "images/lock.svg"
+        height: Math.floor(circle.height * 5 / 8)
+        sourceSize.height: height
+        anchors.centerIn: circle
+        opacity: circle.opacity/circle.maxOpacity
+        visible: opacity > 0
+    }
+
     Item {
         id: panel
 
@@ -105,7 +131,6 @@ SilicaFlickable {
         Button {
             id: button
 
-            anchors.horizontalCenter: parent.horizontalCenter
             text: unlocking ?
                 //: Button label
                 //% "Unlocking..."
