@@ -149,6 +149,26 @@ SilicaFlickable {
         target: panel
     }
 
+    Loader {
+        anchors {
+            top: parent.top
+            topMargin: screenHeight - height - Theme.paddingLarge
+            left: parent.left
+            leftMargin: Theme.horizontalPageMargin
+            right: parent.right
+            rightMargin: Theme.horizontalPageMargin
+        }
+        readonly property bool display: FoilPicsSettings.sharedKeyWarning && FileUtil.otherFoilAppsInstalled
+        opacity: display ? 1 : 0
+        active: opacity > 0
+        sourceComponent: Component {
+            FoilAppsWarning {
+                onClicked: FoilPicsSettings.sharedKeyWarning = false
+            }
+        }
+        Behavior on opacity { FadeAnimation {} }
+    }
+
     states: [
         State {
             name: "portrait"

@@ -439,5 +439,10 @@
         <extracomment>Name for the newly created group</extracomment>
         <translation>Новая группа</translation>
     </message>
+    <message id="foilpics-foil_apps_warning">
+        <source>Note that all Foil apps use the same encryption key and password.</source>
+        <extracomment>Warning text, small size label below the password prompt</extracomment>
+        <translation>Имейте в виду, что все Foil приложения использует тот же ключ с тем же паролем.</translation>
+    </message>
 </context>
 </TS>

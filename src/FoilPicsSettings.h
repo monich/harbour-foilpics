@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2017-2019 Jolla Ltd.
- * Copyright (C) 2017-2019 Slava Monich <slava@monich.com>
+ * Copyright (C) 2019 Jolla Ltd.
+ * Copyright (C) 2019 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -31,41 +31,35 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef FOILPICS_FILE_UTIL_H
-#define FOILPICS_FILE_UTIL_H
+#ifndef FOILPICS_SETTINGS_H
+#define FOILPICS_SETTINGS_H
 
 #include <QtQml>
 
-class FoilPicsFileUtil : public QObject {
+class FoilPicsSettings : public QObject {
     Q_OBJECT
-    Q_DISABLE_COPY(FoilPicsFileUtil)
-    Q_PROPERTY(bool otherFoilAppsInstalled READ otherFoilAppsInstalled NOTIFY otherFoilAppsInstalledChanged)
+    Q_DISABLE_COPY(FoilPicsSettings)
+    Q_PROPERTY(bool sharedKeyWarning READ sharedKeyWarning WRITE setSharedKeyWarning NOTIFY sharedKeyWarningChanged)
+    Q_PROPERTY(bool sharedKeyWarning2 READ sharedKeyWarning2 WRITE setSharedKeyWarning2 NOTIFY sharedKeyWarning2Changed)
 
 public:
-    FoilPicsFileUtil(QObject* aParent = Q_NULLPTR);
-    ~FoilPicsFileUtil();
+    explicit FoilPicsSettings(QObject* aParent = Q_NULLPTR);
+    ~FoilPicsSettings();
 
-    static FoilPicsFileUtil* singleton();
     static QObject* createSingleton(QQmlEngine* aEngine, QJSEngine* aScript);
 
-    bool otherFoilAppsInstalled() const;
-
-    Q_INVOKABLE bool deleteFile(QString aPath);
-    Q_INVOKABLE bool deleteLocalFile(QUrl aUrl);
-    Q_INVOKABLE void deleteLocalFilesFromModel(QObject* aModel, QString aRole,
-        QList<int> aRows);
-    Q_INVOKABLE QString formatFileSize(qlonglong aBytes);
-
-    static void mediaDeleted(QString aFilename);
-    void mediaDeleted(QUrl aUrl);
+    bool sharedKeyWarning() const;
+    bool sharedKeyWarning2() const;
+    void setSharedKeyWarning(bool aValue);
+    void setSharedKeyWarning2(bool aValue);
 
 Q_SIGNALS:
-    void otherFoilAppsInstalledChanged();
+    void sharedKeyWarningChanged();
+    void sharedKeyWarning2Changed();
 
 private:
     class Private;
-    class TrackerProxy;
     Private* iPrivate;
 };
 
-#endif // FOILPICS_FILE_UTIL_H
+#endif // FOILPICS_SETTINGS_H

@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2017-2018 Jolla Ltd.
- * Copyright (C) 2017-2018 Slava Monich <slava@monich.com>
+ * Copyright (C) 2017-2019 Jolla Ltd.
+ * Copyright (C) 2017-2019 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -11,12 +11,12 @@
  *   1. Redistributions of source code must retain the above copyright
  *      notice, this list of conditions and the following disclaimer.
  *   2. Redistributions in binary form must reproduce the above copyright
- *      notice, this list of conditions and the following disclaimer in
- *      the documentation and/or other materials provided with the
+ *      notice, this list of conditions and the following disclaimer
+ *      in the documentation and/or other materials provided with the
  *      distribution.
- *   3. Neither the name of Jolla Ltd nor the names of its contributors
- *      may be used to endorse or promote products derived from this
- *      software without specific prior written permission.
+ *   3. Neither the names of the copyright holders nor the names of its
+ *      contributors may be used to endorse or promote products derived
+ *      from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -50,13 +50,9 @@
 #define TRACKER_PATH "/org/freedesktop/Tracker1/Resources"
 #define TRACKER_INTERFACE "org.freedesktop.Tracker1.Resources"
 
-FoilPicsFileUtil* FoilPicsFileUtil::gInstance = NULL;
-
-FoilPicsFileUtil* FoilPicsFileUtil::instance()
-{
-    HASSERT(gInstance);
-    return gInstance;
-}
+#define FOILAPPS_DIR    "/usr/bin"
+#define FOILAUTH_PATH   FOILAPPS_DIR "/harbour-foilauth"
+#define FOILNOTES_PATH  FOILAPPS_DIR "/harbour-foilnotes"
 
 // ==========================================================================
 // FoilPicsFileUtil::TrackerProxy
@@ -80,12 +76,43 @@ public Q_SLOTS: // METHODS
 // FoilPicsFileUtil::Private
 // ==========================================================================
 
-FoilPicsFileUtil::FoilPicsFileUtil(QObject* aParent) :
+class FoilPicsFileUtil::Private : public QObject {
+    Q_OBJECT
+public:
+    static FoilPicsFileUtil* gInstance;
+
+    Private(FoilPicsFileUtil* aParent);
+
+    static bool foilAuthInstalled();
+    static bool foilNotesInstalled();
+    static bool otherFoilAppsInstalled();
+    FoilPicsFileUtil* owner() const;
+
+public Q_SLOTS:
+    void onTrackerRegistered();
+    void onTrackerUnregistered();
+    void checkFoilAppsInstalled();
+
+public:
+    QLocale iLocale;
+    TrackerProxy* iTrackerProxy;
+    QFileSystemWatcher* iFileWatcher;
+    bool iOtherFoilAppsInstalled;
+};
+
+FoilPicsFileUtil* FoilPicsFileUtil::Private::gInstance = Q_NULLPTR;
+
+FoilPicsFileUtil::Private::Private(FoilPicsFileUtil* aParent) :
     QObject(aParent),
-    iTrackerProxy(NULL)
+    iTrackerProxy(NULL),
+    iFileWatcher(new QFileSystemWatcher(this))
 {
-    HASSERT(!gInstance);
-    gInstance = this;
+    connect(iFileWatcher, SIGNAL(directoryChanged(QString)),
+        SLOT(checkFoilAppsInstalled()));
+    if (!iFileWatcher->addPath(FOILAPPS_DIR)) {
+        HWARN("Failed to watch " FOILAPPS_DIR);
+    }
+    iOtherFoilAppsInstalled = otherFoilAppsInstalled();
 
     QDBusServiceWatcher* trackerWatcher =
         new QDBusServiceWatcher(TRACKER_SERVICE,
@@ -102,29 +129,93 @@ FoilPicsFileUtil::FoilPicsFileUtil(QObject* aParent) :
     }
 }
 
-FoilPicsFileUtil::~FoilPicsFileUtil()
+inline FoilPicsFileUtil* FoilPicsFileUtil::Private::owner() const
 {
-    HASSERT(this == gInstance);
-    gInstance = NULL;
+    return qobject_cast<FoilPicsFileUtil*>(parent());
 }
 
-void FoilPicsFileUtil::onTrackerRegistered()
+bool FoilPicsFileUtil::Private::foilAuthInstalled()
+{
+    const bool installed = QFile::exists(FOILAUTH_PATH);
+    HDEBUG("FoilAuth is" << (installed ? "installed" : "not installed"));
+    return installed;
+}
+
+bool FoilPicsFileUtil::Private::foilNotesInstalled()
+{
+    const bool installed = QFile::exists(FOILNOTES_PATH);
+    HDEBUG("FoilNotes is" << (installed ? "installed" : "not installed"));
+    return installed;
+}
+
+bool FoilPicsFileUtil::Private::otherFoilAppsInstalled()
+{
+    return foilAuthInstalled() || foilNotesInstalled();
+}
+
+void FoilPicsFileUtil::Private::checkFoilAppsInstalled()
+{
+    const bool haveOtherFoilApps = otherFoilAppsInstalled();
+    if (iOtherFoilAppsInstalled != haveOtherFoilApps) {
+        iOtherFoilAppsInstalled = haveOtherFoilApps;
+        Q_EMIT owner()->otherFoilAppsInstalledChanged();
+    }
+}
+
+void FoilPicsFileUtil::Private::onTrackerRegistered()
 {
     HDEBUG("Tracker is here");
     delete iTrackerProxy;
     iTrackerProxy = new TrackerProxy(this);
 }
 
-void FoilPicsFileUtil::onTrackerUnregistered()
+void FoilPicsFileUtil::Private::onTrackerUnregistered()
 {
     HDEBUG("Tracker gone");
     delete iTrackerProxy;
     iTrackerProxy = NULL;
 }
 
+// ==========================================================================
+// FoilPicsFileUtil::Private
+// ==========================================================================
+
+FoilPicsFileUtil::FoilPicsFileUtil(QObject* aParent) :
+    QObject(aParent),
+    iPrivate(new Private(this))
+{
+    HASSERT(!Private::gInstance);
+    Private::gInstance = this;
+}
+
+FoilPicsFileUtil::~FoilPicsFileUtil()
+{
+    HASSERT(this == Private::gInstance);
+    Private::gInstance = NULL;
+}
+
+FoilPicsFileUtil* FoilPicsFileUtil::singleton()
+{
+    HASSERT(Private::gInstance);
+    return Private::gInstance;
+}
+
+QObject* FoilPicsFileUtil::createSingleton(QQmlEngine*, QJSEngine*)
+{
+    return new FoilPicsFileUtil();
+}
+
+bool FoilPicsFileUtil::otherFoilAppsInstalled() const
+{
+    return iPrivate->iOtherFoilAppsInstalled;
+}
+
 void FoilPicsFileUtil::mediaDeleted(QString aFilename)
 {
-    mediaDeleted(QUrl::fromLocalFile(aFilename));
+    HASSERT(Private::gInstance);
+    if (Private::gInstance) {
+        Private::gInstance->mediaDeleted(QUrl::fromLocalFile(aFilename));
+    }
 }
 
 QString FoilPicsFileUtil::formatFileSize(qlonglong aBytes)
@@ -140,28 +231,28 @@ QString FoilPicsFileUtil::formatFileSize(qlonglong aBytes)
     } else if (aBytes < 1000*kB) {
         const int precision = (aBytes < 10*kB) ? 2 : 1;
         return qtTrId("foilpics-file_size-kilobytes").
-            arg(iLocale.toString((float)aBytes/kB, 'f', precision));
+            arg(iPrivate->iLocale.toString((float)aBytes/kB, 'f', precision));
     } else if (aBytes < 1000*MB) {
         const int precision = (aBytes < 10*MB) ? 2 : 1;
         return qtTrId("foilpics-file_size-megabytes").
-            arg(iLocale.toString((float)aBytes/MB, 'f', precision));
+            arg(iPrivate->iLocale.toString((float)aBytes/MB, 'f', precision));
     } else if (aBytes < 1000*GB) {
         const int precision = (aBytes < 10*GB) ? 2 : 1;
         return qtTrId("foilpics-file_size-gigabytes").
-            arg(iLocale.toString((float)aBytes/GB, 'f', precision));
+            arg(iPrivate->iLocale.toString((float)aBytes/GB, 'f', precision));
     } else {
         return qtTrId("foilpics-file_size-terabytes").
-            arg(iLocale.toString((float)aBytes/TB, 'f', 1));
+            arg(iPrivate->iLocale.toString((float)aBytes/TB, 'f', 1));
     }
 }
 
 void FoilPicsFileUtil::mediaDeleted(QUrl aUrl)
 {
-    if (iTrackerProxy) {
+    if (iPrivate->iTrackerProxy) {
         QString url(aUrl.toString());
         HDEBUG(url);
         // Black magic
-        iTrackerProxy->SparqlUpdate("DELETE {\n"
+        iPrivate->iTrackerProxy->SparqlUpdate("DELETE {\n"
             "   ?y nfo:hasMediaFileListEntry ?x\n"
             "   ?x a nfo:MediaFileListEntry\n"
             "} WHERE {\n"

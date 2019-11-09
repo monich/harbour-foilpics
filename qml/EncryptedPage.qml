@@ -17,6 +17,7 @@ Page {
     readonly property Page nextPage: pageStack.nextPage(page)
     readonly property bool isCurrentPage: status === PageStatus.Active || status === PageStatus.Activating ||
         (nextPage && page.parent && nextPage.parent !== page.parent.attachedContainer)
+    readonly property real screenHeight: isPortrait ? Screen.height : Screen.width
 
     Connections {
         target: page.foilModel

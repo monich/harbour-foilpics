@@ -2668,7 +2668,7 @@ void FoilPicsModel::Private::onEncryptTaskDone()
         task->iData = NULL;
         saveInfo();
     }
-    FoilPicsFileUtil::instance()->mediaDeleted(task->iSourceFile);
+    FoilPicsFileUtil::mediaDeleted(task->iSourceFile);
     task->release(this);
     if (!busy()) {
         // We know we were busy when we received this signal
