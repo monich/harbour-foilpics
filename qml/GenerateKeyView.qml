@@ -15,11 +15,11 @@ Item {
 
     function generateKey() {
         var dialog = pageStack.push(Qt.resolvedUrl("ConfirmPasswordDialog.qml"), {
-            password: passphrase.text
+            password: inputField.text
         })
         dialog.passwordConfirmed.connect(function() {
             dialog.backNavigation = false
-            foilModel.generateKey(keySize.value, passphrase.text)
+            foilModel.generateKey(keySize.value, inputField.text)
             dialog.forwardNavigation = true
             dialog.accept()
         })
