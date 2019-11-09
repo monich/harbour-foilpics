@@ -169,7 +169,7 @@
     <message id="foilpics-enter_password_view-label-enter_password_short">
         <source>Please enter your password</source>
         <extracomment>Password prompt label (short)</extracomment>
-        <translation type="unfinished">Wprowadź hasło</translation>
+        <translation>Wprowadź hasło</translation>
     </message>
     <message id="foilpics-enter_password_view-button-unlocking">
         <source>Unlocking...</source>
