@@ -167,7 +167,7 @@
     <message id="foilpics-enter_password_view-label-enter_password_short">
         <source>Please enter your password</source>
         <extracomment>Password prompt label (short)</extracomment>
-        <translation type="unfinished">Merci d&apos;entrer le mot de passe</translation>
+        <translation>Merci d&apos;entrer le mot de passe</translation>
     </message>
     <message id="foilpics-enter_password_view-button-unlocking">
         <source>Unlocking...</source>
@@ -290,7 +290,7 @@
     <message id="foilpics-encrypted_pics_view-remorse-decrypting_selected" numerus="yes">
         <source>Decrypting %0 selected pictures</source>
         <extracomment>Remorse popup text</extracomment>
-        <translation type="unfinished">
+        <translation>
             <numerusform>Déchiffrement de l’image sélectionnée</numerusform>
             <numerusform>Déchiffrement des %0 images sélectionnées</numerusform>
         </translation>
@@ -438,7 +438,7 @@
     <message id="foilpics-foil_apps_warning">
         <source>Note that all Foil apps use the same encryption key and password.</source>
         <extracomment>Warning text, small size label below the password prompt</extracomment>
-        <translation type="unfinished">Sachez que toutes les applications Foil partagent leur clef de chiffrement et leur mot de passe.</translation>
+        <translation>Sachez que toutes les applications Foil partagent leur clef de chiffrement et leur mot de passe.</translation>
     </message>
 </context>
 </TS>
