@@ -438,7 +438,7 @@
     <message id="foilpics-foil_apps_warning">
         <source>Note that all Foil apps use the same encryption key and password.</source>
         <extracomment>Warning text, small size label below the password prompt</extracomment>
-        <translation type="unfinished">Merk op dat alle Foil-apps dezelfde coderingssleutel en hetzelfde wachtwoord gebruiken.</translation>
+        <translation>Merk op dat alle Foil-apps dezelfde coderingssleutel en wachtwoord gebruiken.</translation>
     </message>
 </context>
 </TS>
