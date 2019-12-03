@@ -83,6 +83,7 @@ public:
 
     Private(FoilPicsFileUtil* aParent);
 
+    static FoilPicsFileUtil* instance();
     static bool foilAuthInstalled();
     static bool foilNotesInstalled();
     static bool otherFoilAppsInstalled();
@@ -127,6 +128,12 @@ FoilPicsFileUtil::Private::Private(FoilPicsFileUtil* aParent) :
     if (TRACKER_BUS.interface()->isServiceRegistered(TRACKER_SERVICE)) {
         onTrackerRegistered();
     }
+}
+
+FoilPicsFileUtil* FoilPicsFileUtil::Private::instance()
+{
+    // FoilPicsFileUtil constructor updates gInstance
+    return gInstance ? gInstance : new FoilPicsFileUtil();
 }
 
 inline FoilPicsFileUtil* FoilPicsFileUtil::Private::owner() const
@@ -194,15 +201,9 @@ FoilPicsFileUtil::~FoilPicsFileUtil()
     Private::gInstance = NULL;
 }
 
-FoilPicsFileUtil* FoilPicsFileUtil::singleton()
-{
-    HASSERT(Private::gInstance);
-    return Private::gInstance;
-}
-
 QObject* FoilPicsFileUtil::createSingleton(QQmlEngine*, QJSEngine*)
 {
-    return new FoilPicsFileUtil();
+    return Private::instance();
 }
 
 bool FoilPicsFileUtil::otherFoilAppsInstalled() const
@@ -212,10 +213,7 @@ bool FoilPicsFileUtil::otherFoilAppsInstalled() const
 
 void FoilPicsFileUtil::mediaDeleted(QString aFilename)
 {
-    HASSERT(Private::gInstance);
-    if (Private::gInstance) {
-        Private::gInstance->mediaDeleted(QUrl::fromLocalFile(aFilename));
-    }
+    Private::instance()->mediaDeleted(QUrl::fromLocalFile(aFilename));
 }
 
 QString FoilPicsFileUtil::formatFileSize(qlonglong aBytes)

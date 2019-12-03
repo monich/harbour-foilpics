@@ -45,7 +45,6 @@ public:
     FoilPicsFileUtil(QObject* aParent = Q_NULLPTR);
     ~FoilPicsFileUtil();
 
-    static FoilPicsFileUtil* singleton();
     static QObject* createSingleton(QQmlEngine* aEngine, QJSEngine* aScript);
 
     bool otherFoilAppsInstalled() const;
