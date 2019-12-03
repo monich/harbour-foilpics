@@ -67,23 +67,22 @@ SilicaFlickable {
         width: Theme.itemSizeHuge
         y: (panel.y > height) ? Math.floor((panel.y - height)/2) : (panel.y - height)
         height: width
-        color: Theme.primaryColor
+        color: Theme.rgba(Theme.primaryColor, HarbourTheme.opacityFaint * HarbourTheme.opacityLow)
         radius: width/2
         visible: opacity > 0
 
         // Hide it when it's only partially visible (i.e. in langscape)
-        readonly property real maxOpacity: HarbourTheme.opacityFaint * HarbourTheme.opacityLow
-        opacity: (y < 0) ? 0 : maxOpacity
+        // or getting too close to the edge of the screen
+        opacity: (y < Theme.paddingMedium) ? 0 : 1
         Behavior on opacity { FadeAnimation { duration: landscapeLayout ? 0 : 100 } }
-    }
 
-    Image {
-        source: "images/lock.svg"
-        height: Math.floor(circle.height * 5 / 8)
-        sourceSize.height: height
-        anchors.centerIn: circle
-        opacity: circle.opacity/circle.maxOpacity
-        visible: opacity > 0
+        Image {
+            source: "images/lock.svg"
+            height: Math.floor(circle.height * 5 / 8)
+            sourceSize.height: height
+            anchors.centerIn: circle
+            visible: parent.opacity > 0
+        }
     }
 
     Item {
@@ -93,7 +92,7 @@ SilicaFlickable {
         height: childrenRect.height
         y: (parent.height > height) ? Math.floor((parent.height - height)/2) : (parent.height - height)
 
-        readonly property bool showLongPrompt: y >= 0
+        readonly property bool showLongPrompt: y >= Theme.paddingMedium
 
         InfoLabel {
             id: longPrompt
