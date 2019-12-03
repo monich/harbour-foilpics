@@ -1,5 +1,6 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import harbour.foilpics 1.0
 //import QtDocGallery 5.0
 import harbour.foilpics.QtDocGallery 1.0
 
@@ -10,6 +11,7 @@ Page {
 
     DocumentGalleryItem {
         id: galleryItem
+
         autoUpdate: false
 
         // https://git.merproject.org/mer-core/qtdocgallery/blob/mer-master/src/gallery/qdocumentgallery.h
