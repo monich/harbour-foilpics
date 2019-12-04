@@ -236,7 +236,7 @@
         <source>Encrypting %0 selected pictures</source>
         <extracomment>Remorse popup text</extracomment>
         <translation>
-            <numerusform>正在加密 %0 选择的图片</numerusform>
+            <numerusform>正在加密 %0 张选择的图片</numerusform>
         </translation>
     </message>
     <message id="foilpics-gallery_fullscreen_view-header">
@@ -434,7 +434,7 @@
     <message id="foilpics-foil_apps_warning">
         <source>Note that all Foil apps use the same encryption key and password.</source>
         <extracomment>Warning text, small size label below the password prompt</extracomment>
-        <translation type="unfinished">请记住所有的 Foil 系列软件均使用相同的加密秘钥及密码。</translation>
+        <translation>请记住所有的 Foil 系列软件均使用相同的加密秘钥及密码。</translation>
     </message>
 </context>
 </TS>
