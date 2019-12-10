@@ -34,7 +34,7 @@ Item {
         sourceSize.width: width
         anchors.horizontalCenter: parent.horizontalCenter
         y: (panel.y > height) ? Math.floor((panel.y - height)/2) : (panel.y - height)
-        opacity: (y < 0) ? 0 : 1
+        opacity: (y < Theme.paddingLarge) ? 0 : 1
         visible: opacity > 0
         Behavior on opacity { FadeAnimation { duration: 100 } }
     }
@@ -50,7 +50,7 @@ Item {
             id: promptLabel
 
             height: implicitHeight
-            opacity: (parent.y >= 0) ? 1 : 0
+            opacity: (parent.y >= Theme.paddingLarge) ? 1 : 0
 
             Behavior on opacity { FadeAnimation { } }
         }
