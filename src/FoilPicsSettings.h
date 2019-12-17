@@ -41,6 +41,7 @@ class FoilPicsSettings : public QObject {
     Q_DISABLE_COPY(FoilPicsSettings)
     Q_PROPERTY(bool sharedKeyWarning READ sharedKeyWarning WRITE setSharedKeyWarning NOTIFY sharedKeyWarningChanged)
     Q_PROPERTY(bool sharedKeyWarning2 READ sharedKeyWarning2 WRITE setSharedKeyWarning2 NOTIFY sharedKeyWarning2Changed)
+    Q_PROPERTY(int autoLockTime READ autoLockTime WRITE setAutoLockTime NOTIFY autoLockTimeChanged)
 
 public:
     explicit FoilPicsSettings(QObject* aParent = Q_NULLPTR);
@@ -53,9 +54,13 @@ public:
     void setSharedKeyWarning(bool aValue);
     void setSharedKeyWarning2(bool aValue);
 
+    int autoLockTime() const;
+    void setAutoLockTime(int aValue);
+
 Q_SIGNALS:
     void sharedKeyWarningChanged();
     void sharedKeyWarning2Changed();
+    void autoLockTimeChanged();
 
 private:
     class Private;

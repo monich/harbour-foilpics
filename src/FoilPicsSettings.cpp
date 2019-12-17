@@ -41,8 +41,10 @@
 #define DCONF_KEY(x)                FOILPICS_DCONF_ROOT x
 #define KEY_SHARED_KEY_WARNING      DCONF_KEY("sharedKeyWarning")
 #define KEY_SHARED_KEY_WARNING2     DCONF_KEY("sharedKeyWarning2")
+#define KEY_AUTO_LOCK_TIME          DCONF_KEY("autoLockTime")
 
 #define DEFAULT_SHARED_KEY_WARNING  true
+#define DEFAULT_AUTO_LOCK_TIME      15000
 
 // ==========================================================================
 // FoilPicsSettings::Private
@@ -55,16 +57,24 @@ public:
 public:
     MGConfItem* iSharedKeyWarning;
     MGConfItem* iSharedKeyWarning2;
+    MGConfItem* iAutoLockTime;
+    QVariant iDefaultSharedKeyWarning;
+    QVariant iDefaultAutoLockTime;
 };
 
 FoilPicsSettings::Private::Private(FoilPicsSettings* aParent) :
     iSharedKeyWarning(new MGConfItem(KEY_SHARED_KEY_WARNING, aParent)),
-    iSharedKeyWarning2(new MGConfItem(KEY_SHARED_KEY_WARNING2, aParent))
+    iSharedKeyWarning2(new MGConfItem(KEY_SHARED_KEY_WARNING2, aParent)),
+    iAutoLockTime(new MGConfItem(KEY_AUTO_LOCK_TIME, aParent)),
+    iDefaultSharedKeyWarning(DEFAULT_SHARED_KEY_WARNING),
+    iDefaultAutoLockTime(DEFAULT_AUTO_LOCK_TIME)
 {
     QObject::connect(iSharedKeyWarning, SIGNAL(valueChanged()),
         aParent, SIGNAL(sharedKeyWarningChanged()));
     QObject::connect(iSharedKeyWarning2, SIGNAL(valueChanged()),
         aParent, SIGNAL(sharedKeyWarning2Changed()));
+    QObject::connect(iAutoLockTime, SIGNAL(valueChanged()),
+        aParent, SIGNAL(autoLockTimeChanged()));
 }
 
 // ==========================================================================
@@ -95,15 +105,17 @@ FoilPicsSettings::createSingleton(
 // sharedKeyWarning2
 
 bool
-FoilPicsSettings::sharedKeyWarning() const
+FoilPicsSettings::sharedKeyWarning()
+const
 {
-    return iPrivate->iSharedKeyWarning->value(DEFAULT_SHARED_KEY_WARNING).toBool();
+    return iPrivate->iSharedKeyWarning->value(iPrivate->iDefaultSharedKeyWarning).toBool();
 }
 
 bool
-FoilPicsSettings::sharedKeyWarning2() const
+FoilPicsSettings::sharedKeyWarning2()
+const
 {
-    return iPrivate->iSharedKeyWarning2->value(DEFAULT_SHARED_KEY_WARNING).toBool();
+    return iPrivate->iSharedKeyWarning2->value(iPrivate->iDefaultSharedKeyWarning).toBool();
 }
 
 void
@@ -120,4 +132,22 @@ FoilPicsSettings::setSharedKeyWarning2(
 {
     HDEBUG(aValue);
     iPrivate->iSharedKeyWarning2->set(aValue);
+}
+
+int
+FoilPicsSettings::autoLockTime()
+const
+{
+    QVariant val(iPrivate->iAutoLockTime->value(iPrivate->iDefaultAutoLockTime));
+    bool ok;
+    const int ival(val.toInt(&ok));
+    return (ok && ival >= 0) ? ival : DEFAULT_AUTO_LOCK_TIME;
+}
+
+void
+FoilPicsSettings::setAutoLockTime(
+    int aValue)
+{
+    HDEBUG(aValue);
+    iPrivate->iAutoLockTime->set(aValue);
 }

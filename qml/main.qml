@@ -24,8 +24,36 @@ ApplicationWindow {
         value: "image/*"
     }
 
+    Timer {
+        id: lockTimer
+
+        interval: FoilPicsSettings.autoLockTime
+        onTriggered: appFoilModel.lock(true);
+    }
+
     SystemState {
-        onLockModeChanged: if (locked) appFoilModel.lock(false);
+        property bool wasDimmed
+
+        onDisplayStatusChanged: {
+            if (displayStatus === MCE_DISPLAY_DIM) {
+                wasDimmed = true
+            } else if (displayStatus === MCE_DISPLAY_ON) {
+                wasDimmed = false
+            }
+        }
+
+        onLockedChanged: {
+            lockTimer.stop()
+            if (locked) {
+                if (wasDimmed) {
+                    // Give the user some time to wake wake up the screen
+                    // and prevent encrypted pictures from being locked
+                    lockTimer.start()
+                } else {
+                    appFoilModel.lock(false);
+                }
+            }
+        }
     }
 
     //: Application title
