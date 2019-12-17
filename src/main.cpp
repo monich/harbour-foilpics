@@ -59,7 +59,7 @@ static void register_types(const char* uri, int v1 = 1, int v2 = 0)
 {
     qmlRegisterSingletonType<HarbourTheme>(uri, v1, v2, "HarbourTheme", HarbourTheme::createSingleton);
     qmlRegisterType<HarbourSystemState>(uri, v1, v2, "SystemState");
-    qmlRegisterType<HarbourTransferMethodsModel>(uri, v1, v2, "TransferMethodsModel");
+    qmlRegisterSingletonType<HarbourTransferMethodsModel>(uri, v1, v2, "TransferMethodsModel", HarbourTransferMethodsModel::createSingleton);
     qmlRegisterSingletonType<FoilPicsSettings>(uri, v1, v2, "FoilPicsSettings", FoilPicsSettings::createSingleton);
     qmlRegisterSingletonType<FoilPicsFileUtil>(uri, v1, v2, "FileUtil", FoilPicsFileUtil::createSingleton);
     qmlRegisterType<FoilPicsBusyState>(uri, v1, v2, "FoilPicsBusyState");

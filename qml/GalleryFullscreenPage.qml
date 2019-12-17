@@ -7,7 +7,6 @@ Page {
     property var foilModel
     property alias model: imageList.model
     property alias currentIndex: imageList.currentIndex
-    property alias transferMethodsModel: shareMethodsList.model
     property var currentImageItem: model ? model.get(currentIndex) : null
 
     signal encryptItem(int index)
@@ -26,8 +25,8 @@ Page {
 
         background: ShareMethodList {
             id: shareMethodsList
-            anchors.fill: parent
 
+            anchors.fill: parent
             source: currentImageItem ? currentImageItem.url : ""
 
             PullDownMenu {

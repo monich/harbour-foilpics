@@ -9,7 +9,6 @@ Page {
 
     property alias hints: grid.hints
     property alias foilModel: grid.foilModel
-    property alias transferMethodsModel: grid.transferMethodsModel
     property alias remorseSelectionModel: grid.selectionModel
     property var selectionModel
     property bool dropSelectionModelsWhenEncryptionDone

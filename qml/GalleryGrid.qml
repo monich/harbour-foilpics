@@ -9,7 +9,6 @@ ImageGridView {
 
     property var hints
     property var foilModel
-    property var transferMethodsModel
     property var selectionModel
     property alias contextMenu: contextMenuItem
     property Item expandItem
@@ -86,8 +85,7 @@ ImageGridView {
                 var page = pageStack.push(Qt.resolvedUrl("GalleryFullscreenPage.qml"), {
                     currentIndex: index,
                     model: grid.model,
-                    foilModel: grid.foilModel,
-                    transferMethodsModel: transferMethodsModel
+                    foilModel: grid.foilModel
                 })
                 if (page) {
                     page.encryptItem.connect(grid.encryptItem)

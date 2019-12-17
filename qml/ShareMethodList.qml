@@ -1,6 +1,7 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import org.nemomobile.dbus 2.0
+import harbour.foilpics 1.0
 
 SilicaListView {
     id: view
@@ -10,9 +11,11 @@ SilicaListView {
 
     width: parent.width
     height: Theme.itemSizeSmall * model.count
+    model: TransferMethodsModel
 
     DBusInterface {
         id: settings
+
         service: "com.jolla.settings"
         path: "/com/jolla/settings/ui"
         iface: "com.jolla.settings.ui"

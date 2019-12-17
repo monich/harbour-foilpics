@@ -18,9 +18,10 @@ ApplicationWindow {
         id: appHints
     }
 
-    TransferMethodsModel {
-        id: appTransferMethodsModel
-        filter: "image/*"
+    Binding {
+        target: TransferMethodsModel
+        property: "filter"
+        value: "image/*"
     }
 
     SystemState {
@@ -50,7 +51,6 @@ ApplicationWindow {
             hints: appHints
             foilModel: appFoilModel
             allowedOrientations: appAllowedOrientations
-            transferMethodsModel: appTransferMethodsModel
         }
     }
 
