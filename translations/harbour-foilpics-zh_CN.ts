@@ -118,7 +118,7 @@
     <message id="foilpics-generate_key_warning-text">
         <source>You seem to have some encrypted files in the storage folder. Once you have generated a new key, you are going to lose access to those files. If you have forgotten your password, then keep in mind that most likely it&apos;s computationally easier to brute-force your password and recover the old key than to crack the new key.</source>
         <extracomment>Warning shown prior to generating the new key</extracomment>
-        <translation>你似乎在存储文件夹中有一些加密的文件。一旦生成了新密匙, 将失去对这些文件的访问权限。如果忘记了密码, 请记住, 很可能在计算上更容易使用强制输入密码并恢复旧密匙, 而不是破解新密匙。</translation>
+        <translation>你似乎在存储文件夹中有一些加密的文件。一旦生成了新密匙, 将失去对这些文件的访问权限。如果忘记了密码, 请记住, 通过强制计算获取密码并恢复旧密匙比破译密钥更容易。</translation>
     </message>
     <message id="foilpics-generate_key_page-title">
         <source>You are about to generate a new key</source>
