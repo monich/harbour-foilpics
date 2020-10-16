@@ -143,7 +143,7 @@ Page {
 
         anchors.fill: parent
         active: opacity > 0
-        opacity: (hints.leftSwipeToGallery < MaximumHintCount | running) ? 1 : 0
+        opacity: (hints.leftSwipeToGallery < MaximumHintCount || running) ? 1 : 0
         property bool running
         sourceComponent: Component {
             HarbourHorizontalSwipeHint {
