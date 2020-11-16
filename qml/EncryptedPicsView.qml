@@ -9,6 +9,7 @@ Item {
 
     property Page mainPage
     property var hints
+    property var foilUi
     property var foilModel
     property bool isCurrentView
     readonly property bool ready: foilModel.foilState === FoilPicsModel.FoilPicsReady
@@ -43,14 +44,31 @@ Item {
         PullDownMenu {
             visible: view.ready
             MenuItem {
-                id: generateKeyMenuItem
-                //: Pulley menu item
-                //% "Generate a new key"
-                text: qsTrId("foilpics-pulley_menu-generate_key")
-                visible: !foilModel.count
+                text: foilUi.qsTrEnterPasswordViewMenuGenerateNewKey()
                 onClicked: {
-                    pageStack.push(Qt.resolvedUrl("GenerateKeyPage.qml"), {
-                        foilModel: foilModel
+                    var warning = pageStack.push(Qt.resolvedUrl("foil-ui/FoilUiGenerateKeyWarning.qml"), {
+                        allowedOrientations: mainPage.allowedOrientations,
+                        foilUi: view.foilUi
+                    });
+                    warning.accepted.connect(function() {
+                        // Replace the warning page with a slide. This may
+                        // occasionally generate "Warning: cannot pop while
+                        // transition is in progress" if the user taps the
+                        // page stack indicator (as opposed to the Accept
+                        // button) but this warning is fairly harmless:
+                        //
+                        // _dialogDone (Dialog.qml:124)
+                        // on_NavigationChanged (Dialog.qml:177)
+                        // navigateForward (PageStack.qml:291)
+                        // onClicked (private/PageStackIndicator.qml:174)
+                        //
+                        warning.canNavigateForward = false
+                        pageStack.replace(Qt.resolvedUrl("foil-ui/FoilUiGenerateKeyPage.qml"), {
+                            allowedOrientations: mainPage.allowedOrientations,
+                            mainPage: view.mainPage,
+                            foilUi: view.foilUi,
+                            foilModel: view.foilModel
+                        })
                     })
                 }
             }
@@ -59,9 +77,22 @@ Item {
                 //% "Change password"
                 text: qsTrId("foilpics-pulley_menu-change_password")
                 onClicked: {
-                    pageStack.push(Qt.resolvedUrl("ChangePasswordPage.qml"), {
+                    pageStack.push(Qt.resolvedUrl("foil-ui/FoilUiChangePasswordPage.qml"), {
                         mainPage: view.mainPage,
-                        foilModel: foilModel
+                        foilUi: view.foilUi,
+                        foilModel: view.foilModel,
+                        //: Password change prompt
+                        //% "Please enter the current and the new password"
+                        promptText: qsTrId("foilpics-change_password_page-label-enter_passwords"),
+                        //: Placeholder and label for the current password prompt
+                        //% "Current password"
+                        currentPasswordLabel: qsTrId("foilpics-change_password_page-text_field_label-current_password"),
+                        //: Placeholder and label for the new password prompt
+                        //% "New password"
+                        newPasswordLabel: qsTrId("foilpics-change_password_page-text_field_label-new_password"),
+                        //: Button label
+                        //% "Change password"
+                        buttonText: qsTrId("foilpics-change_password_page-button-change_password")
                     })
                 }
             }

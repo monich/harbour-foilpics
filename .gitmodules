@@ -7,3 +7,6 @@
 [submodule "libglibutil"]
 	path = libglibutil
 	url = https://github.com/monich/libglibutil.git
+[submodule "foil-ui"]
+	path = foil-ui
+	url = https://github.com/monich/foil-ui.git
