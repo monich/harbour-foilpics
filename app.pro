@@ -29,6 +29,10 @@ CONFIG(debug, debug|release) {
 }
 
 # Directories
+FOIL_UI_REL = foil-ui
+FOIL_UI_DIR = $${_PRO_FILE_PWD_}/$${FOIL_UI_REL}
+FOIL_UI_QML = $${FOIL_UI_DIR}
+
 HARBOUR_LIB_REL = harbour-lib
 HARBOUR_LIB_DIR = $${_PRO_FILE_PWD_}/$${HARBOUR_LIB_REL}
 HARBOUR_LIB_INCLUDE = $${HARBOUR_LIB_DIR}/include
@@ -109,6 +113,30 @@ HEADERS += \
     $${LIBFOILMSG_INCLUDE}/*.h \
     $${LIBGLIBUTIL_INCLUDE}/*.h
 
+# foil-ui
+
+FOIL_UI_COMPONENTS = \
+    $${FOIL_UI_QML}/FoilUiAppsWarning.qml \
+    $${FOIL_UI_QML}/FoilUiChangePasswordPage.qml \
+    $${FOIL_UI_QML}/FoilUiConfirmPasswordDialog.qml \
+    $${FOIL_UI_QML}/FoilUiEnterPasswordView.qml \
+    $${FOIL_UI_QML}/FoilUiGenerateKeyPage.qml \
+    $${FOIL_UI_QML}/FoilUiGenerateKeyView.qml \
+    $${FOIL_UI_QML}/FoilUiGenerateKeyWarning.qml \
+    $${FOIL_UI_QML}/FoilUiGeneratingKeyView.qml
+
+FOIL_UI_IMAGES = $${FOIL_UI_QML}/images/*.svg
+
+OTHER_FILES += $${FOIL_UI_COMPONENTS}
+foil_ui_components.files = $${FOIL_UI_COMPONENTS}
+foil_ui_components.path = /usr/share/$${TARGET}/qml/foil-ui
+INSTALLS += foil_ui_components
+
+OTHER_FILES += $${FOIL_UI_IMAGES}
+foil_ui_images.files = $${FOIL_UI_IMAGES}
+foil_ui_images.path = /usr/share/$${TARGET}/qml/foil-ui/images
+INSTALLS += foil_ui_images
+
 # harbour-lib
 
 HEADERS += \
@@ -141,7 +169,8 @@ HARBOUR_QML_COMPONENTS = \
     $${HARBOUR_LIB_QML}/HarbourHighlightIcon.qml \
     $${HARBOUR_LIB_QML}/HarbourIconTextButton.qml \
     $${HARBOUR_LIB_QML}/HarbourPasswordInputField.qml \
-    $${HARBOUR_LIB_QML}/HarbourShakeAnimation.qml
+    $${HARBOUR_LIB_QML}/HarbourShakeAnimation.qml \
+    $${HARBOUR_LIB_QML}/HarbourShareMethodList.qml
 
 OTHER_FILES += $${HARBOUR_QML_COMPONENTS}
 

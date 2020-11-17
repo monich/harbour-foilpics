@@ -1,5 +1,8 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import harbour.foilpics 1.0
+
+import "harbour"
 
 Page {
     id: page
@@ -23,11 +26,16 @@ Page {
         anchors.fill: parent
         open: true
 
-        background: ShareMethodList {
+        background: HarbourShareMethodList {
             id: shareMethodsList
 
             anchors.fill: parent
             source: currentImageItem ? currentImageItem.url : ""
+            model: TransferMethodsModel
+
+            //: Share list item
+            //% "Add account"
+            addAccountText: qsTrId("foilpics-share_method_list-add_account")
 
             PullDownMenu {
                 MenuItem {
