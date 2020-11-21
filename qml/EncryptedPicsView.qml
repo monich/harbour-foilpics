@@ -49,27 +49,15 @@ Item {
                     var warning = pageStack.push(Qt.resolvedUrl("foil-ui/FoilUiGenerateKeyWarning.qml"), {
                         allowedOrientations: mainPage.allowedOrientations,
                         foilUi: view.foilUi
-                    });
-                    warning.accepted.connect(function() {
-                        // Replace the warning page with a slide. This may
-                        // occasionally generate "Warning: cannot pop while
-                        // transition is in progress" if the user taps the
-                        // page stack indicator (as opposed to the Accept
-                        // button) but this warning is fairly harmless:
-                        //
-                        // _dialogDone (Dialog.qml:124)
-                        // on_NavigationChanged (Dialog.qml:177)
-                        // navigateForward (PageStack.qml:291)
-                        // onClicked (private/PageStackIndicator.qml:174)
-                        //
-                        warning.canNavigateForward = false
-                        pageStack.replace(Qt.resolvedUrl("foil-ui/FoilUiGenerateKeyPage.qml"), {
-                            allowedOrientations: mainPage.allowedOrientations,
-                            mainPage: view.mainPage,
-                            foilUi: view.foilUi,
-                            foilModel: view.foilModel
-                        })
                     })
+                    warning.acceptDestinationProperties = {
+                        allowedOrientations: mainPage.allowedOrientations,
+                        mainPage: view.mainPage,
+                        foilUi: view.foilUi,
+                        foilModel: view.foilModel
+                    }
+                    warning.acceptDestinationAction = PageStackAction.Replace
+                    warning.acceptDestination = Qt.resolvedUrl("foil-ui/FoilUiGenerateKeyPage.qml")
                 }
             }
             MenuItem {
@@ -218,7 +206,6 @@ Item {
             //: Remorse popup text
             //% "Decrypting %0 selected pictures"
             bulkAction(qsTrId("foilpics-encrypted_pics_view-remorse-decrypting_selected", list.length).arg(list.length), list, function() {
-                console.log(list)
                 foilModel.decryptFiles(list)
                 if (foilModel.busy) {
                     dropSelectionModelsWhenDecryptionDone = true
@@ -242,7 +229,6 @@ Item {
 
     function maybeDropSelectionModel() {
         if (selectionModel && mainPage.status === PageStatus.Active && pageStack.currentPage === mainPage) {
-            console.log("dropping selection model")
             selectionModel.destroy()
             selectionModel = null
         }
