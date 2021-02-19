@@ -168,7 +168,7 @@ Item {
 
     function bulkAction(text, list, callback) {
         listView.jumpToIndex(list[0])
-        remorseSelectionModel = selectionModelComponent.createObject(page)
+        remorseSelectionModel = selectionModelComponent.createObject(mainPage)
         remorseSelectionModel.makeBusy(list)
         pageStack.pop()
         bulkActionRemorse.execute(text, callback)
@@ -177,9 +177,9 @@ Item {
     function selectPictures() {
         dropSelectionModels()
         bulkActionRemorse.cancelNicely()
-        selectionModel = selectionModelComponent.createObject(page)
+        selectionModel = selectionModelComponent.createObject(mainPage)
         var selectionPage = pageStack.push(Qt.resolvedUrl("EncryptedSelectionPage.qml"), {
-            allowedOrientations: page.allowedOrientations,
+            allowedOrientations: mainPage.allowedOrientations,
             selectionModel: view.selectionModel,
             foilModel: view.foilModel
         })
