@@ -141,7 +141,6 @@ INSTALLS += foil_ui_images
 
 HEADERS += \
     $${HARBOUR_LIB_INCLUDE}/HarbourDebug.h \
-    $${HARBOUR_LIB_INCLUDE}/HarbourImageProvider.h \
     $${HARBOUR_LIB_INCLUDE}/HarbourPluginLoader.h \
     $${HARBOUR_LIB_INCLUDE}/HarbourSystem.h \
     $${HARBOUR_LIB_INCLUDE}/HarbourSystemState.h \
@@ -152,7 +151,6 @@ HEADERS += \
     $${HARBOUR_LIB_SRC}/HarbourMce.h
 
 SOURCES += \
-    $${HARBOUR_LIB_SRC}/HarbourImageProvider.cpp \
     $${HARBOUR_LIB_SRC}/HarbourMce.cpp \
     $${HARBOUR_LIB_SRC}/HarbourPluginLoader.cpp \
     $${HARBOUR_LIB_SRC}/HarbourSystem.cpp \

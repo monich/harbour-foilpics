@@ -13,7 +13,6 @@ Item {
 
     property bool active
     property real visiblePart: active ? height : 0
-    readonly property string imageProvider: HarbourTheme.darkOnLight ? HarbourImageProviderDarkOnLight : HarbourImageProviderDefault
 
     signal deleteSelected()
     signal deleteHint()
@@ -50,7 +49,7 @@ Item {
             topMargin: Theme.paddingMedium
         }
         enabled: active
-        iconSource: "image://" + imageProvider + "/" + Qt.resolvedUrl("images/folder.svg")
+        iconSource: Qt.resolvedUrl("images/folder.svg")
         onClicked: panel.groupSelected()
         onPressAndHold: panel.groupHint()
     }

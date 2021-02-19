@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2017-2019 Jolla Ltd.
- * Copyright (C) 2017-2019 Slava Monich <slava@monich.com>
+ * Copyright (C) 2017-2021 Jolla Ltd.
+ * Copyright (C) 2017-2021 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -22,7 +22,7 @@
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
  * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
  * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
  * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
@@ -44,7 +44,6 @@
 #include "FoilPicsFileUtil.h"
 
 #include "HarbourDebug.h"
-#include "HarbourImageProvider.h"
 #include "HarbourSystemState.h"
 #include "HarbourTheme.h"
 #include "HarbourTransferMethodsModel.h"
@@ -113,7 +112,6 @@ int main(int argc, char *argv[])
     // Create ans show the view
     QQuickView* view = SailfishApp::createView();
     QQmlContext* context = view->rootContext();
-    QQmlEngine* engine = context->engine();
 
     // Re-register some types
     FoilPicsGalleryPlugin::registerTypes(context->engine(),
@@ -121,18 +119,9 @@ int main(int argc, char *argv[])
     FoilPicsThumbnailerPlugin::registerTypes(context->engine(),
         FOILPICS_THUMBNAILER_QML_IMPORT, 1, 0);
 
-    // Register our image provider (two sets - one for light-on-dark and
-    // one for dark-on-light, doesn't really matter which one)
-    QString providerDefault("harbour");
-    QString providerDarkOnLight("harbour-dark");
-    engine->addImageProvider(providerDefault, new HarbourImageProvider);
-    engine->addImageProvider(providerDarkOnLight, new HarbourImageProvider);
-
     // Initialize the view and the global properties
     view->setTitle(qtTrId("foilpics-app_name"));
     context->setContextProperty("MaximumHintCount", 1);
-    context->setContextProperty("HarbourImageProviderDefault", providerDefault);
-    context->setContextProperty("HarbourImageProviderDarkOnLight", providerDarkOnLight);
     //context->setContextProperty("AppSettings", new AppSettings(app));
 
     view->setSource(SailfishApp::pathTo("qml/main.qml"));
