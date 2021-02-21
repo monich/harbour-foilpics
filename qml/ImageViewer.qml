@@ -21,20 +21,21 @@ SilicaFlickable {
 
     // Calculate a default value which produces approximately same level of zoom
     // on devices with different screen resolutions.
-    property real maximumZoom: Math.max(Screen.width, Screen.height) / 200
-    property int _maximumZoomedWidth: _fullWidth * maximumZoom
-    property int _maximumZoomedHeight: _fullHeight * maximumZoom
-    property int _minimumZoomedWidth: implicitWidth * _fittedScale
-    property int _minimumZoomedHeight: implicitHeight * _fittedScale
-    property bool _zoomAllowed: !viewMoving && !menuOpen && _fittedScale !== maximumZoom && !_menuAnimating
-    property int _fullWidth: _transpose ? Math.max(photo.implicitHeight, largePhoto.implicitHeight)
+    readonly property real maximumZoom: Math.max(Screen.width, Screen.height) / 200
+    readonly property int _maximumZoomedWidth: _fullWidth * maximumZoom
+    readonly property int _maximumZoomedHeight: _fullHeight * maximumZoom
+    readonly property int _minimumZoomedWidth: implicitWidth * _fittedScale
+    readonly property int _minimumZoomedHeight: implicitHeight * _fittedScale
+    readonly property bool _zoomAllowed: !viewMoving && !menuOpen && _fittedScale !== maximumZoom && !_menuAnimating
+    readonly property int _fullWidth: _transpose ? Math.max(photo.implicitHeight, largePhoto.implicitHeight)
                                         : Math.max(photo.implicitWidth, largePhoto.implicitWidth)
-    property int _fullHeight: _transpose ? Math.max(photo.implicitWidth, largePhoto.implicitWidth)
+    readonly property int _fullHeight: _transpose ? Math.max(photo.implicitWidth, largePhoto.implicitWidth)
                                          : Math.max(photo.implicitHeight, largePhoto.implicitHeight)
 
-    property int _viewOrientation: fitWidth ? Orientation.Portrait : Orientation.Landscape
-    property int _viewOpenWidth: _viewOrientation === Orientation.Portrait ? Screen.width : Screen.height / 2
-    property int _viewOpenHeight: _viewOrientation === Orientation.Portrait ? Screen.height / 2 : Screen.width
+    readonly property int _viewOrientation: fitWidth ? Orientation.Portrait : Orientation.Landscape
+    readonly property int _splitScreenHeight: Math.max(Screen.height / 2, Screen.height - Screen.width)
+    readonly property int _viewOpenWidth: _viewOrientation === Orientation.Portrait ? Screen.width : _splitScreenHeight
+    readonly property int _viewOpenHeight: _viewOrientation === Orientation.Portrait ? _splitScreenHeight : Screen.width
 
     readonly property bool _transpose: (orientation % 180) != 0
     property bool _menuAnimating

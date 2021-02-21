@@ -24,6 +24,7 @@ Page {
         dock: page.orientation & Orientation.PortraitMask ? Dock.Top: Dock.Left
         hideOnMinimize: true
         anchors.fill: parent
+        backgroundSize: Math.min(Math.min(page.width, page.height), Math.max(page.width/2, page.height/2))
         open: true
 
         background: HarbourShareMethodList {
