@@ -113,7 +113,6 @@ Page {
                 height: drawer.foregroundItem.height
 
                 isPortrait: page.isPortrait
-                menuOpen: drawer.open
 
                 onClicked: drawer.open = !drawer.open
                 onItemTitleChanged: updateCurrentImageItem()
