@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2017-2018 Jolla Ltd.
- * Copyright (C) 2017-2018 Slava Monich <slava@monich.com>
+ * Copyright (C) 2017-2021 Jolla Ltd.
+ * Copyright (C) 2017-2021 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -96,6 +96,7 @@ public:
 Q_SIGNALS:
     void countChanged();
     void rowsActuallyMoved();
+    void groupRenamed(int index, const FoilPicsGroupModel::Group& group);
 
 private:
     class ProxyModel;
@@ -105,6 +106,7 @@ private:
 };
 
 QML_DECLARE_TYPE(FoilPicsGroupModel)
+Q_DECLARE_METATYPE(FoilPicsGroupModel::Group)
 Q_DECLARE_METATYPE(FoilPicsGroupModel::GroupList)
 
 #endif // FOILPICS_GROUP_MODEL_H

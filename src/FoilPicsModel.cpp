@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2017-2019 Jolla Ltd.
- * Copyright (C) 2017-2019 Slava Monich <slava@monich.com>
+ * Copyright (C) 2017-2021 Jolla Ltd.
+ * Copyright (C) 2017-2021 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of BSD license as follows:
  *
@@ -117,7 +117,8 @@ const QString FoilPicsModel::MetaAltitude("altitude");       // double
     role(DefaultTitle, defaultTitle) \
     role(ImageWidth, imageWidth) \
     role(ImageHeight, imageHeight) \
-    role(GroupId, groupId)
+    role(GroupId, groupId) \
+    role(GroupName, groupName)
 
 // ==========================================================================
 // FoilPicsModel::ModelData
@@ -153,7 +154,8 @@ public:
     ~ModelData();
 
     QVariant get(Role aRole) const;
-    void updateVariant(Role aRole);
+    QVariantMap toVariantMap() const;
+    void updateVariantMap(Role aRole);
 
     static QString defaultTitle(QString aPath);
     static QString defaultTitle(QFileInfo aFileInfo);
@@ -198,7 +200,7 @@ public:
     HarbourTask* iDecryptTask;
     HarbourTask* iSetTitleTask;
     HarbourTask* iSetGroupTask;
-    QVariantMap iVariant;
+    mutable QVariantMap iVariantMap;
 };
 
 #define ROLE(X,x) const QString FoilPicsModel::ModelData::RoleName##X(#x);
@@ -238,11 +240,6 @@ FoilPicsModel::ModelData::ModelData(QString aOriginalPath, int aOriginalSize,
     iImageId = QLatin1String(buf->str);
     HDEBUG(iFileName << buf->str << iOrientation);
     g_string_free(buf, TRUE);
-
-    // Fill the variant map
-#define ROLE(X,x) iVariant.insert(RoleName##X, get(X##Role));
-    FOILPICS_ROLES(ROLE)
-#undef ROLE
 }
 
 FoilPicsModel::ModelData::~ModelData()
@@ -277,16 +274,29 @@ FoilPicsModel::ModelData* FoilPicsModel::ModelData::fromFoilMsg(FoilMsg* aMsg,
     return data;
 }
 
-void FoilPicsModel::ModelData::updateVariant(Role aRole)
+QVariantMap FoilPicsModel::ModelData::toVariantMap() const
 {
-    switch (aRole) {
-#define ROLE(X,x) case X##Role: \
-    iVariant.insert(RoleName##X, get(X##Role)); break;
-    FOILPICS_ROLES(ROLE)
+    // Fill the variant map (groupName renames empty)
+    if (iVariantMap.isEmpty()) {
+#define ROLE(X,x) iVariantMap.insert(RoleName##X, get(X##Role));
+        FOILPICS_ROLES(ROLE)
 #undef ROLE
-    case ModelData::FirstRole:
-    case ModelData::LastRole:
-        break;
+    }
+    return iVariantMap;
+}
+
+void FoilPicsModel::ModelData::updateVariantMap(Role aRole)
+{
+    if (!iVariantMap.isEmpty()) {
+        switch (aRole) {
+#define ROLE(X,x) case X##Role: \
+        iVariantMap.insert(RoleName##X, get(X##Role)); break;
+        FOILPICS_ROLES(ROLE)
+#undef ROLE
+        case ModelData::FirstRole:
+        case ModelData::LastRole:
+            break;
+        }
     }
 }
 
@@ -319,6 +329,9 @@ QVariant FoilPicsModel::ModelData::get(Role aRole) const
     case ImageHeightRole: return iFullDimensions.height();
     case GroupIdRole: return iGroupId.isEmpty() ?
         QString() : QString::fromLatin1(iGroupId);
+    // Group name is maintained by FoilPicsGroupModel and is returned
+    // by FoilPicsModel. Ignore it here.
+    case GroupNameRole:
     // No default to make sure that we get "warning: enumeration value
     // not handled in switch" if we forget to handle a real role.
     case FirstRole:
@@ -1791,6 +1804,7 @@ public Q_SLOTS:
     void onSaveInfoDone();
     void onImageRequestDone();
     void onGroupModelChanged();
+    void onGroupRenamed(int aIndex, const FoilPicsGroupModel::Group& aGroup);
     void onStopIgnoringGroupModelChanges();
 
 public:
@@ -2064,6 +2078,10 @@ void FoilPicsModel::Private::connectGroupModel()
         connect(iGroupModel,
             SIGNAL(rowsActuallyMoved()),
             SLOT(onGroupModelChanged()));
+        // And this is to emit dataChanged when groupName role changes:
+        connect(iGroupModel,
+            SIGNAL(groupRenamed(int,FoilPicsGroupModel::Group)),
+            SLOT(onGroupRenamed(int,FoilPicsGroupModel::Group)));
     }
 }
 
@@ -2247,7 +2265,7 @@ void FoilPicsModel::Private::insertModelData(ModelData* aData)
     if (iThumbnailProvider) {
         aData->iThumbSource = iThumbnailProvider->addThumbnail(aData->iImageId,
             aData->iThumbnail);
-        aData->updateVariant(ModelData::ThumbnailRole);
+        aData->updateVariantMap(ModelData::ThumbnailRole);
     }
     if (!iImageProvider) {
         iImageProvider = FoilPicsImageProvider::createForObject(model);
@@ -2255,7 +2273,7 @@ void FoilPicsModel::Private::insertModelData(ModelData* aData)
     if (iImageProvider) {
         aData->iImageSource = iImageProvider->addImage(aData->iImageId,
             aData->iPath);
-        aData->updateVariant(ModelData::UrlRole);
+        aData->updateVariantMap(ModelData::UrlRole);
     }
 
     // Make sure that group id is valid
@@ -2405,6 +2423,23 @@ void FoilPicsModel::Private::onGroupModelChanged()
         // Save the info whenever group model changes
         sortModel();
         saveInfo();
+    }
+}
+
+void FoilPicsModel::Private::onGroupRenamed(int aIndex, const FoilPicsGroupModel::Group& aGroup)
+{
+    const QString groupId(aGroup.iId);
+    HDEBUG("Group" << groupId << "renamed into" << aGroup.iName);
+    const int n = iData.count();
+    QList<int> changedRows;
+    for (int i = 0; i < n; i++) {
+        ModelData* data = iData.at(i);
+        if (data->iGroupId == groupId) {
+            changedRows.append(i);
+        }
+    }
+    if (!changedRows.isEmpty()) {
+        dataChanged(changedRows, ModelData::GroupNameRole);
     }
 }
 
@@ -2829,7 +2864,7 @@ void FoilPicsModel::Private::setTitleAt(int aIndex, QString aTitle)
         QString title(aTitle.isEmpty() ? data->iDefaultTitle : aTitle);
         if (data->iTitle != title) {
             data->iTitle = title;
-            data->updateVariant(ModelData::TitleRole);
+            data->updateVariantMap(ModelData::TitleRole);
             dataChanged(aIndex, ModelData::TitleRole);
 
             HDEBUG("Settings title at" << aIndex << "to" << title);
@@ -2871,7 +2906,7 @@ bool FoilPicsModel::Private::setGroupId(ModelData* aData, QByteArray aId)
 {
     if (aData->iGroupId != aId) {
         aData->iGroupId = aId;
-        aData->updateVariant(ModelData::GroupIdRole);
+        aData->updateVariantMap(ModelData::GroupIdRole);
         // Update the encrypted file
         if (aData->iSetGroupTask) {
             aData->iSetGroupTask->release(this);
@@ -2981,7 +3016,7 @@ void FoilPicsModel::Private::headerUpdateDone(SetHeaderTask* task)
         if (data->iEncryptedSize != size) {
             HDEBUG("Encrypted size" << data->iEncryptedSize << "->" << size);
             data->iEncryptedSize = size;
-            data->updateVariant(ModelData::EncryptedFileSizeRole);
+            data->updateVariantMap(ModelData::EncryptedFileSizeRole);
             dataChanged(iData.indexOf(data), ModelData::EncryptedFileSizeRole);
         }
     }
@@ -3025,9 +3060,19 @@ void FoilPicsModel::Private::dataChanged(int aIndex, ModelData::Role aRole)
 
 void FoilPicsModel::Private::dataChanged(QList<int> aRows, ModelData::Role aRole)
 {
-    const int n = aRows.count();
-    for (int i = 0; i < n; i++) {
-        dataChanged(aRows.at(i), aRole);
+    if (!aRows.isEmpty()) {
+        QVector<int> roles;
+        roles.append(aRole);
+        FoilPicsModel* model = parentModel();
+        const int n = aRows.count();
+        for (int i = 0; i < n; i++) {
+            // TODO: coalesce signals for sequential rows
+            const int row = aRows.at(i);
+            if (row >= 0 && row < iData.count()) {
+                QModelIndex modelIndex(model->index(row));
+                Q_EMIT model->dataChanged(modelIndex, modelIndex, roles);
+            }
+        }
     }
 }
 
@@ -3251,7 +3296,14 @@ int FoilPicsModel::rowCount(const QModelIndex& aParent) const
 QVariant FoilPicsModel::data(const QModelIndex& aIndex, int aRole) const
 {
     ModelData* data = iPrivate->dataAt(aIndex.row());
-    return data ? data->get((ModelData::Role)aRole) : QVariant();
+    if (data) {
+        if (aRole == ModelData::GroupNameRole) {
+            return iPrivate->iGroupModel->groupName(data->iGroupId);
+        } else {
+            return data->get((ModelData::Role)aRole);
+        }
+    }
+    return QVariant();
 }
 
 void FoilPicsModel::setThumbnailSize(QSize aSize)
@@ -3282,7 +3334,13 @@ QVariantMap FoilPicsModel::get(int aIndex) const
 {
     HDEBUG(aIndex);
     ModelData* data = iPrivate->dataAt(aIndex);
-    return data ? data->iVariant : QVariantMap();
+    if (data) {
+        QVariantMap map(data->toVariantMap());
+        map.insert(ModelData::RoleNameGroupName,
+            iPrivate->iGroupModel->groupName(data->iGroupId));
+        return map;
+    }
+    return QVariantMap();
 }
 
 void FoilPicsModel::decryptFiles(QList<int> aRows)

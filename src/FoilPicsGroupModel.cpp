@@ -743,9 +743,11 @@ FoilPicsGroupModel::FoilPicsGroupModel(FoilPicsModel* aParent) :
     QAbstractListModel(aParent),
     iPrivate(new Private(this, aParent))
 {
+    qRegisterMetaType<Group>("FoilPicsGroupModel::Group");
     qRegisterMetaType<GroupList>("FoilPicsGroupModel::GroupList");
     connect(this, SIGNAL(rowsInserted(QModelIndex,int,int)), SIGNAL(countChanged()));
     connect(this, SIGNAL(rowsRemoved(QModelIndex,int,int)), SIGNAL(countChanged()));
+    connect(this, SIGNAL(modelReset()), SIGNAL(countChanged()));
 }
 
 QHash<int,QByteArray> FoilPicsGroupModel::roleNames() const
@@ -878,7 +880,9 @@ void FoilPicsGroupModel::renameGroupAt(int aIndex, QString aName)
         data->iGroup.iName = aName;
         QVector<int> roles;
         roles.append(ModelData::GroupNameRole);
-        QModelIndex modelIndex(index(aIndex));
+        const Group group(data->iGroup);
+        const QModelIndex modelIndex(index(aIndex));
+        Q_EMIT groupRenamed(aIndex, group);
         Q_EMIT dataChanged(modelIndex, modelIndex, roles);
     }
 }

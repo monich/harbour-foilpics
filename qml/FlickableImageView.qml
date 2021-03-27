@@ -5,6 +5,7 @@ SlideshowView {
     id: view
 
     readonly property string itemTitle: currentItem !== null ? currentItem.itemTitle : ""
+    readonly property string itemGroupName: currentItem !== null ? currentItem.itemGroupName : ""
     readonly property bool itemScaled: currentItem !== null && currentItem.itemScaled
     readonly property bool itemTouchingVerticalEdge: currentItem !== null && currentItem.itemTouchingVerticalEdge
     property bool isPortrait
@@ -26,6 +27,7 @@ SlideshowView {
         readonly property alias itemScaled: imageViewer.scaled
         readonly property bool itemTouchingVerticalEdge: imageViewer.atXBeginning || imageViewer.atXEnd
         readonly property string itemTitle: model.title
+        readonly property string itemGroupName: model.groupName
 
         width: view.width
         height: view.height

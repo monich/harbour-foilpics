@@ -88,11 +88,12 @@ Page {
                 width: parent.width
                 PageHeader {
                     id: portraitHeader
-                    title: currentImageItem ? currentImageItem.title : ""
+                    title: imageList.itemTitle
                     rightMargin: Theme.horizontalPageMargin
-                    description: currentImageItem ? currentImageItem.imageWidth + "×" + currentImageItem.imageHeight : ""
+                    description: imageList.itemGroupName
                     visible: page.isPortrait
                 }
+                // Avoid instantiating description component for the landscape header
                 PageHeader {
                     id: landscapeHeader
                     title: imageList.itemTitle
@@ -115,7 +116,7 @@ Page {
                 isPortrait: page.isPortrait
 
                 onClicked: drawer.open = !drawer.open
-                onItemTitleChanged: updateCurrentImageItem()
+                onCurrentItemChanged: updateCurrentImageItem()
             }
         }
     }
