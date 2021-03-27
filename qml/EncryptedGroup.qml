@@ -79,6 +79,19 @@ Item {
                 group.deleteItem(picsModel.mapToSource(modelIndex))
             }
 
+            function editDetails() {
+                var modelIndex = index
+                var imageData = picsModel.get(modelIndex)
+                var page = pageStack.push(Qt.resolvedUrl("EncryptedDetailsPage.qml"), {
+                    details: imageData,
+                    foilModel: group.foilModel
+                })
+                page.titleChanged.connect(function(title) {
+                    grid.model.setTitleAt(modelIndex, title)
+                })
+                page.requestIndex.connect(group.requestIndex)
+            }
+
             onClicked: {
                 if (selectable) {
                     selectionModel.toggleSelection(selectionKey)
@@ -150,6 +163,12 @@ Item {
                 //% "Delete"
                 text: qsTrId("foilpics-menu-delete")
                 onClicked: grid.expandItem.remove()
+            }
+            MenuItem {
+                //: Generic menu item
+                //% "Image details"
+                text: qsTrId("foilpics-menu-details")
+                onClicked: grid.expandItem.editDetails()
             }
         }
     }

@@ -80,6 +80,12 @@ ImageGridView {
             })
         }
 
+        function showDetails() {
+            pageStack.push(Qt.resolvedUrl("GalleryDetailsPage.qml"), {
+                item: model.itemId
+            })
+        }
+
         onClicked: {
             if (!isBusy && !grid.contextMenu.active) {
                 var page = pageStack.push(Qt.resolvedUrl("GalleryFullscreenPage.qml"), {
@@ -145,6 +151,12 @@ ImageGridView {
             //% "Delete"
             text: qsTrId("foilpics-menu-delete")
             onClicked: grid.expandItem.remove()
+        }
+        MenuItem {
+            //: Generic menu item
+            //% "Image details"
+            text: qsTrId("foilpics-menu-details")
+            onClicked: grid.expandItem.showDetails()
         }
     }
 
