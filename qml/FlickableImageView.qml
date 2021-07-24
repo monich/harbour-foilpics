@@ -24,10 +24,11 @@ SlideshowView {
 
     delegate: Item {
         id: delegate
+
         readonly property alias itemScaled: imageViewer.scaled
         readonly property bool itemTouchingVerticalEdge: imageViewer.atXBeginning || imageViewer.atXEnd
         readonly property string itemTitle: model.title
-        readonly property string itemGroupName: model.groupName
+        readonly property string itemGroupName: model.groupName ? model.groupName : ""
 
         width: view.width
         height: view.height
@@ -35,6 +36,7 @@ SlideshowView {
 
         ImageViewer {
             id: imageViewer
+
             width: view.isPortrait ? Screen.width : Screen.height
             height: view.contentHeight
             anchors.centerIn: parent
