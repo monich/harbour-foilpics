@@ -12,6 +12,9 @@ Page {
     property alias currentIndex: imageList.currentIndex
     property var currentImageItem: model ? model.get(currentIndex) : null
 
+    readonly property string _sharingApiVersion: HarbourSystemInfo.packageVersion("declarative-transferengine-qt5")
+    readonly property bool _sharingBroken: HarbourSystemInfo.compareVersions(_sharingApiVersion, "0.4.0") >= 0 // QML API break
+
     signal encryptItem(int index)
     signal deleteItem(int index)
     signal requestIndex(int index)
@@ -19,16 +22,11 @@ Page {
     allowedOrientations: Orientation.All
     backNavigation: drawer.open
 
-    Drawer {
-        id: drawer
-        dock: page.orientation & Orientation.PortraitMask ? Dock.Top: Dock.Left
-        hideOnMinimize: true
-        anchors.fill: parent
-        backgroundSize: Math.min(Math.min(page.width, page.height), Math.max(page.width/2, page.height/2))
-        open: true
+    Component {
+        id: sharingBackgroundComponent
 
-        background: HarbourShareMethodList {
-            id: shareMethodsList
+        HarbourShareMethodList {
+            readonly property int backgroundSize: Math.min(Math.min(page.width, page.height), Math.max(page.width/2, page.height/2))
 
             anchors.fill: parent
             source: currentImageItem ? currentImageItem.url : ""
@@ -70,23 +68,78 @@ Page {
                 rightMargin: page.isPortrait ? Theme.horizontalPageMargin : Theme.paddingLarge
             }
         }
+    }
 
-        foreground: FlickableImageView {
-            id: imageList
+    Component {
+        id: nonSharingBackgroundComponent
 
-            pathItemCount: 3
+        PageHeader {
+            readonly property int backgroundSize: height
 
-            contentWidth: page.width
-            contentHeight: page.height
+            width: page.width
+            title: imageList.itemTitle
+        }
+    }
 
-            width: drawer.foregroundItem.width
-            height: drawer.foregroundItem.height
+    SilicaFlickable {
+        anchors.fill: parent
 
-            isPortrait: page.isPortrait
-            menuOpen: drawer.open
+        PullDownMenu {
+            visible: _sharingBroken && drawer.open
 
-            onClicked: {
-                drawer.open = !drawer.open
+            MenuItem {
+                //: Generic menu item
+                //% "Image details"
+                text: qsTrId("foilpics-menu-details")
+                onClicked: pageStack.push(Qt.resolvedUrl("GalleryDetailsPage.qml"), {
+                    item: currentImageItem.itemId
+                })
+            }
+            MenuItem {
+                //: Generic menu item
+                //% "Delete"
+                text: qsTrId("foilpics-menu-delete")
+                onClicked: page.deleteItem(page.currentIndex)
+            }
+            MenuItem {
+                //: Generic menu item
+                //% "Encrypt"
+                text: qsTrId("foilpics-menu-encrypt")
+                visible: foilModel.keyAvailable
+                onClicked: page.encryptItem(page.currentIndex)
+            }
+        }
+
+        Drawer {
+            id: drawer
+            dock: (_sharingBroken || page.isPortrait) ? Dock.Top: Dock.Left
+            hideOnMinimize: true
+            anchors.fill: parent
+            backgroundSize: backgroundLoader.item ? backgroundLoader.item.backgroundSize : 0
+            open: true
+
+            background: Loader {
+                id: backgroundLoader
+
+                anchors.fill: parent
+                sourceComponent: _sharingBroken ? nonSharingBackgroundComponent : sharingBackgroundComponent
+            }
+
+            foreground: FlickableImageView {
+                id: imageList
+
+                contentWidth: page.width
+                contentHeight: page.height
+
+                pathItemCount: 3
+                width: drawer.foregroundItem.width
+                height: drawer.foregroundItem.height
+                isPortrait: page.isPortrait
+                menuOpen: !_sharingBroken && drawer.open
+
+                onClicked: {
+                    drawer.open = !drawer.open
+                }
             }
         }
     }

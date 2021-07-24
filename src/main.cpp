@@ -44,6 +44,7 @@
 #include "FoilPicsFileUtil.h"
 
 #include "HarbourDebug.h"
+#include "HarbourSystemInfo.h"
 #include "HarbourSystemState.h"
 #include "HarbourTheme.h"
 #include "HarbourTransferMethodsModel.h"
@@ -56,8 +57,9 @@
 
 static void register_types(const char* uri, int v1 = 1, int v2 = 0)
 {
-    qmlRegisterSingletonType<HarbourTheme>(uri, v1, v2, "HarbourTheme", HarbourTheme::createSingleton);
     qmlRegisterType<HarbourSystemState>(uri, v1, v2, "SystemState");
+    qmlRegisterSingletonType<HarbourSystemInfo>(uri, v1, v2, "HarbourSystemInfo", HarbourSystemInfo::createSingleton);
+    qmlRegisterSingletonType<HarbourTheme>(uri, v1, v2, "HarbourTheme", HarbourTheme::createSingleton);
     qmlRegisterSingletonType<HarbourTransferMethodsModel>(uri, v1, v2, "TransferMethodsModel", HarbourTransferMethodsModel::createSingleton);
     qmlRegisterSingletonType<FoilPicsSettings>(uri, v1, v2, "FoilPicsSettings", FoilPicsSettings::createSingleton);
     qmlRegisterSingletonType<FoilPicsFileUtil>(uri, v1, v2, "FileUtil", FoilPicsFileUtil::createSingleton);
