@@ -14,9 +14,9 @@ Page {
 
         autoUpdate: false
 
-        // https://git.merproject.org/mer-core/qtdocgallery/blob/mer-master/src/gallery/qdocumentgallery.h
+        // https://github.com/sailfishos/qtdocgallery/blob/mer-master/src/gallery/qdocumentgallery.h
         properties: [
-            "fileName", "fileSize", "mimeType", "width", "height",
+            "filePath", "fileSize", "mimeType", "width", "height",
             "dateTaken", "cameraManufacturer", "cameraModel",
             "latitude", "longitude", "altitude"
         ]
@@ -24,7 +24,7 @@ Page {
         onStatusChanged: {
             if (status === DocumentGalleryItem.Finished) {
                 var metadata = galleryItem.metaData
-                fileNameItem.value = metadata.fileName
+                fileNameItem.value = metadata.filePath
                 fileSizeItem.value = FileUtil.formatFileSize(metadata.fileSize)
                 mimeTypeItem.value = metadata.mimeType
                 widthItem.value = metadata.width
@@ -33,7 +33,7 @@ Page {
                     Format.formatDate(metadata.dateTaken, Format.Timepoint) : ""
                 cameraManufacturerItem.value = metadata.cameraManufacturer
                 cameraModelItem.value = metadata.cameraModel
-                coordinatesItem.value = metadata.latitude != "" && metadata.longitude != "" ?
+                coordinatesItem.value = metadata.latitude != "" && metadata.longitude != "" && !(metadata.longitude == 0 && metadata.longitude == 0)?
                     //: Coordinates
                     //% "Latitude %1, Longitude %2, Altitude %3"
                     qsTrId("foilpics-details-coordinates-value").arg(metadata.latitude).arg(metadata.longitude).arg(metadata.altitude) :
