@@ -55,58 +55,58 @@ Page {
                 //% "Details"
                 title: qsTrId("foilpics-details-header")
             }
-            DetailItem {
+            CopyableDetailItem {
                 id: fileNameItem
                 //: Details label
                 //% "File name"
                 label: qsTrId("foilpics-details-file_name-label")
             }
-            DetailItem {
+            CopyableDetailItem {
                 id: fileSizeItem
                 //: Details label
                 //% "File size"
                 label: qsTrId("foilpics-details-file_size-label")
             }
-            DetailItem {
+            CopyableDetailItem {
                 id: mimeTypeItem
                 //: Details label
                 //% "Type"
                 label: qsTrId("foilpics-details-mime_type-label")
             }
-            DetailItem {
+            CopyableDetailItem {
                 id: widthItem
                 //: Details label
                 //% "Width"
                 label: qsTrId("foilpics-details-width-label")
             }
-            DetailItem {
+            CopyableDetailItem {
                 id: heightItem
                 //: Details label
                 //% "Height"
                 label: qsTrId("foilpics-details-height-label")
             }
-            DetailItem {
+            CopyableDetailItem {
                 id: dateTakenItem
                 //: Details label
                 //% "Date"
                 label: qsTrId("foilpics-details-date-label")
                 visible: value.length > 0
             }
-            DetailItem {
+            CopyableDetailItem {
                 id: cameraManufacturerItem
                 //: Details label
                 //% "Camera manufacturer"
                 label: qsTrId("foilpics-details-camera_manufacturer-label")
                 visible: value.length > 0
             }
-            DetailItem {
+            CopyableDetailItem {
                 id: cameraModelItem
                 //: Details label
                 //% "Camera model"
                 label: qsTrId("foilpics-details-camera_model-label")
                 visible: value.length > 0
             }
-            DetailItem {
+            CopyableDetailItem {
                 id: coordinatesItem
                 //: Details label
                 //% "Coordinates"

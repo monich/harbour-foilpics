@@ -76,14 +76,14 @@ Page {
                 //% "Details"
                 title: qsTrId("foilpics-details-header")
             }
-            DetailItem {
+            CopyableDetailItem {
                 //: Details label
                 //% "File name"
                 label: qsTrId("foilpics-details-file_name-label")
                 value: ("fileName" in details) ? details.fileName : ""
                 visible: value.length > 0
             }
-            DetailItem {
+            CopyableDetailItem {
                 //: Details label
                 //% "Original file size"
                 label: qsTrId("foilpics-details-original_file_size-label")
@@ -91,32 +91,32 @@ Page {
                     FileUtil.formatFileSize(details.originalFileSize) : ""
                 visible: value.length > 0
             }
-            DetailItem {
+            CopyableDetailItem {
                 //: Details label
                 //% "Encrypted file size"
                 label: qsTrId("foilpics-details-encrypted_file_size-label")
                 value: details.encryptedFileSize ? FileUtil.formatFileSize(details.encryptedFileSize) : ""
                 visible: value.length > 0
             }
-            DetailItem {
+            CopyableDetailItem {
                 //: Details label
                 //% "Type"
                 label: qsTrId("foilpics-details-mime_type-label")
                 value: details.mimeType
             }
-            DetailItem {
+            CopyableDetailItem {
                 //: Details label
                 //% "Width"
                 label: qsTrId("foilpics-details-width-label")
                 value: details.imageWidth
             }
-            DetailItem {
+            CopyableDetailItem {
                 //: Details label
                 //% "Height"
                 label: qsTrId("foilpics-details-height-label")
                 value: details.imageHeight
             }
-            DetailItem {
+            CopyableDetailItem {
                 //: Details label
                 //% "Date"
                 label: qsTrId("foilpics-details-date-label")
@@ -124,21 +124,21 @@ Page {
                     Format.formatDate(details.imageDate, Format.Timepoint) : ""
                 visible: value.length > 0
             }
-            DetailItem {
+            CopyableDetailItem {
                 //: Details label
                 //% "Camera manufacturer"
                 label: qsTrId("foilpics-details-camera_manufacturer-label")
                 value: ("cameraManufacturer" in details) ? details.cameraManufacturer : ""
                 visible: value.length > 0
             }
-            DetailItem {
+            CopyableDetailItem {
                 //: Details label
                 //% "Camera model"
                 label: qsTrId("foilpics-details-camera_model-label")
                 value: ("cameraModel" in details) ? details.cameraModel : ""
                 visible: value.length > 0
             }
-            DetailItem {
+            CopyableDetailItem {
                 //: Details label
                 //% "Coordinates"
                 label: qsTrId("foilpics-details-coordinates-label")

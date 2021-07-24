@@ -33,6 +33,11 @@
         <extracomment>Generic menu item</extracomment>
         <translation>Löschen</translation>
     </message>
+    <message id="foilpics-menu-copy">
+        <source>Copy to clipboard</source>
+        <extracomment>Context menu item</extracomment>
+        <translation type="unfinished">In Zwischenablage kopieren</translation>
+    </message>
     <message id="foilpics-pulley_menu-generate_key">
         <source>Generate a new key</source>
         <extracomment>Pulley menu item</extracomment>
