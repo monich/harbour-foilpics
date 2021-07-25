@@ -71,76 +71,80 @@ Page {
     }
 
     Component {
-        id: nonSharingBackgroundComponent
+        id: detailsBackgroundComponent
 
-        PageHeader {
-            readonly property int backgroundSize: height
+        SilicaFlickable {
+            anchors.fill: parent
+            contentHeight: detailsColumn.height
 
-            width: page.width
-            title: imageList.itemTitle
+            PullDownMenu {
+                MenuItem {
+                    //: Generic menu item
+                    //% "Delete"
+                    text: qsTrId("foilpics-menu-delete")
+                    onClicked: page.deleteItem(page.currentIndex)
+                }
+                MenuItem {
+                    //: Generic menu item
+                    //% "Encrypt"
+                    text: qsTrId("foilpics-menu-encrypt")
+                    visible: foilModel.keyAvailable
+                    onClicked: page.encryptItem(page.currentIndex)
+                }
+            }
+
+            Column {
+                id: detailsColumn
+
+                width: parent.width
+
+                PageHeader {
+                    width: parent.width
+                    title: imageList.itemTitle
+                    //: Page header
+                    //% "Details"
+                    description: qsTrId("foilpics-details-header")
+                }
+
+                GalleryDetailsView {
+                    id: view
+
+                    width: parent.width
+                    item: currentImageItem.itemId
+                }
+            }
+
+            VerticalScrollDecorator { }
         }
     }
 
-    SilicaFlickable {
+    Drawer {
+        id: drawer
+
+        dock: page.isPortrait ? Dock.Top: Dock.Left
+        hideOnMinimize: true
         anchors.fill: parent
+        backgroundSize: Math.min(Math.min(page.width, page.height), Math.max(page.width/2, page.height/2))
+        open: true
 
-        PullDownMenu {
-            visible: _sharingBroken && drawer.open
-
-            MenuItem {
-                //: Generic menu item
-                //% "Image details"
-                text: qsTrId("foilpics-menu-details")
-                onClicked: pageStack.push(Qt.resolvedUrl("GalleryDetailsPage.qml"), {
-                    item: currentImageItem.itemId
-                })
-            }
-            MenuItem {
-                //: Generic menu item
-                //% "Delete"
-                text: qsTrId("foilpics-menu-delete")
-                onClicked: page.deleteItem(page.currentIndex)
-            }
-            MenuItem {
-                //: Generic menu item
-                //% "Encrypt"
-                text: qsTrId("foilpics-menu-encrypt")
-                visible: foilModel.keyAvailable
-                onClicked: page.encryptItem(page.currentIndex)
-            }
+        background: Loader {
+            anchors.fill: parent
+            sourceComponent: _sharingBroken ? detailsBackgroundComponent : sharingBackgroundComponent
         }
 
-        Drawer {
-            id: drawer
-            dock: (_sharingBroken || page.isPortrait) ? Dock.Top: Dock.Left
-            hideOnMinimize: true
-            anchors.fill: parent
-            backgroundSize: backgroundLoader.item ? backgroundLoader.item.backgroundSize : 0
-            open: true
+        foreground: FlickableImageView {
+            id: imageList
 
-            background: Loader {
-                id: backgroundLoader
+            contentWidth: page.width
+            contentHeight: page.height
 
-                anchors.fill: parent
-                sourceComponent: _sharingBroken ? nonSharingBackgroundComponent : sharingBackgroundComponent
-            }
+            pathItemCount: 3
+            width: drawer.foregroundItem.width
+            height: drawer.foregroundItem.height
+            isPortrait: page.isPortrait
+            menuOpen: drawer.open
 
-            foreground: FlickableImageView {
-                id: imageList
-
-                contentWidth: page.width
-                contentHeight: page.height
-
-                pathItemCount: 3
-                width: drawer.foregroundItem.width
-                height: drawer.foregroundItem.height
-                isPortrait: page.isPortrait
-                menuOpen: !_sharingBroken && drawer.open
-
-                onClicked: {
-                    drawer.open = !drawer.open
-                }
-            }
+            onClicked: drawer.open = !drawer.open
         }
     }
 
