@@ -4,6 +4,8 @@ import harbour.foilpics 1.0
 
 ApplicationWindow {
     id: app
+
+    readonly property bool jailed: HarbourProcessState.jailedApp
     readonly property int appAllowedOrientations: Orientation.All
     readonly property bool appLandscapeMode: orientation === Qt.LandscapeOrientation ||
         orientation === Qt.InvertedLandscapeOrientation
@@ -60,9 +62,9 @@ ApplicationWindow {
     //% "Foil Pics"
     readonly property string appTitle: qsTrId("foilpics-app_name")
 
-    initialPage: encryptedPageComponent
+    initialPage: jailed ? jailPageComponent : encryptedPageComponent
 
-    Component.onCompleted: pageStack.pushAttached(galleryPageComponent)
+    Component.onCompleted: if (!jailed) pageStack.pushAttached(galleryPageComponent)
 
     Component {
         id: encryptedPageComponent
@@ -78,6 +80,13 @@ ApplicationWindow {
         GalleryPage {
             hints: appHints
             foilModel: appFoilModel
+            allowedOrientations: appAllowedOrientations
+        }
+    }
+
+    Component {
+        id: jailPageComponent
+        JailPage {
             allowedOrientations: appAllowedOrientations
         }
     }

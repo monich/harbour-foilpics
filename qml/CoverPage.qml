@@ -2,9 +2,13 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import harbour.foilpics 1.0
 
+import "harbour"
+
 CoverBackground {
     id: cover
+
     property var foilModel
+    readonly property bool jailed: HarbourProcessState.jailedApp
 
     Rectangle {
         id: backgroundCircle
@@ -50,6 +54,14 @@ CoverBackground {
         //: Application title
         //% "Foil Pics"
         text: qsTrId("foilpics-app_name")
+    }
+
+    HarbourHighlightIcon {
+        anchors.centerIn: backgroundCircle
+        sourceSize.height: backgroundCircle.height + 2 * Theme.paddingMedium
+        highlightColor: Theme.secondaryColor
+        visible: jailed
+        source: jailed ? "images/jail.svg" : ""
     }
 
     CoverActionList {

@@ -445,5 +445,15 @@
         <extracomment>Warning text, small size label below the password prompt</extracomment>
         <translation>Merk op dat alle Foil-apps dezelfde coderingssleutel en wachtwoord gebruiken.</translation>
     </message>
+    <message id="jail-explanation">
+        <source>This application is not designed to function in a sandbox. Try installing the latest version from &lt;b&gt;&lt;a href=&apos;%1&apos;&gt;OpenRepos&lt;/a&gt;&lt;/b&gt; or &lt;b&gt;&lt;a href=&apos;%2&apos;&gt;GitHub&lt;/a&gt;&lt;/b&gt;, it may implement some sort of a workaround. No guarantee, though.</source>
+        <extracomment>Label text explaining the sandbox situation</extracomment>
+        <translation type="unfinished">Deze applicatie is niet ontworpen om in een sandbox te functioneren. Probeer de nieuwste versie te installeren vanaf &lt;b&gt;&lt;a href=&apos;%1&apos;&gt;OpenRepos&lt;/a&gt;&lt;/b&gt; of &lt;b&gt;&lt;a href=&apos;%2&apos;&gt;GitHub&lt;/a&gt;&lt;/b&gt;, het kan een soort van tijdelijke oplossing implementeren. Geen garantie echter.</translation>
+    </message>
+    <message id="jail-terminal_hint">
+        <source>If you have developer mode enabled, you may also try running &lt;b&gt;%1&lt;/b&gt; from the terminal. Sorry for the inconvenience!</source>
+        <extracomment>Hint suggesting to run the app from the terminal</extracomment>
+        <translation type="unfinished">Als u de ontwikkelaarsmodus heeft ingeschakeld, kunt u ook proberen &lt;b&gt;%1&lt;/b&gt; uit te voeren vanaf de terminal. Excuses voor het ongemak!</translation>
+    </message>
 </context>
 </TS>
