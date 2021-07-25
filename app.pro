@@ -9,7 +9,7 @@ openrepos {
 
 TARGET = $${PREFIX}-$${NAME}
 CONFIG += sailfishapp link_pkgconfig
-PKGCONFIG += sailfishapp mlite5 glib-2.0 gobject-2.0 libcrypto
+PKGCONFIG += sailfishapp mlite5 glib-2.0 gobject-2.0
 QT += qml quick dbus
 
 QMAKE_CXXFLAGS += -Wno-unused-parameter -Wno-psabi
@@ -22,6 +22,13 @@ app_settings {
     TRANSLATIONS_PATH = /usr/share/translations
 } else {
     TRANSLATIONS_PATH = /usr/share/$${TARGET}/translations
+}
+
+openssl_static {
+  LIBS += $$[QT_INSTALL_LIBS]/libcrypto.a $$[QT_INSTALL_LIBS]/libssl.a
+  PKGCONFIG += zlib
+} else {
+  PKGCONFIG += libcrypto
 }
 
 CONFIG(debug, debug|release) {
