@@ -95,7 +95,7 @@
     <message id="foilpics-notification-generated_key">
         <source>Generated new key</source>
         <extracomment>Pop-up notification</extracomment>
-        <translation>Wygeneruj nowy klucz</translation>
+        <translation>Wygenerowano nowy klucz</translation>
     </message>
     <message id="foilpics-notification-password_changed">
         <source>Password changed</source>
