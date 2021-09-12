@@ -1,6 +1,5 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import QtGraphicalEffects 1.0
 
 import "harbour"
 
@@ -8,49 +7,9 @@ Page {
     id: thisPage
 
     readonly property string appExe: "harbour-foilpics"
-    readonly property string appImage: "images/harbour-foilpics.svg"
-    readonly property string openReposUrl: "https://openrepos.net/content/slava/foil-notes"
+    readonly property string appImage: "foil-ui/images/foilpics.svg"
+    readonly property string openReposUrl: "https://openrepos.net/content/slava/foil-pics"
     readonly property string gitHubUrl: "https://github.com/monich/harbour-foilpics/releases"
-
-    Item {
-        id: graphics
-
-        anchors.topMargin: Theme.paddingLarge
-        height: Math.min(parent.width, parent.height) - 2 * Theme.paddingLarge
-        width: height
-
-        Image {
-            readonly property real size: Theme.itemSizeHuge
-            anchors.centerIn: parent
-            sourceSize.height: size
-            source: appImage
-        }
-
-        Image {
-            id: shadow
-
-            anchors.centerIn: parent
-            sourceSize.height: parent.height
-            source: "images/jail-black.svg"
-            visible: false
-        }
-
-        FastBlur {
-            source: shadow
-            anchors.fill: shadow
-            radius: 16
-            transparentBorder: true
-        }
-
-        HarbourHighlightIcon {
-            id: jail
-
-            anchors.fill: shadow
-            sourceSize.height: parent.height
-            highlightColor: Theme.secondaryColor
-            source: "images/jail.svg"
-        }
-    }
 
     Item {
         id: infoPanel
@@ -99,6 +58,33 @@ Page {
             sourceSize.height: Theme.fontSizeLarge
             highlightColor: Theme.secondaryColor
             source: "images/shrug.svg"
+        }
+    }
+
+    Item {
+        id: graphics
+
+        anchors.topMargin: Theme.paddingLarge
+        height: Math.min(parent.width, parent.height) - 2 * Theme.paddingLarge
+        width: height
+
+        Image {
+            anchors.centerIn: parent
+            sourceSize.height: Theme.itemSizeHuge
+            source: appImage
+        }
+
+        Flickable {
+            anchors.fill: parent
+            contentWidth: width
+            contentHeight: height
+            boundsBehavior: Flickable.DragAndOvershootBounds
+            flickableDirection: Flickable.HorizontalAndVerticalFlick
+
+            JailDoor {
+                anchors.centerIn: parent
+                height: parent.height
+            }
         }
     }
 
