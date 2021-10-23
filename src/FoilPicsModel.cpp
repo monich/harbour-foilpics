@@ -1003,7 +1003,13 @@ void FoilPicsModel::EncryptTask::performTask()
 
                 struct stat st;
                 if (stat(fname, &st) == 0) {
+                    /*
+                     * Ignore deprecation warnings for GTimeVal and
+                     * g_time_val_to_iso8601()
+                     */
+                    G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
                     GTimeVal tv;
+
                     tv.tv_sec = st.st_mtim.tv_sec;
                     tv.tv_usec = st.st_mtim.tv_nsec / 1000;
                     mtime = g_time_val_to_iso8601(&tv);
@@ -1020,6 +1026,7 @@ void FoilPicsModel::EncryptTask::performTask()
                     header[headers.count].name = HEADER_ACCESS_TIME;
                     header[headers.count].value = atime;
                     headers.count++;
+                    G_GNUC_END_IGNORE_DEPRECATIONS;
                 }
 
                 // Metadata
@@ -1038,8 +1045,14 @@ void FoilPicsModel::EncryptTask::performTask()
                 if (var.isValid()) {
                     QDateTime dateTime(var.toDateTime());
                     if (dateTime.isValid()) {
+                        /*
+                         * Ignore deprecation warnings for GTimeVal and
+                         * g_time_val_to_iso8601()
+                         */
+                        G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
                         GTimeVal tv;
                         qint64 msec = dateTime.toMSecsSinceEpoch();
+
                         tv.tv_sec = (glong)(msec/1000);
                         tv.tv_usec = (glong)(msec%1000) * 1000;
                         ttime = g_time_val_to_iso8601(&tv);
@@ -1048,6 +1061,7 @@ void FoilPicsModel::EncryptTask::performTask()
                         headers.count++;
                         sortTime = dateTime;
                         dateTaken = dateTime;
+                        G_GNUC_END_IGNORE_DEPRECATIONS;
                     }
                 }
 
@@ -1460,6 +1474,11 @@ FoilPicsModel::DecryptTask::DecryptTask(QThreadPool* aPool, ModelData* aData,
 void FoilPicsModel::DecryptTask::setTimeVal(struct timeval* aTimeVal,
     const char* aIso8601, const struct timespec* aDefaultTime)
 {
+    /*
+     * Ignore deprecation warnings for GTimeVal and
+     * g_time_val_from_iso8601()
+     */
+    G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
     GTimeVal tv;
     if (aIso8601 && g_time_val_from_iso8601(aIso8601, &tv)) {
         aTimeVal->tv_sec = tv.tv_sec;
@@ -1468,6 +1487,7 @@ void FoilPicsModel::DecryptTask::setTimeVal(struct timeval* aTimeVal,
         aTimeVal->tv_sec = aDefaultTime->tv_sec;
         aTimeVal->tv_usec = aDefaultTime->tv_nsec / 1000;
     }
+    G_GNUC_END_IGNORE_DEPRECATIONS;
 }
 
 void FoilPicsModel::DecryptTask::setFileTimes(const char* aPath,
