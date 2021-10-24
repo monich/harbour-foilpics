@@ -32,6 +32,12 @@ Page {
             source: currentImageItem ? currentImageItem.url : ""
             model: TransferMethodsModel
 
+            Binding {
+                target: TransferMethodsModel
+                property: "filter"
+                value: "image/*"
+            }
+
             //: Share list item
             //% "Add account"
             addAccountText: qsTrId("foilpics-share_method_list-add_account")

@@ -20,12 +20,6 @@ ApplicationWindow {
         id: appHints
     }
 
-    Binding {
-        target: TransferMethodsModel
-        property: "filter"
-        value: "image/*"
-    }
-
     Timer {
         id: lockTimer
 
