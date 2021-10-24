@@ -13,7 +13,7 @@ Page {
     property var currentImageItem: model ? model.get(currentIndex) : null
 
     readonly property string _sharingApiVersion: HarbourSystemInfo.packageVersion("declarative-transferengine-qt5")
-    readonly property bool _sharingBroken: HarbourSystemInfo.compareVersions(_sharingApiVersion, "0.4.0") >= 0 // QML API break
+    readonly property bool _sailfishShare: HarbourSystemInfo.compareVersions(_sharingApiVersion, "0.4.0") >= 0 // QML API break
 
     signal encryptItem(int index)
     signal deleteItem(int index)
@@ -86,6 +86,23 @@ Page {
                 }
                 MenuItem {
                     //: Generic menu item
+                    //% "Share"
+                    text: qsTrId("foilpics-menu-share")
+                    visible: _sailfishShare
+                    onClicked: {
+                        if (!shareAction) {
+                            shareAction = Qt.createQmlObject("import Sailfish.Share 1.0;ShareAction {}",
+                                page, "SailfishShare")
+                        }
+                        if (shareAction) {
+                            shareAction.resources = [ currentImageItem.url ]
+                            shareAction.trigger()
+                        }
+                    }
+                    property var shareAction
+                }
+                MenuItem {
+                    //: Generic menu item
                     //% "Encrypt"
                     text: qsTrId("foilpics-menu-encrypt")
                     visible: foilModel.keyAvailable
@@ -129,7 +146,7 @@ Page {
 
         background: Loader {
             anchors.fill: parent
-            sourceComponent: _sharingBroken ? detailsBackgroundComponent : sharingBackgroundComponent
+            sourceComponent: _sailfishShare ? detailsBackgroundComponent : sharingBackgroundComponent
         }
 
         foreground: FlickableImageView {

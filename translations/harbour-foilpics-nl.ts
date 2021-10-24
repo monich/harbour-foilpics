@@ -8,6 +8,11 @@
         <extracomment>Application title</extracomment>
         <translation>Foil Pics</translation>
     </message>
+    <message id="foilpics-menu-share">
+        <source>Share</source>
+        <extracomment>Generic menu item</extracomment>
+        <translation type="unfinished">Delen</translation>
+    </message>
     <message id="foilpics-menu-details">
         <source>Image details</source>
         <extracomment>Generic menu item</extracomment>
