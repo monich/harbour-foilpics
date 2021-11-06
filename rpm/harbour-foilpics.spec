@@ -1,6 +1,6 @@
 Name:           harbour-foilpics
 Summary:        Encrypted pictures
-Version:        1.0.20
+Version:        1.0.21
 Release:        1
 License:        BSD
 Group:          Applications/File
