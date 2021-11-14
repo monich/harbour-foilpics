@@ -28,6 +28,11 @@ CONFIG(debug, debug|release) {
   DEFINES += DEBUG HARBOUR_DEBUG
 }
 
+equals(QT_ARCH, arm64){
+    message(Linking with OpenSSL)
+    PKGCONFIG += libcrypto
+}
+
 # Directories
 FOIL_UI_REL = foil-ui
 FOIL_UI_DIR = $${_PRO_FILE_PWD_}/$${FOIL_UI_REL}
@@ -181,8 +186,10 @@ qml_components.path = /usr/share/$${TARGET}/qml/harbour
 INSTALLS += qml_components
 
 # openssl
+!equals(QT_ARCH, arm64){
 SOURCES += \
-  $${HARBOUR_LIB_SRC}/libcrypto.c
+    $${HARBOUR_LIB_SRC}/libcrypto.c
+}
 
 # Icons
 ICON_SIZES = 86 108 128 172 256
