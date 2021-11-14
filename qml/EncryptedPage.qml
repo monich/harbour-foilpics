@@ -72,7 +72,7 @@ Page {
             function qsTrEnterPasswordViewButtonUnlocking() {
                 //: Button label
                 //% "Unlocking..."
-                qsTrId("foilpics-enter_password_view-button-unlocking")
+                return qsTrId("foilpics-enter_password_view-button-unlocking")
             }
             function qsTrAppsWarningText() {
                 //: Warning text, small size label below the password prompt
