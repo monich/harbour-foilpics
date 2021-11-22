@@ -11,7 +11,7 @@
     <message id="foilpics-menu-share">
         <source>Share</source>
         <extracomment>Generic menu item</extracomment>
-        <translation type="unfinished">Udostępnij</translation>
+        <translation>Udostępnij</translation>
     </message>
     <message id="foilpics-menu-details">
         <source>Image details</source>
