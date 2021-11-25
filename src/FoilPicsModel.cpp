@@ -48,6 +48,8 @@
 #include "HarbourDebug.h"
 #include "HarbourTask.h"
 
+#include <QStandardPaths>
+
 #include <errno.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -846,7 +848,7 @@ public:
     GenerateKeyTask(QThreadPool* aPool, QString aKeyFile, int aBits,
         QString aPassword);
 
-    virtual void performTask();
+    virtual void performTask() Q_DECL_OVERRIDE;
 
 public:
     QString iKeyFile;
@@ -900,7 +902,8 @@ public:
         FoilPrivateKey* aPrivateKey, FoilKey* aPublicKey, QSize aThumbSize,
         QVariantMap aMetaData);
 
-    virtual void performTask();
+    virtual void performTask() Q_DECL_OVERRIDE;
+
     static bool addDoubleHeader(QVariant aValue, FoilMsgHeader* aHeader,
         const char* aName, char* aBuffer);
 
@@ -1163,7 +1166,7 @@ public:
     SaveInfoTask(QThreadPool* aPool, ModelInfo aInfo, QString aDir,
         FoilPrivateKey* aPrivateKey, FoilKey* aPublicKey);
 
-    virtual void performTask();
+    virtual void performTask() Q_DECL_OVERRIDE;
 
 public:
     ModelInfo iInfo;
@@ -1193,7 +1196,7 @@ class FoilPicsModel::CheckPicsTask : public HarbourTask {
 public:
     CheckPicsTask(QThreadPool* aPool, QString aDir);
 
-    virtual void performTask();
+    virtual void performTask() Q_DECL_OVERRIDE;
 
 public:
     QString iDir;
@@ -1271,7 +1274,7 @@ public:
         FoilPrivateKey* aPrivateKey, FoilKey* aPublicKey,
         QSize aThumbSize);
 
-    virtual void performTask();
+    virtual void performTask() Q_DECL_OVERRIDE;
 
     ModelData* decryptThumb(QString aImagePath, QString aThumbPath);
     ModelData* decryptImage(QString aImagePath);
@@ -1447,8 +1450,12 @@ public:
     DecryptTask(QThreadPool* aPool, ModelData* aData,
         FoilPrivateKey* aPrivateKey, FoilKey* aPublicKey);
 
-    virtual void performTask();
-    static bool saveDecrypted(FoilMsg* msg);
+    virtual void performTask() Q_DECL_OVERRIDE;
+
+    QString decryptionPath(FoilMsg* msg);
+    bool saveDecrypted(FoilMsg* msg);
+
+    static QString defaultDecryptDir();
     static void setTimeVal(struct timeval* aTimeVal, const char* aIso8601,
         const struct timespec* aDefaultTime);
     static void setFileTimes(const char* aPath, const char* aAccessTime,
@@ -1504,20 +1511,102 @@ void FoilPicsModel::DecryptTask::setFileTimes(const char* aPath,
     }
 }
 
-bool FoilPicsModel::DecryptTask::saveDecrypted(FoilMsg* msg)
+QString FoilPicsModel::DecryptTask::defaultDecryptDir()
+{
+    // ~/Pictures/FoilPics
+    return QStandardPaths::writableLocation(QStandardPaths::PicturesLocation) +
+        QDir::separator() + QString("FoilPics");
+}
+
+QString FoilPicsModel::DecryptTask::decryptionPath(FoilMsg* aMsg)
+{
+    const char* origPath = foilmsg_get_value(aMsg, HEADER_ORIGINAL_PATH);
+    QFileInfo fileInfo;
+    QString filePath;
+    if (origPath && origPath[0]) {
+        filePath = QString::fromUtf8(origPath);
+    }
+    if (filePath.isEmpty()) {
+        // File name is unknown, pick the default
+        QDir defaultDir(defaultDecryptDir());
+        const char* format = ModelData::format(aMsg->content_type);
+        if (format) {
+            fileInfo = QFileInfo(defaultDir, QString("image.").append(QString::fromLatin1(format)));
+        } else {
+            fileInfo = QFileInfo(defaultDir, QString("image"));
+        }
+        filePath = fileInfo.absoluteFilePath();
+    } else {
+        fileInfo = QFileInfo(filePath);
+    }
+    QDir dir(fileInfo.dir());
+    if (!dir.exists()) {
+        // Destination directory doesn't exist. Try to create but only
+        // if it's under home.
+        QString dirPath(dir.absolutePath());
+        if (!dirPath.startsWith(QDir::homePath() + QDir::separator())) {
+            HDEBUG("Directory" << qPrintable(dirPath) << "is missing (not trying to create)");
+        } else if (dir.mkpath(dirPath)) {
+            HDEBUG("Created directory" << qPrintable(dirPath));
+        } else {
+            HWARN("Failed to create" << qPrintable(dirPath));
+        }
+        if (!dir.exists()) {
+            // Try the default location ~/Pictures/FoilPics
+            const QString defaultDir(defaultDecryptDir());
+            if (dirPath.compare(defaultDir)) {
+                dir.setPath(defaultDir);
+                dirPath = dir.absolutePath();
+                if (!dir.mkpath(dirPath)) {
+                    HWARN("Failed to create" << qPrintable(dirPath));
+                }
+            }
+        }
+        if (dir.exists()) {
+            fileInfo = QFileInfo(dir, fileInfo.fileName());
+            filePath = fileInfo.absoluteFilePath();
+        } else {
+            return QString();
+        }
+    }
+    if (fileInfo.exists()) {
+        // Destination file already exists. We don't want to overwrite
+        // existing files.
+        HWARN(qPrintable(filePath) << "already exists");
+        const QString baseName(fileInfo.baseName());
+        const QString suffix(fileInfo.suffix());
+        int i = 1;
+        do {
+            if (isCanceled()) {
+                return QString();
+            }
+            // Build a similar file name
+            fileInfo = QFileInfo(dir, baseName + QString::fromLatin1(" (") +
+                QString::number(i++) + QString::fromLatin1(").") + suffix);
+            filePath = fileInfo.absoluteFilePath();
+        } while (fileInfo.exists());
+    }
+    return filePath;
+}
+
+bool FoilPicsModel::DecryptTask::saveDecrypted(FoilMsg* aMsg)
 {
     bool ok = false;
-    const char* dest = foilmsg_get_value(msg, HEADER_ORIGINAL_PATH);
-    if (dest) {
+    const QString destPath(decryptionPath(aMsg));
+    if (destPath.isEmpty()) {
+        HWARN("Can't figure out file name for decryption");
+    } else {
+        const QByteArray destBytes(destPath.toUtf8());
+        const char* dest = destBytes.constData();
         FoilOutput* out = foil_output_file_new_open(dest);
         if (out) {
-            if (foil_output_write_bytes_all(out, msg->data) &&
+            if (foil_output_write_bytes_all(out, aMsg->data) &&
                 foil_output_flush(out)) {
                 foil_output_close(out);
                 HDEBUG("Wrote" << dest);
-                 setFileTimes(dest,
-                    foilmsg_get_value(msg, HEADER_ACCESS_TIME),
-                    foilmsg_get_value(msg, HEADER_MODIFICATION_TIME));
+                setFileTimes(dest,
+                    foilmsg_get_value(aMsg, HEADER_ACCESS_TIME),
+                    foilmsg_get_value(aMsg, HEADER_MODIFICATION_TIME));
                 ok = true;
             } else {
                 HWARN("Failed to write" << dest);
@@ -1526,8 +1615,6 @@ bool FoilPicsModel::DecryptTask::saveDecrypted(FoilMsg* msg)
         } else {
             HWARN("Failed to open" << dest);
         }
-    } else {
-        HWARN("Original file name is unknown");
     }
     return ok;
 }
@@ -1562,7 +1649,7 @@ public:
         FoilPicsImageRequest aRequest);
     virtual ~ImageRequestTask();
 
-    virtual void performTask();
+    virtual void performTask() Q_DECL_OVERRIDE;
 
 public:
     QString iPath;
@@ -1634,7 +1721,8 @@ public:
     static SetHeaderTask* createGroupTask(QThreadPool* aPool,
         FoilPrivateKey* aPrivateKey, FoilKey* aPublicKey, ModelData* aData);
 
-    virtual void performTask();
+    virtual void performTask() Q_DECL_OVERRIDE;
+
     QString setHeaderAndEncrypt(FoilMsg* aMsg);
 
 public:
