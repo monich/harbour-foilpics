@@ -340,6 +340,11 @@
         <extracomment>Details label</extracomment>
         <translation>File name</translation>
     </message>
+    <message id="foilpics-details-original_path-label">
+        <source>Original file</source>
+        <extracomment>Details label</extracomment>
+        <translation>Original file</translation>
+    </message>
     <message id="foilpics-details-file_size-label">
         <source>File size</source>
         <extracomment>Details label</extracomment>

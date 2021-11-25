@@ -344,6 +344,11 @@
         <extracomment>Details label</extracomment>
         <translation>Имя файла</translation>
     </message>
+    <message id="foilpics-details-original_path-label">
+        <source>Original file</source>
+        <extracomment>Details label</extracomment>
+        <translation>Оригинальный файл</translation>
+    </message>
     <message id="foilpics-details-file_size-label">
         <source>File size</source>
         <extracomment>Details label</extracomment>

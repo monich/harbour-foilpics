@@ -336,6 +336,11 @@
         <extracomment>Details label</extracomment>
         <translation>文件名称</translation>
     </message>
+    <message id="foilpics-details-original_path-label">
+        <source>Original file</source>
+        <extracomment>Details label</extracomment>
+        <translation type="unfinished">原始文件</translation>
+    </message>
     <message id="foilpics-details-file_size-label">
         <source>File size</source>
         <extracomment>Details label</extracomment>

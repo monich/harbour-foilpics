@@ -78,9 +78,9 @@ Page {
             }
             CopyableDetailItem {
                 //: Details label
-                //% "File name"
-                label: qsTrId("foilpics-details-file_name-label")
-                value: ("fileName" in details) ? details.fileName : ""
+                //% "Original file"
+                label: qsTrId("foilpics-details-original_path-label")
+                value: ("originalPath" in details) ? details.originalPath : ""
                 visible: value.length > 0
             }
             CopyableDetailItem {

@@ -115,6 +115,7 @@ const QString FoilPicsModel::MetaAltitude("altitude");       // double
     role(ImageDate, imageDate) \
     role(MimeType, mimeType) \
     role(FileName, fileName) \
+    role(OriginalPath, originalPath) \
     role(Title, title) \
     role(DefaultTitle, defaultTitle) \
     role(ImageWidth, imageWidth) \
@@ -177,6 +178,7 @@ public:
 
 public:
     QString iPath;
+    QString iOriginalPath;
     QString iFileName;
     QString iThumbFile; // Without path
     QString iDefaultTitle;
@@ -225,6 +227,7 @@ FoilPicsModel::ModelData::ModelData(QString aOriginalPath, int aOriginalSize,
     iSetGroupTask(NULL)
 {
     QFileInfo fileInfo(aOriginalPath);
+    iOriginalPath = fileInfo.absoluteFilePath();
     iFileName = fileInfo.fileName();
     iEncryptedSize = QFileInfo(aPath).size();
     iDefaultTitle = defaultTitle(fileInfo);
@@ -327,6 +330,7 @@ QVariant FoilPicsModel::ModelData::get(Role aRole) const
     case TitleRole: return iTitle;
     case DefaultTitleRole: return iDefaultTitle;
     case FileNameRole: return iFileName;
+    case OriginalPathRole: return iOriginalPath;
     case ImageWidthRole: return iFullDimensions.width();
     case ImageHeightRole: return iFullDimensions.height();
     case GroupIdRole: return iGroupId.isEmpty() ?

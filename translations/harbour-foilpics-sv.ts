@@ -341,6 +341,11 @@ Om du har glömt ditt lösenord, bör du veta att det troligen är datortekniskt
         <extracomment>Details label</extracomment>
         <translation>Filnamn</translation>
     </message>
+    <message id="foilpics-details-original_path-label">
+        <source>Original file</source>
+        <extracomment>Details label</extracomment>
+        <translation type="unfinished">Originalfil</translation>
+    </message>
     <message id="foilpics-details-file_size-label">
         <source>File size</source>
         <extracomment>Details label</extracomment>
