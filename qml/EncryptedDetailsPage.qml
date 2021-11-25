@@ -13,7 +13,7 @@ Page {
     signal requestIndex(int index)
 
     // These are used from the native code:
-    //% "%n B"
+    //% "%1 B"
     readonly property string _formatB: qsTrId("foilpics-file_size-bytes")
     //% "%1 kB"
     readonly property string _formatKB: qsTrId("foilpics-file_size-kilobytes")

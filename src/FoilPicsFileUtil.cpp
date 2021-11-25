@@ -225,7 +225,7 @@ QString FoilPicsFileUtil::formatFileSize(qlonglong aBytes)
     if (aBytes < 0) {
         return QString::number(aBytes);
     } else if (aBytes < kB) {
-        return qtTrId("foilpics-file_size-bytes", aBytes);
+        return qtTrId("foilpics-file_size-bytes").arg(aBytes);
     } else if (aBytes < 1000*kB) {
         const int precision = (aBytes < 10*kB) ? 2 : 1;
         return qtTrId("foilpics-file_size-kilobytes").

@@ -77,8 +77,8 @@
         </translation>
     </message>
     <message id="foilpics-file_size-bytes">
-        <source>%n B</source>
-        <translation>%n o</translation>
+        <source>%1 B</source>
+        <translation>%1 o</translation>
     </message>
     <message id="foilpics-file_size-kilobytes">
         <source>%1 kB</source>

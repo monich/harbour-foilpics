@@ -78,8 +78,8 @@
         </translation>
     </message>
     <message id="foilpics-file_size-bytes">
-        <source>%n B</source>
-        <translation>%n B</translation>
+        <source>%1 B</source>
+        <translation>%1 B</translation>
     </message>
     <message id="foilpics-file_size-kilobytes">
         <source>%1 kB</source>
