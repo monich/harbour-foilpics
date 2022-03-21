@@ -55,9 +55,7 @@ public:
     Q_INVOKABLE void deleteLocalFilesFromModel(QObject* aModel, QString aRole,
         QList<int> aRows);
     Q_INVOKABLE QString formatFileSize(qlonglong aBytes);
-
-    static void mediaDeleted(QString aFilename);
-    void mediaDeleted(QUrl aUrl);
+    Q_INVOKABLE void mediaDeleted(QUrl aUrl);
 
 Q_SIGNALS:
     void otherFoilAppsInstalledChanged();

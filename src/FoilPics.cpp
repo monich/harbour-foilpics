@@ -79,11 +79,8 @@ public Q_SLOTS: // METHODS
 class FoilPics::Private : public QObject {
     Q_OBJECT
 public:
-    static FoilPics* gInstance;
-
     Private(FoilPics* aParent);
 
-    static FoilPics* instance();
     static bool foilAuthInstalled();
     static bool foilNotesInstalled();
     static bool otherFoilAppsInstalled();
@@ -100,8 +97,6 @@ public:
     QFileSystemWatcher* iFileWatcher;
     bool iOtherFoilAppsInstalled;
 };
-
-FoilPics* FoilPics::Private::gInstance = Q_NULLPTR;
 
 FoilPics::Private::Private(FoilPics* aParent) :
     QObject(aParent),
@@ -128,12 +123,6 @@ FoilPics::Private::Private(FoilPics* aParent) :
     if (TRACKER_BUS.interface()->isServiceRegistered(TRACKER_SERVICE)) {
         onTrackerRegistered();
     }
-}
-
-FoilPics* FoilPics::Private::instance()
-{
-    // FoilPics constructor updates gInstance
-    return gInstance ? gInstance : new FoilPics();
 }
 
 inline FoilPics* FoilPics::Private::owner() const
@@ -191,29 +180,20 @@ FoilPics::FoilPics(QObject* aParent) :
     QObject(aParent),
     iPrivate(new Private(this))
 {
-    HASSERT(!Private::gInstance);
-    Private::gInstance = this;
 }
 
 FoilPics::~FoilPics()
 {
-    HASSERT(this == Private::gInstance);
-    Private::gInstance = NULL;
 }
 
 QObject* FoilPics::createSingleton(QQmlEngine*, QJSEngine*)
 {
-    return Private::instance();
+    return new FoilPics;
 }
 
 bool FoilPics::otherFoilAppsInstalled() const
 {
     return iPrivate->iOtherFoilAppsInstalled;
-}
-
-void FoilPics::mediaDeleted(QString aFilename)
-{
-    Private::instance()->mediaDeleted(QUrl::fromLocalFile(aFilename));
 }
 
 QString FoilPics::formatFileSize(qlonglong aBytes)

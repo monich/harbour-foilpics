@@ -2815,12 +2815,13 @@ void FoilPicsModel::Private::onEncryptTaskDone()
         task->iData = NULL;
         saveInfo();
     }
-    FoilPics::mediaDeleted(task->iSourceFile);
+    const QUrl mediaUrl(QUrl::fromLocalFile(task->iSourceFile));
     task->release(this);
     if (!busy()) {
         // We know we were busy when we received this signal
         queueSignal(SignalBusyChanged);
     }
+    Q_EMIT parentModel()->mediaDeleted(mediaUrl);
     emitQueuedSignals();
 }
 

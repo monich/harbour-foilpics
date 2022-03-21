@@ -14,6 +14,7 @@ ApplicationWindow {
     FoilPicsModel {
         id: appFoilModel
         thumbnailSize: Qt.size(Theme.itemSizeHuge,Theme.itemSizeHuge)
+        onMediaDeleted: FoilPics.mediaDeleted(url)
     }
 
     FoilPicsHints {
