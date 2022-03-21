@@ -111,7 +111,7 @@ Page {
             //: Generic remorse popup text
             //% "Deleting %0 selected pictures"
             bulkAction(qsTrId("foilpics-remorse-deleting_selected", list.length).arg(list.length), list, function() {
-                FileUtil.deleteLocalFilesFromModel(galleryModel, galleryModel.keyRole, list)
+                FoilPics.deleteLocalFilesFromModel(galleryModel, galleryModel.keyRole, list)
                 dropSelectionModels()
             })
         })

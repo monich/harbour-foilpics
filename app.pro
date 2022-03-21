@@ -72,9 +72,9 @@ INCLUDEPATH += \
     $${HARBOUR_LIB_INCLUDE}
 
 HEADERS += \
+    src/FoilPics.h \
     src/FoilPicsBusyState.h \
     src/FoilPicsDefs.h \
-    src/FoilPicsFileUtil.h \
     src/FoilPicsGalleryPlugin.h \
     src/FoilPicsGroupModel.h \
     src/FoilPicsHints.h \
@@ -90,8 +90,8 @@ HEADERS += \
     src/FoilPicsThumbnailProvider.h
 
 SOURCES += \
+    src/FoilPics.cpp \
     src/FoilPicsBusyState.cpp \
-    src/FoilPicsFileUtil.cpp \
     src/FoilPicsGalleryPlugin.cpp \
     src/FoilPicsGroupModel.cpp \
     src/FoilPicsHints.cpp \

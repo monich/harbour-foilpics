@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2017-2019 Jolla Ltd.
- * Copyright (C) 2017-2019 Slava Monich <slava@monich.com>
+ * Copyright (C) 2017-2022 Jolla Ltd.
+ * Copyright (C) 2017-2022 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -31,19 +31,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef FOILPICS_FILE_UTIL_H
-#define FOILPICS_FILE_UTIL_H
+#ifndef FOILPICS_H
+#define FOILPICS_H
 
 #include <QtQml>
 
-class FoilPicsFileUtil : public QObject {
+class FoilPics : public QObject
+{
     Q_OBJECT
-    Q_DISABLE_COPY(FoilPicsFileUtil)
+    Q_DISABLE_COPY(FoilPics)
     Q_PROPERTY(bool otherFoilAppsInstalled READ otherFoilAppsInstalled NOTIFY otherFoilAppsInstalledChanged)
 
 public:
-    FoilPicsFileUtil(QObject* aParent = Q_NULLPTR);
-    ~FoilPicsFileUtil();
+    FoilPics(QObject* aParent = Q_NULLPTR);
+    ~FoilPics();
 
     static QObject* createSingleton(QQmlEngine* aEngine, QJSEngine* aScript);
 
@@ -67,4 +68,4 @@ private:
     Private* iPrivate;
 };
 
-#endif // FOILPICS_FILE_UTIL_H
+#endif // FOILPICS_H

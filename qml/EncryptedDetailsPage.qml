@@ -88,14 +88,14 @@ Page {
                 //% "Original file size"
                 label: qsTrId("foilpics-details-original_file_size-label")
                 value: ("originalFileSize" in details && details.originalFileSize) ?
-                    FileUtil.formatFileSize(details.originalFileSize) : ""
+                    FoilPics.formatFileSize(details.originalFileSize) : ""
                 visible: value.length > 0
             }
             CopyableDetailItem {
                 //: Details label
                 //% "Encrypted file size"
                 label: qsTrId("foilpics-details-encrypted_file_size-label")
-                value: details.encryptedFileSize ? FileUtil.formatFileSize(details.encryptedFileSize) : ""
+                value: details.encryptedFileSize ? FoilPics.formatFileSize(details.encryptedFileSize) : ""
                 visible: value.length > 0
             }
             CopyableDetailItem {

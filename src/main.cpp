@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2017-2021 Jolla Ltd.
- * Copyright (C) 2017-2021 Slava Monich <slava@monich.com>
+ * Copyright (C) 2017-2022 Jolla Ltd.
+ * Copyright (C) 2017-2022 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -41,7 +41,7 @@
 #include "FoilPicsSelectionState.h"
 #include "FoilPicsSettings.h"
 #include "FoilPicsThumbnailerPlugin.h"
-#include "FoilPicsFileUtil.h"
+#include "FoilPics.h"
 
 #include "HarbourDebug.h"
 #include "HarbourProcessState.h"
@@ -64,7 +64,7 @@ static void register_types(const char* uri, int v1 = 1, int v2 = 0)
     qmlRegisterSingletonType<HarbourTheme>(uri, v1, v2, "HarbourTheme", HarbourTheme::createSingleton);
     qmlRegisterSingletonType<HarbourTransferMethodsModel>(uri, v1, v2, "TransferMethodsModel", HarbourTransferMethodsModel::createSingleton);
     qmlRegisterSingletonType<FoilPicsSettings>(uri, v1, v2, "FoilPicsSettings", FoilPicsSettings::createSingleton);
-    qmlRegisterSingletonType<FoilPicsFileUtil>(uri, v1, v2, "FileUtil", FoilPicsFileUtil::createSingleton);
+    qmlRegisterSingletonType<FoilPics>(uri, v1, v2, "FoilPics", FoilPics::createSingleton);
     qmlRegisterType<FoilPicsBusyState>(uri, v1, v2, "FoilPicsBusyState");
     qmlRegisterType<FoilPicsHints>(uri, v1, v2, "FoilPicsHints");
     qmlRegisterType<FoilPicsModel>(uri, v1, v2, "FoilPicsModel");

@@ -23,7 +23,7 @@ Column {
             if (status === DocumentGalleryItem.Finished) {
                 var metadata = galleryItem.metaData
                 fileNameItem.value = metadata.filePath
-                fileSizeItem.value = FileUtil.formatFileSize(metadata.fileSize)
+                fileSizeItem.value = FoilPics.formatFileSize(metadata.fileSize)
                 mimeTypeItem.value = metadata.mimeType
                 widthItem.value = metadata.width
                 heightItem.value = metadata.height

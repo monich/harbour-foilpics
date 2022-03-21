@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2017-2021 Jolla Ltd.
- * Copyright (C) 2017-2021 Slava Monich <slava@monich.com>
+ * Copyright (C) 2017-2022 Jolla Ltd.
+ * Copyright (C) 2017-2022 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of BSD license as follows:
  *
@@ -32,7 +32,7 @@
  */
 
 #include "FoilPicsModel.h"
-#include "FoilPicsFileUtil.h"
+#include "FoilPics.h"
 #include "FoilPicsImageProvider.h"
 #include "FoilPicsGroupModel.h"
 #include "FoilPicsRole.h"
@@ -2815,7 +2815,7 @@ void FoilPicsModel::Private::onEncryptTaskDone()
         task->iData = NULL;
         saveInfo();
     }
-    FoilPicsFileUtil::mediaDeleted(task->iSourceFile);
+    FoilPics::mediaDeleted(task->iSourceFile);
     task->release(this);
     if (!busy()) {
         // We know we were busy when we received this signal

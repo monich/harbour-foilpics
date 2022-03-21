@@ -76,7 +76,7 @@ ImageGridView {
 
         function remove() {
             requestDelete(delegate, function() {
-                FileUtil.deleteLocalFile(delegate.mediaUrl)
+                FoilPics.deleteLocalFile(delegate.mediaUrl)
             })
         }
 

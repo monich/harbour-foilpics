@@ -38,7 +38,7 @@ Page {
             readonly property real opacityOverlay: HarbourTheme.opacityOverlay
 
             readonly property var settings: FoilPicsSettings
-            readonly property bool otherFoilAppsInstalled: FileUtil.otherFoilAppsInstalled
+            readonly property bool otherFoilAppsInstalled: FoilPics.otherFoilAppsInstalled
             function isLockedState(foilState) {
                 return foilState === FoilPicsModel.FoilLocked ||
                     foilState === FoilPicsModel.FoilLockedTimedOut

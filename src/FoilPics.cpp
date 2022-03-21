@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2017-2021 Jolla Ltd.
- * Copyright (C) 2017-2021 Slava Monich <slava@monich.com>
+ * Copyright (C) 2017-2022 Jolla Ltd.
+ * Copyright (C) 2017-2022 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -31,7 +31,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "FoilPicsFileUtil.h"
+#include "FoilPics.h"
 #include "FoilPicsRole.h"
 
 #include "HarbourDebug.h"
@@ -55,10 +55,10 @@
 #define FOILNOTES_PATH  FOILAPPS_DIR "/harbour-foilnotes"
 
 // ==========================================================================
-// FoilPicsFileUtil::TrackerProxy
+// FoilPics::TrackerProxy
 // ==========================================================================
 
-class FoilPicsFileUtil::TrackerProxy: public QDBusAbstractInterface
+class FoilPics::TrackerProxy: public QDBusAbstractInterface
 {
     Q_OBJECT
 
@@ -73,21 +73,21 @@ public Q_SLOTS: // METHODS
 };
 
 // ==========================================================================
-// FoilPicsFileUtil::Private
+// FoilPics::Private
 // ==========================================================================
 
-class FoilPicsFileUtil::Private : public QObject {
+class FoilPics::Private : public QObject {
     Q_OBJECT
 public:
-    static FoilPicsFileUtil* gInstance;
+    static FoilPics* gInstance;
 
-    Private(FoilPicsFileUtil* aParent);
+    Private(FoilPics* aParent);
 
-    static FoilPicsFileUtil* instance();
+    static FoilPics* instance();
     static bool foilAuthInstalled();
     static bool foilNotesInstalled();
     static bool otherFoilAppsInstalled();
-    FoilPicsFileUtil* owner() const;
+    FoilPics* owner() const;
 
 public Q_SLOTS:
     void onTrackerRegistered();
@@ -101,9 +101,9 @@ public:
     bool iOtherFoilAppsInstalled;
 };
 
-FoilPicsFileUtil* FoilPicsFileUtil::Private::gInstance = Q_NULLPTR;
+FoilPics* FoilPics::Private::gInstance = Q_NULLPTR;
 
-FoilPicsFileUtil::Private::Private(FoilPicsFileUtil* aParent) :
+FoilPics::Private::Private(FoilPics* aParent) :
     QObject(aParent),
     iTrackerProxy(NULL),
     iFileWatcher(new QFileSystemWatcher(this))
@@ -130,37 +130,37 @@ FoilPicsFileUtil::Private::Private(FoilPicsFileUtil* aParent) :
     }
 }
 
-FoilPicsFileUtil* FoilPicsFileUtil::Private::instance()
+FoilPics* FoilPics::Private::instance()
 {
-    // FoilPicsFileUtil constructor updates gInstance
-    return gInstance ? gInstance : new FoilPicsFileUtil();
+    // FoilPics constructor updates gInstance
+    return gInstance ? gInstance : new FoilPics();
 }
 
-inline FoilPicsFileUtil* FoilPicsFileUtil::Private::owner() const
+inline FoilPics* FoilPics::Private::owner() const
 {
-    return qobject_cast<FoilPicsFileUtil*>(parent());
+    return qobject_cast<FoilPics*>(parent());
 }
 
-bool FoilPicsFileUtil::Private::foilAuthInstalled()
+bool FoilPics::Private::foilAuthInstalled()
 {
     const bool installed = QFile::exists(FOILAUTH_PATH);
     HDEBUG("FoilAuth is" << (installed ? "installed" : "not installed"));
     return installed;
 }
 
-bool FoilPicsFileUtil::Private::foilNotesInstalled()
+bool FoilPics::Private::foilNotesInstalled()
 {
     const bool installed = QFile::exists(FOILNOTES_PATH);
     HDEBUG("FoilNotes is" << (installed ? "installed" : "not installed"));
     return installed;
 }
 
-bool FoilPicsFileUtil::Private::otherFoilAppsInstalled()
+bool FoilPics::Private::otherFoilAppsInstalled()
 {
     return foilAuthInstalled() || foilNotesInstalled();
 }
 
-void FoilPicsFileUtil::Private::checkFoilAppsInstalled()
+void FoilPics::Private::checkFoilAppsInstalled()
 {
     const bool haveOtherFoilApps = otherFoilAppsInstalled();
     if (iOtherFoilAppsInstalled != haveOtherFoilApps) {
@@ -169,14 +169,14 @@ void FoilPicsFileUtil::Private::checkFoilAppsInstalled()
     }
 }
 
-void FoilPicsFileUtil::Private::onTrackerRegistered()
+void FoilPics::Private::onTrackerRegistered()
 {
     HDEBUG("Tracker is here");
     delete iTrackerProxy;
     iTrackerProxy = new TrackerProxy(this);
 }
 
-void FoilPicsFileUtil::Private::onTrackerUnregistered()
+void FoilPics::Private::onTrackerUnregistered()
 {
     HDEBUG("Tracker gone");
     delete iTrackerProxy;
@@ -184,10 +184,10 @@ void FoilPicsFileUtil::Private::onTrackerUnregistered()
 }
 
 // ==========================================================================
-// FoilPicsFileUtil::Private
+// FoilPics::Private
 // ==========================================================================
 
-FoilPicsFileUtil::FoilPicsFileUtil(QObject* aParent) :
+FoilPics::FoilPics(QObject* aParent) :
     QObject(aParent),
     iPrivate(new Private(this))
 {
@@ -195,28 +195,28 @@ FoilPicsFileUtil::FoilPicsFileUtil(QObject* aParent) :
     Private::gInstance = this;
 }
 
-FoilPicsFileUtil::~FoilPicsFileUtil()
+FoilPics::~FoilPics()
 {
     HASSERT(this == Private::gInstance);
     Private::gInstance = NULL;
 }
 
-QObject* FoilPicsFileUtil::createSingleton(QQmlEngine*, QJSEngine*)
+QObject* FoilPics::createSingleton(QQmlEngine*, QJSEngine*)
 {
     return Private::instance();
 }
 
-bool FoilPicsFileUtil::otherFoilAppsInstalled() const
+bool FoilPics::otherFoilAppsInstalled() const
 {
     return iPrivate->iOtherFoilAppsInstalled;
 }
 
-void FoilPicsFileUtil::mediaDeleted(QString aFilename)
+void FoilPics::mediaDeleted(QString aFilename)
 {
     Private::instance()->mediaDeleted(QUrl::fromLocalFile(aFilename));
 }
 
-QString FoilPicsFileUtil::formatFileSize(qlonglong aBytes)
+QString FoilPics::formatFileSize(qlonglong aBytes)
 {
     const qlonglong kB = Q_INT64_C(1024);
     const qlonglong MB = kB*1024;
@@ -244,7 +244,7 @@ QString FoilPicsFileUtil::formatFileSize(qlonglong aBytes)
     }
 }
 
-void FoilPicsFileUtil::mediaDeleted(QUrl aUrl)
+void FoilPics::mediaDeleted(QUrl aUrl)
 {
     if (iPrivate->iTrackerProxy) {
         QString url(aUrl.toString());
@@ -265,7 +265,7 @@ void FoilPicsFileUtil::mediaDeleted(QUrl aUrl)
     }
 }
 
-bool FoilPicsFileUtil::deleteLocalFile(QUrl aUrl)
+bool FoilPics::deleteLocalFile(QUrl aUrl)
 {
     if (aUrl.isLocalFile()) {
         QString path(aUrl.toLocalFile());
@@ -281,7 +281,7 @@ bool FoilPicsFileUtil::deleteLocalFile(QUrl aUrl)
     return false;
 }
 
-void FoilPicsFileUtil::deleteLocalFilesFromModel(QObject* aModel,
+void FoilPics::deleteLocalFilesFromModel(QObject* aModel,
     QString aRole, QList<int> aRows)
 {
     HDEBUG(aRows);
@@ -317,7 +317,7 @@ void FoilPicsFileUtil::deleteLocalFilesFromModel(QObject* aModel,
     }
 }
 
-bool FoilPicsFileUtil::deleteFile(QString aPath)
+bool FoilPics::deleteFile(QString aPath)
 {
     if (QFile::remove(aPath)) {
         HDEBUG(aPath);
@@ -328,4 +328,4 @@ bool FoilPicsFileUtil::deleteFile(QString aPath)
     }
 }
 
-#include "FoilPicsFileUtil.moc"
+#include "FoilPics.moc"
