@@ -1,41 +1,34 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-//import org.nemomobile.thumbnailer 1.0
-import harbour.foilpics.thumbnailer 1.0
+import harbour.foilpics 1.0
 
 ThumbnailBase {
     id: thumbnailBase
 
     Thumbnail {
         id: thumbnail
-        property bool gridMoving: thumbnailBase.grid ? thumbnailBase.grid.moving : false
+
+        readonly property bool gridMoving: thumbnailBase.grid ? thumbnailBase.grid.moving : false
 
         source: thumbnailBase.source
         mimeType: thumbnailBase.mimeType
         width:  size
         height: size
-        sourceSize.width: width
-        sourceSize.height: height
         y: contentYOffset
         x: contentXOffset
-        priority: Thumbnail.NormalPriority
 
         onGridMovingChanged: {
             if (!gridMoving) {
                 var visibleIndex = Math.floor(thumbnailBase.grid.contentY / size) * thumbnailBase.grid.columnCount
                 if (visibleIndex <= index && index <= visibleIndex + 18) {
-                    priority = Thumbnail.HighPriority
+                    thumbnail.setHighPriority()
                 } else {
-                    priority = Thumbnail.LowPriority
+                    thumbnail.setLowPriority()
                 }
             }
         }
 
-        onStatusChanged: {
-            if (status === Thumbnail.Error) {
-                errorLabelComponent.createObject(thumbnail)
-            }
-        }
+        onThumbnailError: errorLabelComponent.createObject(thumbnail)
     }
 
     Component {

@@ -86,7 +86,6 @@ HEADERS += \
     src/FoilPicsSelection.h \
     src/FoilPicsSelectionState.h \
     src/FoilPicsSettings.h \
-    src/FoilPicsThumbnailerPlugin.h \
     src/FoilPicsThumbnailProvider.h
 
 SOURCES += \
@@ -103,7 +102,6 @@ SOURCES += \
     src/FoilPicsSelection.cpp \
     src/FoilPicsSelectionState.cpp \
     src/FoilPicsSettings.cpp \
-    src/FoilPicsThumbnailerPlugin.cpp \
     src/FoilPicsThumbnailProvider.cpp \
     src/main.cpp
 
@@ -145,6 +143,7 @@ INSTALLS += foil_ui_images
 # harbour-lib
 
 HEADERS += \
+    $${HARBOUR_LIB_INCLUDE}/HarbourBase45.h \
     $${HARBOUR_LIB_INCLUDE}/HarbourDebug.h \
     $${HARBOUR_LIB_INCLUDE}/HarbourPluginLoader.h \
     $${HARBOUR_LIB_INCLUDE}/HarbourProcessState.h \
@@ -158,6 +157,7 @@ HEADERS += \
     $${HARBOUR_LIB_SRC}/HarbourMce.h
 
 SOURCES += \
+    $${HARBOUR_LIB_SRC}/HarbourBase45.cpp \
     $${HARBOUR_LIB_SRC}/HarbourMce.cpp \
     $${HARBOUR_LIB_SRC}/HarbourPluginLoader.cpp \
     $${HARBOUR_LIB_SRC}/HarbourProcessState.cpp \

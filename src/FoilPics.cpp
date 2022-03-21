@@ -34,6 +34,7 @@
 #include "FoilPics.h"
 #include "FoilPicsRole.h"
 
+#include "HarbourBase45.h"
 #include "HarbourDebug.h"
 
 #include <QFile>
@@ -194,6 +195,28 @@ QObject* FoilPics::createSingleton(QQmlEngine*, QJSEngine*)
 bool FoilPics::otherFoilAppsInstalled() const
 {
     return iPrivate->iOtherFoilAppsInstalled;
+}
+
+QString FoilPics::thumbnailQml()
+{
+    // import org.nemomobile.thumbnailer 1.0;Thumbnail{
+    //   readonly property int normalPriority:Thumbnail.NormalPriority;
+    //   readonly property int highPriority:Thumbnail.HighPriority;
+    //   readonly property int lowPriority:Thumbnail.LowPriority;
+    //   readonly property int errorStatus:Thumbnail.Error;
+    //   priority: Thumbnail.NormalPriority;
+    //   anchors.fill:parent}
+    static const char base45[] =
+        "YEDS9E5LEN44$KE6*50$C+3ET3EXEDRZCAWE1%E/JC7ECTVDBJEZ96H468UA1%E/J"
+        "C7EC6WDZKE2EC-3E4WDO440LEI9E5LE3EFZEDSUEB/D/KEAECT7A ED*KERWE$G7B"
+        "9DC$D..DXEDJ%504EB$D8VD*KE04E-EDUEFZKE2EC-3E4WDO440LEI9E5LE3EFZED"
+        "SUE:8DC3DT7A ED*KERWE$G7B9DC$D..DXEDD%5SEDJ8D*KE04E-EDUEFZKE2EC-3"
+        "E4WDO440LEI9E5LE3EFZEDSUE*VDY3F*KE04E-EDTEF8UA1%E/JC7ECJUD$T9Y3F*"
+        "KE04E-EDUEFZKE2EC-3E4WDO440LEI9E5LE3EFZEDSUE5$C0LEHKE3WENWENPE8UA"
+        "1%E/JC7ECJUD3Z80LE%JEV9E ED*KERWEUF78UA1%E/JC7ECJUD9-9/KEAECT7A E"
+        "D*KERWE M7:.D59D4LE/%5XEDVUDE9EZKEG/DZ2";
+
+    return HarbourBase45::fromBase45(QString::fromLatin1(base45));
 }
 
 QString FoilPics::formatFileSize(qlonglong aBytes)

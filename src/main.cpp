@@ -40,7 +40,6 @@
 #include "FoilPicsSelection.h"
 #include "FoilPicsSelectionState.h"
 #include "FoilPicsSettings.h"
-#include "FoilPicsThumbnailerPlugin.h"
 #include "FoilPics.h"
 
 #include "HarbourDebug.h"
@@ -120,8 +119,6 @@ int main(int argc, char *argv[])
     // Re-register some types
     FoilPicsGalleryPlugin::registerTypes(context->engine(),
         FOILPICS_GALLERY_QML_IMPORT, 1, 0);
-    FoilPicsThumbnailerPlugin::registerTypes(context->engine(),
-        FOILPICS_THUMBNAILER_QML_IMPORT, 1, 0);
 
     // Initialize the view and the global properties
     view->setTitle(qtTrId("foilpics-app_name"));
