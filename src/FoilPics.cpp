@@ -97,6 +97,9 @@ public:
     TrackerProxy* iTrackerProxy;
     QFileSystemWatcher* iFileWatcher;
     bool iOtherFoilAppsInstalled;
+    QString iDocumentGalleryItemQml;
+    QString iDocumentGalleryModelQml;
+    QString iThumbnailQml;
 };
 
 FoilPics::Private::Private(FoilPics* aParent) :
@@ -197,26 +200,80 @@ bool FoilPics::otherFoilAppsInstalled() const
     return iPrivate->iOtherFoilAppsInstalled;
 }
 
-QString FoilPics::thumbnailQml()
+const QString FoilPics::documentGalleryItemQml() const
 {
-    // import org.nemomobile.thumbnailer 1.0;Thumbnail{
-    //   readonly property int normalPriority:Thumbnail.NormalPriority;
-    //   readonly property int highPriority:Thumbnail.HighPriority;
-    //   readonly property int lowPriority:Thumbnail.LowPriority;
-    //   readonly property int errorStatus:Thumbnail.Error;
-    //   priority: Thumbnail.NormalPriority;
-    //   anchors.fill:parent}
-    static const char base45[] =
-        "YEDS9E5LEN44$KE6*50$C+3ET3EXEDRZCAWE1%E/JC7ECTVDBJEZ96H468UA1%E/J"
-        "C7EC6WDZKE2EC-3E4WDO440LEI9E5LE3EFZEDSUEB/D/KEAECT7A ED*KERWE$G7B"
-        "9DC$D..DXEDJ%504EB$D8VD*KE04E-EDUEFZKE2EC-3E4WDO440LEI9E5LE3EFZED"
-        "SUE:8DC3DT7A ED*KERWE$G7B9DC$D..DXEDD%5SEDJ8D*KE04E-EDUEFZKE2EC-3"
-        "E4WDO440LEI9E5LE3EFZEDSUE*VDY3F*KE04E-EDTEF8UA1%E/JC7ECJUD$T9Y3F*"
-        "KE04E-EDUEFZKE2EC-3E4WDO440LEI9E5LE3EFZEDSUE5$C0LEHKE3WENWENPE8UA"
-        "1%E/JC7ECJUD3Z80LE%JEV9E ED*KERWEUF78UA1%E/JC7ECJUD9-9/KEAECT7A E"
-        "D*KERWE M7:.D59D4LE/%5XEDVUDE9EZKEG/DZ2";
+    if (iPrivate->iDocumentGalleryItemQml.isEmpty()) {
+        // import Sailfish.Silica 1.0;import QtDocGallery 5.0;DocumentGalleryItem{
+        //   readonly property int statusFinished:DocumentGalleryItem.Finished;
+        //   autoUpdate:false;properties:["filePath","fileSize","mimeType","width","height",
+        //   "dateTaken","cameraManufacturer","cameraModel","latitude","longitude","altitude"]}
+        static const char base45[] =
+            "YEDS9E5LE+347ECUVD+EDU7DNOAXVDGPC634Y$5:M7Q$D04ESUEHDAET8ZOCAEC"
+            "TVDALEA34Y$57M7U3E1%E1$CMVEAECTVDALE*C90$CCRFX CGVC8/D3EFV9E/3E"
+            "5$CRWEH44G/DR443WENWEZPEZED+ED+8D8UCET8 PCF$DG/D319 VD5$C:EF7WE"
+            "5 DP+85/DOQE  C M78%EG3EH9EIEC*ZCJ.C/VD+ZCV9E/3E5$CBWE6$C:G7VF4"
+            "XEDG CIECI7D3Q5R.CTVDNOADLFIE4%F4YEDK C%FFFZC3Q5E4FLVCI7D3Q5+8D"
+            "SEDA9DIE4TF4IECK C9EC1$CIE4SF4BEC5$CODCCEC*$E1ECNWEZKEDJE3Q5GPC"
+            "F$DVKENZ96VC7UD3Q5PVDBWENWE6VCIE4$F4-3ED3DNWE6VCIE4QF4:VD-ED$$E"
+            "FZC% B";
+        iPrivate->iDocumentGalleryItemQml = HarbourBase45::fromBase45
+            (QString::fromLatin1(base45));
+        HDEBUG(iPrivate->iDocumentGalleryItemQml);
+    }
+    return iPrivate->iDocumentGalleryItemQml;
+}
 
-    return HarbourBase45::fromBase45(QString::fromLatin1(base45));
+const QString FoilPics::documentGalleryModelQml() const
+{
+    if (iPrivate->iDocumentGalleryModelQml.isEmpty()) {
+        // import Sailfish.Silica 1.0;import QtDocGallery 5.0;DocumentGalleryModel{
+        //   rootType:DocumentGallery.Image;
+        //   properties:["url","mimeType","title","orientation","dateTaken","width","height",
+        //   "cameraManufacturer","cameraModel","latitude","longitude","altitude"];
+        //   sortProperties:["-dateTaken"];autoUpdate:true;
+        //   filter:GalleryStartsWithFilter{property:"filePath";value:StandardPaths.music;negated:true}}
+        static const char base45[] =
+            "YEDS9E5LE+347ECUVD+EDU7DNOAXVDGPC634Y$5:M7Q$D04ESUEHDAET8ZOCAEC"
+            "TVDALEA34Y$57M7U3E1%E1$CMVEAECTVDALENZ96VC6WD0LE24EPUAI9ELG7U3E"
+            "1%E1$CMVEAECTVDALEE%5B$D93D6N70LEI9E5LEQEDNPEKNB6%E7UD3Q5J$DF$D"
+            "PUAI9EIE40G4-EDTVDIE4+F4*KE1$C3WEBWE-3EIE4TF4IECK C9EC1$CIE43G4"
+            "PEDAWEIE4XF4- CC3DUUE3Q5GPCF$DVKE9Z9H/DJ.CZPC6%E5$CIE4SF4BEC5$C"
+            "ODCV3E: CIE4$F4IEC-ED$$EFZC3Q5*VD3/D-ED$$EFZC3Q5AECBWENWE6VCMF4"
+            "9N704EVVE0LEI9E5LEQEDNPEKNBAX5IECK C9EC1$CMF4 M78%EG3EH9EIEC*ZC"
+            "KWE%$E-M7XED7WE$JE319 VD5$C9FF3WE5LE7QE-ED98DXED7WECLEV9E/3E5$C"
+            "RWEWF7R.CTVDC7AAWEXE4K/E0WD*ZCYOACEC2VCYKEC7AAWEBPEV$DPQENOC1/D"
+            "53D7WE8UCKWE%$E+%F";
+        iPrivate->iDocumentGalleryModelQml = HarbourBase45::fromBase45
+            (QString::fromLatin1(base45));
+        HDEBUG(iPrivate->iDocumentGalleryModelQml);
+    }
+    return iPrivate->iDocumentGalleryModelQml;
+}
+
+const QString FoilPics::thumbnailQml() const
+{
+    if (iPrivate->iThumbnailQml.isEmpty()) {
+        // import org.nemomobile.thumbnailer 1.0;Thumbnail{
+        //   readonly property int normalPriority:Thumbnail.NormalPriority;
+        //   readonly property int highPriority:Thumbnail.HighPriority;
+        //   readonly property int lowPriority:Thumbnail.LowPriority;
+        //   readonly property int errorStatus:Thumbnail.Error;
+        //   priority: Thumbnail.NormalPriority;
+        //   anchors.fill:parent}
+        static const char base45[] =
+            "YEDS9E5LEN44$KE6*50$C+3ET3EXEDRZCAWE1%E/JC7ECTVDBJEZ96H468UA1%E"
+            "/JC7EC6WDZKE2EC-3E4WDO440LEI9E5LE3EFZEDSUEB/D/KEAECT7A ED*KERWE"
+            "$G7B9DC$D..DXEDJ%504EB$D8VD*KE04E-EDUEFZKE2EC-3E4WDO440LEI9E5LE"
+            "3EFZEDSUE:8DC3DT7A ED*KERWE$G7B9DC$D..DXEDD%5SEDJ8D*KE04E-EDUEF"
+            "ZKE2EC-3E4WDO440LEI9E5LE3EFZEDSUE*VDY3F*KE04E-EDTEF8UA1%E/JC7EC"
+            "JUD$T9Y3F*KE04E-EDUEFZKE2EC-3E4WDO440LEI9E5LE3EFZEDSUE5$C0LEHKE"
+            "3WENWENPE8UA1%E/JC7ECJUD3Z80LE%JEV9E ED*KERWEUF78UA1%E/JC7ECJUD"
+            "9-9/KEAECT7A ED*KERWE M7:.D59D4LE/%5XEDVUDE9EZKEG/DZ2";
+        iPrivate->iThumbnailQml = HarbourBase45::fromBase45
+            (QString::fromLatin1(base45));
+        HDEBUG(iPrivate->iThumbnailQml);
+    }
+    return iPrivate->iThumbnailQml;
 }
 
 QString FoilPics::formatFileSize(qlonglong aBytes)

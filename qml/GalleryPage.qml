@@ -1,7 +1,5 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-//import QtDocGallery 5.0
-import harbour.foilpics.QtDocGallery 1.0
 import harbour.foilpics 1.0
 
 Page {
@@ -13,23 +11,8 @@ Page {
     property var selectionModel
     property bool dropSelectionModelsWhenEncryptionDone
 
-    DocumentGalleryModel {
-        id: galleryModel
-        rootType: DocumentGallery.Image
-        readonly property string keyRole: "url"
-        properties: [
-            "url", "mimeType", "title", "orientation", "dateTaken",
-            "width", "height", "cameraManufacturer", "cameraModel",
-            "latitude", "longitude", "altitude"
-        ]
-        sortProperties: ["-dateTaken"]
-        autoUpdate: true
-        filter: GalleryStartsWithFilter {
-            property: "filePath"
-            value: StandardPaths.music
-            negated: true
-        }
-    }
+    readonly property var galleryModel: Qt.createQmlObject(FoilPics.documentGalleryModelQml, page, "GalleryModel")
+    readonly property int galleryModelCount: galleryModel ? galleryModel.count : 0
 
     // Selection model is fairly expensive, we create and maintain it
     // only in selection mode
@@ -38,7 +21,7 @@ Page {
 
         FoilPicsSelection {
             model: galleryModel
-            role: galleryModel.keyRole
+            role: "url"
         }
     }
 
@@ -50,7 +33,7 @@ Page {
         model: galleryModel
 
         PullDownMenu {
-            visible: galleryModel.count > 0
+            visible: galleryModelCount > 0
             MenuItem {
                 //: Pulley menu item
                 //% "Select photos"
@@ -63,7 +46,7 @@ Page {
             //: Placeholder text
             //% "The photo gallery seems to be empty"
             text: qsTrId("foilpics-gallery_view-placeholder-no_pictures")
-            enabled: !galleryModel.count
+            enabled: !galleryModelCount
         }
     }
 

@@ -75,7 +75,6 @@ HEADERS += \
     src/FoilPics.h \
     src/FoilPicsBusyState.h \
     src/FoilPicsDefs.h \
-    src/FoilPicsGalleryPlugin.h \
     src/FoilPicsGroupModel.h \
     src/FoilPicsHints.h \
     src/FoilPicsImageProvider.h \
@@ -91,7 +90,6 @@ HEADERS += \
 SOURCES += \
     src/FoilPics.cpp \
     src/FoilPicsBusyState.cpp \
-    src/FoilPicsGalleryPlugin.cpp \
     src/FoilPicsGroupModel.cpp \
     src/FoilPicsHints.cpp \
     src/FoilPicsImageProvider.cpp \
@@ -145,7 +143,6 @@ INSTALLS += foil_ui_images
 HEADERS += \
     $${HARBOUR_LIB_INCLUDE}/HarbourBase45.h \
     $${HARBOUR_LIB_INCLUDE}/HarbourDebug.h \
-    $${HARBOUR_LIB_INCLUDE}/HarbourPluginLoader.h \
     $${HARBOUR_LIB_INCLUDE}/HarbourProcessState.h \
     $${HARBOUR_LIB_INCLUDE}/HarbourSystem.h \
     $${HARBOUR_LIB_INCLUDE}/HarbourSystemInfo.h \
@@ -159,7 +156,6 @@ HEADERS += \
 SOURCES += \
     $${HARBOUR_LIB_SRC}/HarbourBase45.cpp \
     $${HARBOUR_LIB_SRC}/HarbourMce.cpp \
-    $${HARBOUR_LIB_SRC}/HarbourPluginLoader.cpp \
     $${HARBOUR_LIB_SRC}/HarbourProcessState.cpp \
     $${HARBOUR_LIB_SRC}/HarbourSystem.cpp \
     $${HARBOUR_LIB_SRC}/HarbourSystemInfo.cpp \

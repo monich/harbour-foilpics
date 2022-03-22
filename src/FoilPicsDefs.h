@@ -43,6 +43,4 @@
 #define FOILPICS_QML_IMPORT         "harbour.foilpics"
 #define FOILPICS_DCONF_ROOT         "/apps/" FOILPICS_APP_NAME "/"
 
-#define FOILPICS_GALLERY_QML_IMPORT     FOILPICS_QML_IMPORT ".QtDocGallery"
-
 #endif // FOILPICS_DEFS_H

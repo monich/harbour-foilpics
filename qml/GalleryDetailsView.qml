@@ -1,26 +1,21 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import harbour.foilpics 1.0
-//import QtDocGallery 5.0
-import harbour.foilpics.QtDocGallery 1.0
 
 Column {
-    property alias item: galleryItem.item
+    id: thisItem
 
-    DocumentGalleryItem {
-        id: galleryItem
+    property var item
 
-        autoUpdate: false
+    readonly property var galleryItem: Qt.createQmlObject(FoilPics.documentGalleryItemQml, thisItem, "GalleryItem")
 
-        // https://github.com/sailfishos/qtdocgallery/blob/mer-master/src/gallery/qdocumentgallery.h
-        properties: [
-            "filePath", "fileSize", "mimeType", "width", "height",
-            "dateTaken", "cameraManufacturer", "cameraModel",
-            "latitude", "longitude", "altitude"
-        ]
+    Binding { target: galleryItem; property: "item"; value: thisItem.item }
 
+    Connections {
+        target: galleryItem
+        ignoreUnknownSignals: true
         onStatusChanged: {
-            if (status === DocumentGalleryItem.Finished) {
+            if (galleryItem.status === galleryItem.statusFinished) {
                 var metadata = galleryItem.metaData
                 fileNameItem.value = metadata.filePath
                 fileSizeItem.value = FoilPics.formatFileSize(metadata.fileSize)

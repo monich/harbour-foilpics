@@ -41,6 +41,8 @@ class FoilPics : public QObject
     Q_OBJECT
     Q_DISABLE_COPY(FoilPics)
     Q_PROPERTY(bool otherFoilAppsInstalled READ otherFoilAppsInstalled NOTIFY otherFoilAppsInstalledChanged)
+    Q_PROPERTY(QString documentGalleryItemQml READ documentGalleryItemQml CONSTANT)
+    Q_PROPERTY(QString documentGalleryModelQml READ documentGalleryModelQml CONSTANT)
     Q_PROPERTY(QString thumbnailQml READ thumbnailQml CONSTANT)
 
 public:
@@ -50,7 +52,9 @@ public:
     static QObject* createSingleton(QQmlEngine* aEngine, QJSEngine* aScript);
 
     bool otherFoilAppsInstalled() const;
-    static QString thumbnailQml();
+    const QString documentGalleryItemQml() const;
+    const QString documentGalleryModelQml() const;
+    const QString thumbnailQml() const;
 
     Q_INVOKABLE bool deleteFile(QString aPath);
     Q_INVOKABLE bool deleteLocalFile(QUrl aUrl);

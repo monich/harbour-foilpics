@@ -33,7 +33,6 @@
 
 #include "FoilPicsBusyState.h"
 #include "FoilPicsDefs.h"
-#include "FoilPicsGalleryPlugin.h"
 #include "FoilPicsHints.h"
 #include "FoilPicsModelWatch.h"
 #include "FoilPicsModel.h"
@@ -115,10 +114,6 @@ int main(int argc, char *argv[])
     // Create ans show the view
     QQuickView* view = SailfishApp::createView();
     QQmlContext* context = view->rootContext();
-
-    // Re-register some types
-    FoilPicsGalleryPlugin::registerTypes(context->engine(),
-        FOILPICS_GALLERY_QML_IMPORT, 1, 0);
 
     // Initialize the view and the global properties
     view->setTitle(qtTrId("foilpics-app_name"));
