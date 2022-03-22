@@ -9,6 +9,7 @@ CoverBackground {
 
     property var foilModel
     readonly property bool jailed: HarbourProcessState.jailedApp
+    readonly property bool darkOnLight: ('colorScheme' in Theme) && Theme.colorScheme === 1
 
     Rectangle {
         id: backgroundCircle
@@ -67,7 +68,7 @@ CoverBackground {
     CoverActionList {
         enabled: cover.foilModel.keyAvailable
         CoverAction {
-            iconSource: Qt.resolvedUrl("images/" + (HarbourTheme.darkOnLight ? "cover-lock-dark.svg" :  "cover-lock.svg"))
+            iconSource: Qt.resolvedUrl("images/" + (darkOnLight ? "cover-lock-dark.svg" :  "cover-lock.svg"))
             onTriggered: cover.foilModel.lock(false)
         }
     }

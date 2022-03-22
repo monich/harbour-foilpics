@@ -45,7 +45,6 @@
 #include "HarbourProcessState.h"
 #include "HarbourSystemInfo.h"
 #include "HarbourSystemState.h"
-#include "HarbourTheme.h"
 #include "HarbourTransferMethodsModel.h"
 
 #include <sailfishapp.h>
@@ -59,7 +58,6 @@ static void register_types(const char* uri, int v1 = 1, int v2 = 0)
     qmlRegisterType<HarbourSystemState>(uri, v1, v2, "SystemState");
     qmlRegisterSingletonType<HarbourProcessState>(uri, v1, v2, "HarbourProcessState", HarbourProcessState::createSingleton);
     qmlRegisterSingletonType<HarbourSystemInfo>(uri, v1, v2, "HarbourSystemInfo", HarbourSystemInfo::createSingleton);
-    qmlRegisterSingletonType<HarbourTheme>(uri, v1, v2, "HarbourTheme", HarbourTheme::createSingleton);
     qmlRegisterSingletonType<HarbourTransferMethodsModel>(uri, v1, v2, "TransferMethodsModel", HarbourTransferMethodsModel::createSingleton);
     qmlRegisterSingletonType<FoilPicsSettings>(uri, v1, v2, "FoilPicsSettings", FoilPicsSettings::createSingleton);
     qmlRegisterSingletonType<FoilPics>(uri, v1, v2, "FoilPics", FoilPics::createSingleton);
