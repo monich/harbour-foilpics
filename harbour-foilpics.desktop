@@ -5,6 +5,9 @@ X-Nemo-Application-Type=silica-qt5
 Icon=harbour-foilpics
 Exec=harbour-foilpics
 
+[X-Sailjail]
+Sandboxing=Disabled
+
 [X-HarbourBackup]
 BackupPathList=.local/share/foil/:Documents/FoilPics/
 BackupConfigList=/apps/harbour-foilpics/
