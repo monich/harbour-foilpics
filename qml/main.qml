@@ -28,20 +28,22 @@ ApplicationWindow {
         onTriggered: appFoilModel.lock(true);
     }
 
-    SystemState {
+    Connections {
+        target: HarbourSystemState
+
         property bool wasDimmed
 
         onDisplayStatusChanged: {
-            if (displayStatus === MCE_DISPLAY_DIM) {
+            if (target.displayStatus === HarbourSystemState.MCE_DISPLAY_DIM) {
                 wasDimmed = true
-            } else if (displayStatus === MCE_DISPLAY_ON) {
+            } else if (target.displayStatus === HarbourSystemState.MCE_DISPLAY_ON) {
                 wasDimmed = false
             }
         }
 
         onLockedChanged: {
             lockTimer.stop()
-            if (locked) {
+            if (FoilPicsSettings.autoLock && target.locked) {
                 if (wasDimmed) {
                     // Give the user some time to wake wake up the screen
                     // and prevent encrypted pictures from being locked
@@ -49,6 +51,19 @@ ApplicationWindow {
                 } else {
                     appFoilModel.lock(false);
                 }
+            }
+        }
+    }
+
+    Connections {
+        target: FoilPicsSettings
+
+        onAutoLockChanged: {
+            lockTimer.stop()
+            // It's so unlikely that settings change when the device is locked
+            // But it's possible!
+            if (target.autoLock && HarbourSystemState.locked) {
+                appFoilModel.lock(false);
             }
         }
     }

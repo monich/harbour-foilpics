@@ -55,18 +55,24 @@
 
 static void register_types(const char* uri, int v1 = 1, int v2 = 0)
 {
-    qmlRegisterType<HarbourSystemState>(uri, v1, v2, "SystemState");
-    qmlRegisterSingletonType<HarbourProcessState>(uri, v1, v2, "HarbourProcessState", HarbourProcessState::createSingleton);
-    qmlRegisterSingletonType<HarbourSystemInfo>(uri, v1, v2, "HarbourSystemInfo", HarbourSystemInfo::createSingleton);
-    qmlRegisterSingletonType<HarbourTransferMethodsModel>(uri, v1, v2, "TransferMethodsModel", HarbourTransferMethodsModel::createSingleton);
-    qmlRegisterSingletonType<FoilPicsSettings>(uri, v1, v2, "FoilPicsSettings", FoilPicsSettings::createSingleton);
-    qmlRegisterSingletonType<FoilPics>(uri, v1, v2, "FoilPics", FoilPics::createSingleton);
-    qmlRegisterType<FoilPicsBusyState>(uri, v1, v2, "FoilPicsBusyState");
-    qmlRegisterType<FoilPicsHints>(uri, v1, v2, "FoilPicsHints");
-    qmlRegisterType<FoilPicsModel>(uri, v1, v2, "FoilPicsModel");
-    qmlRegisterType<FoilPicsModelWatch>(uri, v1, v2, "FoilPicsModelWatch");
-    qmlRegisterType<FoilPicsSelection>(uri, v1, v2, "FoilPicsSelection");
-    qmlRegisterType<FoilPicsSelectionState>(uri, v1, v2, "FoilPicsSelectionState");
+#define REGISTER_TYPE(uri, v1, v2, Class) \
+    qmlRegisterType<Class>(uri, v1, v2, #Class)
+#define REGISTER_SINGLETON_TYPE(uri, v1, v2, Class) \
+    qmlRegisterSingletonType<Class>(uri, v1, v2, #Class, \
+    Class::createSingleton)
+
+    REGISTER_SINGLETON_TYPE(uri, v1, v2, HarbourSystemState);
+    REGISTER_SINGLETON_TYPE(uri, v1, v2, HarbourProcessState);
+    REGISTER_SINGLETON_TYPE(uri, v1, v2, HarbourSystemInfo);
+    REGISTER_SINGLETON_TYPE(uri, v1, v2, HarbourTransferMethodsModel);
+    REGISTER_SINGLETON_TYPE(uri, v1, v2, FoilPicsSettings);
+    REGISTER_SINGLETON_TYPE(uri, v1, v2, FoilPics);
+    REGISTER_TYPE(uri, v1, v2, FoilPicsBusyState);
+    REGISTER_TYPE(uri, v1, v2, FoilPicsHints);
+    REGISTER_TYPE(uri, v1, v2, FoilPicsModel);
+    REGISTER_TYPE(uri, v1, v2, FoilPicsModelWatch);
+    REGISTER_TYPE(uri, v1, v2, FoilPicsSelection);
+    REGISTER_TYPE(uri, v1, v2, FoilPicsSelectionState);
 }
 
 int main(int argc, char *argv[])

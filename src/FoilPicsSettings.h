@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2019 Jolla Ltd.
- * Copyright (C) 2019 Slava Monich <slava@monich.com>
+ * Copyright (C) 2019-2022 Jolla Ltd.
+ * Copyright (C) 2019-2022 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -34,32 +34,41 @@
 #ifndef FOILPICS_SETTINGS_H
 #define FOILPICS_SETTINGS_H
 
-#include <QtQml>
+#include <QObject>
+
+class QQmlEngine;
+class QJSEngine;
 
 class FoilPicsSettings : public QObject {
     Q_OBJECT
     Q_DISABLE_COPY(FoilPicsSettings)
     Q_PROPERTY(bool sharedKeyWarning READ sharedKeyWarning WRITE setSharedKeyWarning NOTIFY sharedKeyWarningChanged)
     Q_PROPERTY(bool sharedKeyWarning2 READ sharedKeyWarning2 WRITE setSharedKeyWarning2 NOTIFY sharedKeyWarning2Changed)
+    Q_PROPERTY(bool autoLock READ autoLock WRITE setAutoLock NOTIFY autoLockChanged)
     Q_PROPERTY(int autoLockTime READ autoLockTime WRITE setAutoLockTime NOTIFY autoLockTimeChanged)
 
 public:
     explicit FoilPicsSettings(QObject* aParent = Q_NULLPTR);
     ~FoilPicsSettings();
 
-    static QObject* createSingleton(QQmlEngine* aEngine, QJSEngine* aScript);
+    // Callback for qmlRegisterSingletonType<FoilPicsSettings>
+    static QObject* createSingleton(QQmlEngine*, QJSEngine*);
 
     bool sharedKeyWarning() const;
     bool sharedKeyWarning2() const;
-    void setSharedKeyWarning(bool aValue);
-    void setSharedKeyWarning2(bool aValue);
+    void setSharedKeyWarning(bool);
+    void setSharedKeyWarning2(bool);
+
+    bool autoLock() const;
+    void setAutoLock(bool);
 
     int autoLockTime() const;
-    void setAutoLockTime(int aValue);
+    void setAutoLockTime(int);
 
 Q_SIGNALS:
     void sharedKeyWarningChanged();
     void sharedKeyWarning2Changed();
+    void autoLockChanged();
     void autoLockTimeChanged();
 
 private:

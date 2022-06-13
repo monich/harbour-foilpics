@@ -30,10 +30,10 @@ Page {
 
             anchors.fill: parent
             source: currentImageItem ? currentImageItem.url : ""
-            model: TransferMethodsModel
+            model: HarbourTransferMethodsModel
 
             Binding {
-                target: TransferMethodsModel
+                target: HarbourTransferMethodsModel
                 property: "filter"
                 value: "image/*"
             }

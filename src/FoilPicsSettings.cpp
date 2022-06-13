@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2019 Jolla Ltd.
- * Copyright (C) 2019 Slava Monich <slava@monich.com>
+ * Copyright (C) 2019-2022 Jolla Ltd.
+ * Copyright (C) 2019-2022 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -41,9 +41,11 @@
 #define DCONF_KEY(x)                FOILPICS_DCONF_ROOT x
 #define KEY_SHARED_KEY_WARNING      DCONF_KEY("sharedKeyWarning")
 #define KEY_SHARED_KEY_WARNING2     DCONF_KEY("sharedKeyWarning2")
+#define KEY_AUTO_LOCK               DCONF_KEY("autoLock")
 #define KEY_AUTO_LOCK_TIME          DCONF_KEY("autoLockTime")
 
 #define DEFAULT_SHARED_KEY_WARNING  true
+#define DEFAULT_AUTO_LOCK           true
 #define DEFAULT_AUTO_LOCK_TIME      15000
 
 // ==========================================================================
@@ -57,22 +59,22 @@ public:
 public:
     MGConfItem* iSharedKeyWarning;
     MGConfItem* iSharedKeyWarning2;
+    MGConfItem* iAutoLock;
     MGConfItem* iAutoLockTime;
-    QVariant iDefaultSharedKeyWarning;
-    QVariant iDefaultAutoLockTime;
 };
 
 FoilPicsSettings::Private::Private(FoilPicsSettings* aParent) :
     iSharedKeyWarning(new MGConfItem(KEY_SHARED_KEY_WARNING, aParent)),
     iSharedKeyWarning2(new MGConfItem(KEY_SHARED_KEY_WARNING2, aParent)),
-    iAutoLockTime(new MGConfItem(KEY_AUTO_LOCK_TIME, aParent)),
-    iDefaultSharedKeyWarning(DEFAULT_SHARED_KEY_WARNING),
-    iDefaultAutoLockTime(DEFAULT_AUTO_LOCK_TIME)
+    iAutoLock(new MGConfItem(KEY_AUTO_LOCK, aParent)),
+    iAutoLockTime(new MGConfItem(KEY_AUTO_LOCK_TIME, aParent))
 {
     QObject::connect(iSharedKeyWarning, SIGNAL(valueChanged()),
         aParent, SIGNAL(sharedKeyWarningChanged()));
     QObject::connect(iSharedKeyWarning2, SIGNAL(valueChanged()),
         aParent, SIGNAL(sharedKeyWarning2Changed()));
+    QObject::connect(iAutoLock, SIGNAL(valueChanged()),
+        aParent, SIGNAL(autoLockChanged()));
     QObject::connect(iAutoLockTime, SIGNAL(valueChanged()),
         aParent, SIGNAL(autoLockTimeChanged()));
 }
@@ -108,14 +110,14 @@ bool
 FoilPicsSettings::sharedKeyWarning()
 const
 {
-    return iPrivate->iSharedKeyWarning->value(iPrivate->iDefaultSharedKeyWarning).toBool();
+    return iPrivate->iSharedKeyWarning->value(DEFAULT_SHARED_KEY_WARNING).toBool();
 }
 
 bool
 FoilPicsSettings::sharedKeyWarning2()
 const
 {
-    return iPrivate->iSharedKeyWarning2->value(iPrivate->iDefaultSharedKeyWarning).toBool();
+    return iPrivate->iSharedKeyWarning2->value(DEFAULT_SHARED_KEY_WARNING).toBool();
 }
 
 void
@@ -134,11 +136,29 @@ FoilPicsSettings::setSharedKeyWarning2(
     iPrivate->iSharedKeyWarning2->set(aValue);
 }
 
+// autoLock
+
+bool
+FoilPicsSettings::autoLock() const
+{
+    return iPrivate->iAutoLock->value(DEFAULT_AUTO_LOCK).toBool();
+}
+
+void
+FoilPicsSettings::setAutoLock(
+    bool aValue)
+{
+    HDEBUG(aValue);
+    iPrivate->iAutoLock->set(aValue);
+}
+
+// autoLockTime
+
 int
 FoilPicsSettings::autoLockTime()
 const
 {
-    QVariant val(iPrivate->iAutoLockTime->value(iPrivate->iDefaultAutoLockTime));
+    QVariant val(iPrivate->iAutoLockTime->value(DEFAULT_AUTO_LOCK_TIME));
     bool ok;
     const int ival(val.toInt(&ok));
     return (ok && ival >= 0) ? ival : DEFAULT_AUTO_LOCK_TIME;
