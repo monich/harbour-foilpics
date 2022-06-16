@@ -51,6 +51,7 @@ Page {
                     })
                     details.titleChanged.connect(function(title) {
                         imageList.model.setTitleAt(currentIndex, title)
+                        currentImageItem = model.get(currentIndex)
                     })
                     details.requestIndex.connect(function(index) {
                         // onCurrentIndexChanged won't emit requestIndex
