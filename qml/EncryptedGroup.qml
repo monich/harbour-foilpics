@@ -4,7 +4,9 @@ import harbour.foilpics 1.0
 
 Item {
     id: group
+
     height: grid.y + grid.height
+
     readonly property real headerHeight: grid.y
     readonly property bool headerVisible: (!isDefault || !isFirstGroup) && picsCount > 0
 
@@ -27,13 +29,25 @@ Item {
     signal deleteItem(int globalIndex)
     signal requestIndex(int globalIndex)
 
+    Rectangle {
+        // Keep it visible even underneath the list
+        width: parent.width
+        height: groupHeader.height
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: Theme.rgba(Theme.highlightBackgroundColor, 0.15) }
+            GradientStop { position: 1.0; color: "transparent" }
+        }
+    }
+
     SectionHeader {
         id: groupHeader
+
         visible: headerVisible
     }
 
     ImageGridView {
         id: grid
+
         y: headerVisible ? groupHeader.height : 0
         width: parent.width
         height: contentHeight + expandHeight
