@@ -21,6 +21,10 @@ Page {
         (nextPage && parent && nextPage.parent !== parent.attachedContainer)
     readonly property real screenHeight: isPortrait ? Screen.height : Screen.width
 
+    // Otherwise width is changing with a delay, which may cause weird layout
+    // adjustments when on-screen keyboard is visible
+    onIsLandscapeChanged: width = isLandscape ? Screen.height : Screen.width
+
     function getFoilUi() {
         if (!foilUi) {
             foilUi = foilUiComponent.createObject(thisPage)
@@ -32,11 +36,6 @@ Page {
         id: foilUiComponent
 
         QtObject {
-            readonly property real opacityFaint: 0.2
-            readonly property real opacityLow: 0.4
-            readonly property real opacityHigh: 0.6
-            readonly property real opacityOverlay: 0.8
-
             readonly property var settings: FoilPicsSettings
             readonly property bool otherFoilAppsInstalled: FoilPics.otherFoilAppsInstalled
             function isLockedState(foilState) {
@@ -247,7 +246,7 @@ Page {
                         Rectangle {
                             id: circle
 
-                            width: Theme.itemSizeHuge
+                            width: isPortrait ? Theme.itemSizeHuge : Theme.itemSizeExtraLarge
                             height: width
                             color: Theme.rgba(Theme.primaryColor, 0.08)
                             radius: width/2
