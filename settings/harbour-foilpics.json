@@ -1,0 +1,14 @@
+{
+    "translation_catalog" : "harbour-foilpics",
+    "entries": [
+        {
+            "path": "applications/harbour-foilpics.desktop",
+            "title": "Foil Pics",
+            "type": "page",
+            "icon": "harbour-foilpics",
+            "params": {
+                "source": "/usr/share/harbour-foilpics/qml/settings/settings.qml"
+            }
+        }
+    ]
+}

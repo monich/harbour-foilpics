@@ -1,10 +1,9 @@
+PREFIX = harbour
 NAME = foilpics
 
 openrepos {
-    PREFIX = openrepos
     DEFINES += OPENREPOS
-} else {
-    PREFIX = harbour
+    CONFIG += app_settings
 }
 
 TARGET = $${PREFIX}-$${NAME}
@@ -190,27 +189,26 @@ for(s, ICON_SIZES) {
     icon_dir = icons/$${s}x$${s}
     $${icon_target}.files = $${icon_dir}/$${TARGET}.png
     $${icon_target}.path = /usr/share/icons/hicolor/$${s}x$${s}/apps
-    equals(PREFIX, "openrepos") {
-        $${icon_target}.extra = cp $${icon_dir}/harbour-$${NAME}.png $$eval($${icon_target}.files)
-        $${icon_target}.CONFIG += no_check_exist
-    }
     INSTALLS += $${icon_target}
 }
 
-app_icon.files = icons/harbour-$${NAME}.svg
-app_icon.path = /usr/share/$${TARGET}/qml/images
-INSTALLS += app_icon
-
-# Desktop file
-equals(PREFIX, "openrepos") {
-    desktop.extra = sed s/harbour/openrepos/g harbour-$${NAME}.desktop > $${TARGET}.desktop
-    desktop.CONFIG += no_check_exist
+# Settings
+app_settings {
+    settings_json.files = settings/$${TARGET}.json
+    settings_json.path = /usr/share/jolla-settings/entries/
+    settings_qml.files = settings/*.qml
+    settings_qml.path = /usr/share/$${TARGET}/qml/settings/
+    INSTALLS += settings_qml settings_json
 }
+OTHER_FILES += \
+    settings/*.qml \
+    settings/*.json
 
 # Translations
 TRANSLATION_IDBASED=-idbased
 TRANSLATION_SOURCES = \
-  $${_PRO_FILE_PWD_}/qml
+    $${_PRO_FILE_PWD_}/qml \
+    $${_PRO_FILE_PWD_}/settings
 
 defineTest(addTrFile) {
     rel = translations/$${1}

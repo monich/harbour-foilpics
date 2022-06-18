@@ -34,12 +34,7 @@
 #ifndef FOILPICS_DEFS_H
 #define FOILPICS_DEFS_H
 
-#ifdef OPENREPOS
-#  define FOILPICS_APP_NAME         "openrepos-foilpics"
-#else
-#  define FOILPICS_APP_NAME         "harbour-foilpics"
-#endif
-
+#define FOILPICS_APP_NAME           "harbour-foilpics"
 #define FOILPICS_QML_IMPORT         "harbour.foilpics"
 #define FOILPICS_DCONF_ROOT         "/apps/" FOILPICS_APP_NAME "/"
 

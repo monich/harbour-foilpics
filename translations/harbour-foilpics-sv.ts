@@ -456,6 +456,21 @@ Om du har glömt ditt lösenord, bör du veta att det troligen är datortekniskt
         <extracomment>Warning text, small size label below the password prompt</extracomment>
         <translation type="unfinished">Notera att alla Foil-appar delar krypteringsnyckel och lösenord.</translation>
     </message>
+    <message id="foilpics-settings_page-header-version">
+        <source>Version %1</source>
+        <extracomment>Settings page header description (app version)</extracomment>
+        <translation>Version %1</translation>
+    </message>
+    <message id="foilpics-settings_page-autolock-text">
+        <source>Automatic locking</source>
+        <extracomment>Text switch label</extracomment>
+        <translation type="unfinished">Automatisk låsning</translation>
+    </message>
+    <message id="foilpics-settings_page-autolock-description">
+        <source>Require to enter Foil password after unlocking the screen.</source>
+        <extracomment>Text switch description</extracomment>
+        <translation type="unfinished">Kräv att ange Foil lösenord efter att ha låst upp skärmen.</translation>
+    </message>
     <message id="jail-explanation">
         <source>This application is not designed to function in a sandbox. Try installing the latest version from &lt;b&gt;&lt;a href=&apos;%1&apos;&gt;OpenRepos&lt;/a&gt;&lt;/b&gt; or &lt;b&gt;&lt;a href=&apos;%2&apos;&gt;GitHub&lt;/a&gt;&lt;/b&gt;, it may implement some sort of a workaround. No guarantee, though.</source>
         <extracomment>Label text explaining the sandbox situation</extracomment>

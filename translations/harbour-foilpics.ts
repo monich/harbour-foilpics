@@ -455,6 +455,21 @@
         <extracomment>Warning text, small size label below the password prompt</extracomment>
         <translation>Note that all Foil apps use the same encryption key and password.</translation>
     </message>
+    <message id="foilpics-settings_page-header-version">
+        <source>Version %1</source>
+        <extracomment>Settings page header description (app version)</extracomment>
+        <translation>Version %1</translation>
+    </message>
+    <message id="foilpics-settings_page-autolock-text">
+        <source>Automatic locking</source>
+        <extracomment>Text switch label</extracomment>
+        <translation>Automatic locking</translation>
+    </message>
+    <message id="foilpics-settings_page-autolock-description">
+        <source>Require to enter Foil password after unlocking the screen.</source>
+        <extracomment>Text switch description</extracomment>
+        <translation>Require to enter Foil password after unlocking the screen.</translation>
+    </message>
     <message id="jail-explanation">
         <source>This application is not designed to function in a sandbox. Try installing the latest version from &lt;b&gt;&lt;a href=&apos;%1&apos;&gt;OpenRepos&lt;/a&gt;&lt;/b&gt; or &lt;b&gt;&lt;a href=&apos;%2&apos;&gt;GitHub&lt;/a&gt;&lt;/b&gt;, it may implement some sort of a workaround. No guarantee, though.</source>
         <extracomment>Label text explaining the sandbox situation</extracomment>
