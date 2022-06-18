@@ -79,7 +79,7 @@ Page {
                 onDoneEditing: {
                     editItem = null
                     if (editText.length > 1) {
-                        groupModel.renameGroupAt(index, editText)
+                        model.groupName = editText
                     }
                 }
                 onYChanged: {

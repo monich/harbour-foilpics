@@ -119,6 +119,9 @@ SilicaListView {
         modelIndex: model.index
         selectionModel: view.selectionModel
         selectable: view.selectable
+        expanded: groupExpanded
+
+        onToggleExpanded: groupExpanded = !groupExpanded
 
         Connections {
             target: view

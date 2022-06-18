@@ -2,8 +2,10 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import harbour.foilpics 1.0
 
+import "harbour"
+
 Item {
-    id: group
+    id: thisItem
 
     height: grid.y + grid.height
 
@@ -12,7 +14,7 @@ Item {
 
     property var foilModel
     property var flickable
-    property alias title: groupHeader.text
+    property alias title: groupHeaderLabel.text
     property alias picsModel: grid.model
     property alias cellSize: grid.cellSize
     property alias columnCount: grid.columnCount
@@ -24,25 +26,67 @@ Item {
     property int modelIndex
     property var selectionModel
     property bool selectable
+    property bool expanded: true
+
+    property bool _constructed
 
     signal decryptItem(int globalIndex)
     signal deleteItem(int globalIndex)
     signal requestIndex(int globalIndex)
+    signal toggleExpanded()
 
-    Rectangle {
-        // Keep it visible even underneath the list
-        width: parent.width
-        height: groupHeader.height
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: Theme.rgba(Theme.highlightBackgroundColor, 0.15) }
-            GradientStop { position: 1.0; color: "transparent" }
-        }
-    }
+    Component.onCompleted: _constructed = true
 
-    SectionHeader {
+    BackgroundItem {
         id: groupHeader
 
+        height: Theme.itemSizeSmall
         visible: headerVisible
+        enabled: isInteractive
+
+        readonly property bool isInteractive: !selectable && !isDefault
+
+        Rectangle {
+            anchors.fill: parent
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: Theme.rgba(Theme.highlightBackgroundColor, 0.15) }
+                GradientStop { position: 1.0; color: "transparent" }
+            }
+        }
+
+        SectionHeader {
+            id: groupHeaderLabel
+
+            anchors {
+                left: parent.left
+                leftMargin: Theme.horizontalPageMargin
+                right: groupHeader.isInteractive ? arrow.left : parent.right
+                rightMargin: groupHeader.isInteractive ? Theme.paddingMedium : Theme.horizontalPageMargin
+                verticalCenter: parent.verticalCenter
+            }
+
+            // Label/SectionHeader didn't have "topPadding" in earlier versions of SFOS
+            Component.onCompleted: {
+                if ('topPadding' in groupHeaderLabel) {
+                    groupHeaderLabel.topPadding = 0
+                }
+            }
+        }
+
+        HarbourHighlightIcon {
+            id: arrow
+
+            anchors {
+                right: parent.right
+                verticalCenter: parent.verticalCenter
+                rightMargin: Theme.paddingMedium
+            }
+            highlightColor: groupHeaderLabel.color
+            source: groupHeader.isInteractive ? "image://theme/icon-m-left" : ""
+            visible: groupHeader.isInteractive
+        }
+
+        onClicked: thisItem.toggleExpanded()
     }
 
     ImageGridView {
@@ -50,8 +94,8 @@ Item {
 
         y: headerVisible ? groupHeader.height : 0
         width: parent.width
-        height: contentHeight + expandHeight
         contentHeight: grid.cellWidth * Math.floor((modelCount + columnCount - 1)/columnCount)
+        clip: true
 
         readonly property int modelCount: model ? model.count : 0
         property alias contextMenu: contextMenuItem
@@ -68,7 +112,7 @@ Item {
             contentYOffset: index >= grid.minOffsetIndex ? grid.expandHeight : 0.0
             z: isItemExpanded ? 1000 : 1
             enabled: isItemExpanded || !grid.contextMenu.active
-            selectionModel: group.selectionModel
+            selectionModel: thisItem.selectionModel
             selectionKey: imageId
 
             readonly property bool isItemExpanded: grid.expandItem === delegate
@@ -86,24 +130,25 @@ Item {
             }
 
             function decrypt() {
-                group.decryptItem(picsModel.mapToSource(modelIndex))
+                thisItem.decryptItem(picsModel.mapToSource(modelIndex))
             }
 
             function remove() {
-                group.deleteItem(picsModel.mapToSource(modelIndex))
+                thisItem.deleteItem(picsModel.mapToSource(modelIndex))
             }
 
             function editDetails() {
+                var model = grid.model
                 var modelIndex = index
                 var imageData = picsModel.get(modelIndex)
                 var page = pageStack.push(Qt.resolvedUrl("EncryptedDetailsPage.qml"), {
                     details: imageData,
-                    foilModel: group.foilModel
+                    foilModel: thisItem.foilModel
                 })
                 page.titleChanged.connect(function(title) {
-                    grid.model.setTitleAt(modelIndex, title)
+                    model.setTitleAt(modelIndex, title)
                 })
-                page.requestIndex.connect(group.requestIndex)
+                page.requestIndex.connect(thisItem.requestIndex)
             }
 
             onClicked: {
@@ -116,10 +161,10 @@ Item {
                         model: foilModel
                     })
                     if (page) {
-                        group.requestIndex(sourceIndex)
-                        page.decryptItem.connect(group.decryptItem)
-                        page.deleteItem.connect(group.deleteItem)
-                        page.requestIndex.connect(group.requestIndex)
+                        thisItem.requestIndex(sourceIndex)
+                        page.decryptItem.connect(thisItem.decryptItem)
+                        page.deleteItem.connect(thisItem.deleteItem)
+                        page.requestIndex.connect(thisItem.requestIndex)
                     }
                 }
             }
@@ -184,6 +229,48 @@ Item {
                 text: qsTrId("foilpics-menu-details")
                 onClicked: grid.expandItem.editDetails()
             }
+        }
+    }
+
+    states: [
+        State {
+            when: expanded
+            PropertyChanges {
+                target: arrow
+                rotation: -90
+            }
+            PropertyChanges {
+                target: grid
+                height: grid.contentHeight + grid.expandHeight
+            }
+        },
+        State {
+            when: !expanded
+            PropertyChanges {
+                target: arrow
+                rotation: 0
+            }
+            PropertyChanges {
+                target: grid
+                height: 0
+            }
+        }
+    ]
+
+    transitions: Transition {
+        enabled: _constructed
+        to: "*"
+        NumberAnimation {
+            target: grid
+            duration: 200
+            easing.type: Easing.InOutQuad
+            property: "height"
+        }
+        NumberAnimation {
+            target: arrow
+            duration: 200
+            easing.type: Easing.InOutQuad
+            property: "rotation"
         }
     }
 }

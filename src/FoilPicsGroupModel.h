@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2017-2021 Jolla Ltd.
- * Copyright (C) 2017-2021 Slava Monich <slava@monich.com>
+ * Copyright (C) 2017-2022 Jolla Ltd.
+ * Copyright (C) 2017-2022 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -44,13 +44,16 @@ class FoilPicsGroupModel : public QAbstractListModel {
     Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
 
 public:
+    typedef QPair<QByteArray,QByteArray> GroupInfo; // <groups,collapsed>
+
     class Group {
     public:
         QByteArray iId;
         QString iName;
+        bool iExpanded;
     public:
         class Private;
-        Group() {}
+        Group();
         Group(QByteArray aId, QString aName);
         Group(const Group& aGroup);
         Group& operator = (const Group& aGroup);
@@ -58,8 +61,8 @@ public:
         bool operator != (const Group& aGroup) const;
         bool equals(const Group& aGroup) const;
         bool isDefault() const;
-        static QList<Group> decodeList(const char* aString);
-        static QByteArray encodeList(QList<Group> aList);
+        static QList<Group> decodeList(const char* aString, const char* aCollapsed);
+        static GroupInfo encodeList(QList<Group> aList);
     };
 
     typedef QList<Group> GroupList;
@@ -73,9 +76,11 @@ public:
     void clear();
 
     // QAbstractListModel
-    virtual QHash<int,QByteArray> roleNames() const;
-    virtual int rowCount(const QModelIndex& aParent = QModelIndex()) const;
-    virtual QVariant data(const QModelIndex& aIndex, int aRole) const;
+    Qt::ItemFlags flags(const QModelIndex& aIndex) const Q_DECL_OVERRIDE;
+    QHash<int,QByteArray> roleNames() const Q_DECL_OVERRIDE;
+    int rowCount(const QModelIndex& aParent = QModelIndex()) const Q_DECL_OVERRIDE;
+    QVariant data(const QModelIndex& aIndex, int aRole) const Q_DECL_OVERRIDE;
+    bool setData(const QModelIndex& aIndex, const QVariant& aValue, int aRole) Q_DECL_OVERRIDE;
 
     Q_INVOKABLE QString groupName(QString aId) const;
     Q_INVOKABLE QString groupNameAt(int aIndex) const;
@@ -86,7 +91,6 @@ public:
     Q_INVOKABLE int offsetWithinGroup(int aGroupIndex, int aSourceIndex) const;
 
     Q_INVOKABLE void addGroup(QString aName);
-    Q_INVOKABLE void renameGroupAt(int aIndex, QString aName);
     Q_INVOKABLE void removeGroupAt(int aIndex);
     Q_INVOKABLE void moveGroup(int aFrom, int aTo);
 

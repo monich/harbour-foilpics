@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2017-2021 Jolla Ltd.
- * Copyright (C) 2017-2021 Slava Monich <slava@monich.com>
+ * Copyright (C) 2017-2022 Jolla Ltd.
+ * Copyright (C) 2017-2022 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -49,6 +49,7 @@ class FoilPicsGroupModel::Group::Private {
 public:
     static void encode(QByteArray* aDest, QByteArray aSrc);
     static const char* decode(const char* aStart, char aStop, QByteArray* aBuf);
+    static int find(QList<Group> aList, QByteArray aId);
 };
 
 void FoilPicsGroupModel::Group::Private::encode(QByteArray* aDest, QByteArray aSrc)
@@ -81,17 +82,33 @@ const char* FoilPicsGroupModel::Group::Private::decode(const char* aStart,
     return ptr;
 }
 
+int FoilPicsGroupModel::Group::Private::find(QList<Group> aList, QByteArray aId)
+{
+    const int n = aList.count();
+    for (int i = 0; i < n; i++) {
+        if (aList.at(i).iId == aId) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 // ==========================================================================
 // FoilPicsGroupModel::Group
 // ==========================================================================
 
+FoilPicsGroupModel::Group::Group() :
+    iExpanded(true)
+{
+}
+
 FoilPicsGroupModel::Group::Group(QByteArray aId, QString aName) :
-    iId(aId), iName(aName)
+    iId(aId), iName(aName), iExpanded(true)
 {
 }
 
 FoilPicsGroupModel::Group::Group(const Group& aGroup) :
-    iId(aGroup.iId), iName(aGroup.iName)
+    iId(aGroup.iId), iName(aGroup.iName), iExpanded(aGroup.iExpanded)
 {
 }
 
@@ -115,7 +132,8 @@ bool FoilPicsGroupModel::Group::operator!=(const Group& aGroup) const
 
 bool FoilPicsGroupModel::Group::equals(const Group& aGroup) const
 {
-    return iId == aGroup.iId && iName == aGroup.iName;
+    return iExpanded == aGroup.iExpanded && iId == aGroup.iId &&
+        iName == aGroup.iName;
 }
 
 bool FoilPicsGroupModel::Group::isDefault() const
@@ -126,10 +144,11 @@ bool FoilPicsGroupModel::Group::isDefault() const
 // Serialization format: "id1:name1,id2:name2"
 
 FoilPicsGroupModel::GroupList
-FoilPicsGroupModel::Group::decodeList(const char* aString)
+FoilPicsGroupModel::Group::decodeList(const char* aString, const char* aCollapsed)
 {
     QByteArray buf;
     GroupList groups;
+
     const char* ptr = aString;
     while (*ptr) {
         ptr = Private::decode(ptr, GROUP_ID_SEPARATOR, &buf);
@@ -140,21 +159,43 @@ FoilPicsGroupModel::Group::decodeList(const char* aString)
             if (*ptr == GROUP_LIST_SEPARATOR) ptr++;
         }
     }
+
+    // Mark collapsed groups
+    if (aCollapsed) {
+        ptr = aCollapsed;
+        while (*ptr) {
+            ptr = Private::decode(ptr, GROUP_LIST_SEPARATOR, &buf);
+            if (*ptr == GROUP_LIST_SEPARATOR) ptr++;
+            if (!buf.isEmpty()) {
+                int i = Private::find(groups, buf);
+                if (i >= 0) {
+                    groups[i].iExpanded = false;
+                }
+            }
+        }
+    }
+
     return groups;
 }
 
-QByteArray FoilPicsGroupModel::Group::encodeList(QList<Group> aList)
+FoilPicsGroupModel::GroupInfo
+FoilPicsGroupModel::Group::encodeList(QList<Group> aList)
 {
-    QByteArray buf;
+    QByteArray groups, collapsed;
     const int n = aList.count();
     for (int i = 0; i < n; i++) {
         const Group& group = aList.at(i);
-        if (!buf.isEmpty()) buf.append(GROUP_LIST_SEPARATOR);
-        Private::encode(&buf, group.iId);
-        buf.append(GROUP_ID_SEPARATOR);
-        Private::encode(&buf, group.iName.toUtf8());
+        if (!groups.isEmpty()) groups.append(GROUP_LIST_SEPARATOR);
+        Private::encode(&groups, group.iId);
+        groups.append(GROUP_ID_SEPARATOR);
+        Private::encode(&groups, group.iName.toUtf8());
+        // Default group is always expanded but let's double-check...
+        if (!group.iExpanded && !group.iId.isEmpty()) {
+            if (!collapsed.isEmpty()) collapsed.append(GROUP_LIST_SEPARATOR);
+            Private::encode(&collapsed, group.iId);
+        }
     }
-    return buf;
+    return GroupInfo(groups,collapsed);
 }
 
 // ==========================================================================
@@ -263,6 +304,7 @@ public:
         GroupNameRole,
         GroupPicsModelRole,
         GroupPicsCountRole,
+        GroupExpandedRole,
         FirstGroupRole,
         DefaultGroupRole
     };
@@ -354,6 +396,7 @@ QVariant FoilPicsGroupModel::ModelData::get(Role aRole) const
     case GroupNameRole: return iGroup.iName;
     case GroupPicsModelRole: return QVariant::fromValue(proxyModel());
     case GroupPicsCountRole: return proxyModel()->rowCount();
+    case GroupExpandedRole: return iGroup.iExpanded;
     case FirstGroupRole: return (iLastKnownFirstGroup = isFirstGroup());
     case DefaultGroupRole: return iGroup.isDefault();
     // No default to make sure that we get "warning: enumeration value
@@ -750,6 +793,11 @@ FoilPicsGroupModel::FoilPicsGroupModel(FoilPicsModel* aParent) :
     connect(this, SIGNAL(modelReset()), SIGNAL(countChanged()));
 }
 
+Qt::ItemFlags FoilPicsGroupModel::flags(const QModelIndex& aIndex) const
+{
+    return QAbstractListModel::flags(aIndex) | Qt::ItemIsEditable;
+}
+
 QHash<int,QByteArray> FoilPicsGroupModel::roleNames() const
 {
     QHash<int,QByteArray> roles;
@@ -757,6 +805,7 @@ QHash<int,QByteArray> FoilPicsGroupModel::roleNames() const
     roles.insert(ModelData::GroupNameRole, "groupName");
     roles.insert(ModelData::GroupPicsModelRole, "groupPicsModel");
     roles.insert(ModelData::GroupPicsCountRole, "groupPicsCount");
+    roles.insert(ModelData::GroupExpandedRole, "groupExpanded");
     roles.insert(ModelData::FirstGroupRole, "firstGroup");
     roles.insert(ModelData::DefaultGroupRole, "defaultGroup");
     return roles;
@@ -771,6 +820,51 @@ QVariant FoilPicsGroupModel::data(const QModelIndex& aIndex, int aRole) const
 {
     ModelData* data = iPrivate->dataAt(aIndex.row());
     return data ? data->get((ModelData::Role)aRole) : QVariant();
+}
+
+bool FoilPicsGroupModel::setData(const QModelIndex& aIndex, const QVariant& aValue, int aRole)
+{
+    const int row = aIndex.row();
+    ModelData* data = iPrivate->dataAt(row);
+    if (data) {
+        switch ((ModelData::Role)aRole) {
+        case ModelData::GroupNameRole:
+            {
+                const QString name(aValue.toString());
+                if (data->iGroup.iName != name) {
+                    data->iGroup.iName = name;
+                    QVector<int> roles;
+                    roles.append(aRole);
+                    HDEBUG(row << "groupName" << name);
+                    const Group group(data->iGroup);
+                    Q_EMIT groupRenamed(row, group);
+                    Q_EMIT dataChanged(aIndex, aIndex, roles);
+                }
+            }
+            return true;
+        case ModelData::GroupExpandedRole:
+            {
+                const bool expanded = aValue.toBool();
+                if (data->iGroup.iExpanded != expanded) {
+                    data->iGroup.iExpanded = expanded;
+                    QVector<int> roles;
+                    roles.append(aRole);
+                    HDEBUG(row << "groupExpanded" << expanded);
+                    Q_EMIT dataChanged(aIndex, aIndex, roles);
+                }
+            }
+            return true;
+        // No default to make sure that we get "warning: enumeration value
+        // not handled in switch" if we forget to handle a real role.
+        case ModelData::GroupIdRole:
+        case ModelData::GroupPicsModelRole:
+        case ModelData::GroupPicsCountRole:
+        case ModelData::FirstGroupRole:
+        case ModelData::DefaultGroupRole:
+            break;
+        }
+    }
+    return false;
 }
 
 QList<FoilPicsGroupModel::Group> FoilPicsGroupModel::groups() const
@@ -871,20 +965,6 @@ void FoilPicsGroupModel::addGroup(QString aName)
     iPrivate->iData.insert(pos, data);
     iPrivate->iMap.insert(id, pos);
     endInsertRows();
-}
-
-void FoilPicsGroupModel::renameGroupAt(int aIndex, QString aName)
-{
-    ModelData* data = iPrivate->dataAt(aIndex);
-    if (data && data->iGroup.iName != aName) {
-        data->iGroup.iName = aName;
-        QVector<int> roles;
-        roles.append(ModelData::GroupNameRole);
-        const Group group(data->iGroup);
-        const QModelIndex modelIndex(index(aIndex));
-        Q_EMIT groupRenamed(aIndex, group);
-        Q_EMIT dataChanged(modelIndex, modelIndex, roles);
-    }
 }
 
 void FoilPicsGroupModel::removeGroupAt(int aIndex)

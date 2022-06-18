@@ -83,6 +83,9 @@
 #define INFO_ORDER_DELIMITER_S ","
 #define INFO_ORDER_THUMB_DELIMITER ':'
 #define INFO_GROUPS_HEADER "Groups"
+#define INFO_COLLAPSED_HEADER "Collapsed"
+#define INFO_COLLAPSED_DELIMITER INFO_ORDER_DELIMITER
+#define INFO_COLLAPSED_DELIMITER_S INFO_ORDER_DELIMITER_S
 
 // Directories relative to home
 #define FOIL_PICS_DIR               "Documents/FoilPics"
@@ -550,8 +553,14 @@ FoilPicsModel::ModelInfo::ModelInfo(const FoilMsg* msg)
     }
     const char* groups = foilmsg_get_value(msg, INFO_GROUPS_HEADER);
     if (groups) {
-        HDEBUG(groups);
-        iGroups = FoilPicsGroupModel::Group::decodeList(groups);
+        const char* collapsed = foilmsg_get_value(msg, INFO_COLLAPSED_HEADER);
+#if HARBOUR_DEBUG
+        HDEBUG(INFO_GROUPS_HEADER << groups);
+        if (collapsed) {
+            HDEBUG(INFO_COLLAPSED_HEADER << collapsed);
+        }
+#endif // HARBOUR_DEBUG
+        iGroups = FoilPicsGroupModel::Group::decodeList(groups, collapsed);
     }
 }
 
@@ -597,22 +606,32 @@ void FoilPicsModel::ModelInfo::save(QString aDir, FoilPrivateKey* aPrivate,
         }
 
         const QByteArray order(buf.toUtf8());
-        const QByteArray groups = FoilPicsGroupModel::Group::encodeList(iGroups);
+        const FoilPicsGroupModel::GroupInfo groupInfo(FoilPicsGroupModel::Group::encodeList(iGroups));
+        const QByteArray groups(groupInfo.first);
+        const QByteArray collapsed(groupInfo.second);
+
+        FoilMsgHeaders headers;
+        FoilMsgHeader header[3];
+        headers.header = header;
+        headers.count = 0;
 
         HDEBUG("Saving" << fname);
         HDEBUG(INFO_ORDER_HEADER ":" << order.constData());
-        HDEBUG(INFO_GROUPS_HEADER ":" << groups.constData());
-
-        FoilMsgHeaders headers;
-        FoilMsgHeader header[2];
-        headers.header = header;
-        headers.count = 0;
         header[headers.count].name = INFO_ORDER_HEADER;
         header[headers.count].value = order.constData();
         headers.count++;
+
+        HDEBUG(INFO_GROUPS_HEADER ":" << groups.constData());
         header[headers.count].name = INFO_GROUPS_HEADER;
         header[headers.count].value = groups.constData();
         headers.count++;
+
+        if (!collapsed.isEmpty()) {
+            HDEBUG(INFO_COLLAPSED_HEADER ":" << collapsed.constData());
+            header[headers.count].name = INFO_COLLAPSED_HEADER;
+            header[headers.count].value = collapsed.constData();
+            headers.count++;
+        }
 
         FoilMsgEncryptOptions opt;
         memset(&opt, 0, sizeof(opt));
@@ -2533,8 +2552,13 @@ void FoilPicsModel::Private::onGroupModelChanged()
         HDEBUG("Ignoring group model change");
     } else {
         // Save the info whenever group model changes
+        const bool wasBusy = busy();
         sortModel();
         saveInfo();
+        if (busy() != wasBusy) {
+            queueSignal(SignalBusyChanged);
+        }
+        emitQueuedSignals();
     }
 }
 
