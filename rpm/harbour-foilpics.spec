@@ -1,6 +1,6 @@
 Name:           harbour-foilpics
 Summary:        Encrypted pictures
-Version:        1.1.0
+Version:        1.1.1
 Release:        1
 License:        BSD
 Group:          Applications/File
@@ -37,6 +37,8 @@ Screenshots:
 - https://home.monich.net/chum/harbour-foilpics/screenshots/screenshot-003.png
 - https://home.monich.net/chum/harbour-foilpics/screenshots/screenshot-004.png
 - https://home.monich.net/chum/harbour-foilpics/screenshots/screenshot-005.png
+- https://home.monich.net/chum/harbour-foilpics/screenshots/screenshot-006.png
+- https://home.monich.net/chum/harbour-foilpics/screenshots/screenshot-007.png
 Url:
   Homepage: https://openrepos.net/content/slava/foil-pics
 %endif
