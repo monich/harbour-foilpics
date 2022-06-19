@@ -79,6 +79,7 @@ SilicaListView {
         id: header
 
         title: view.title
+
         HarbourBadge {
             id: badge
 
@@ -88,6 +89,7 @@ SilicaListView {
             }
             text: foilModel.count ? foilModel.count : ""
         }
+
         ProgressBar {
             x: foilModel.count ? (badge.x + badge.width) : header.extraContent.x
             width: header.extraContent.x + header.extraContent.width - x
@@ -99,6 +101,13 @@ SilicaListView {
             opacity: view.busy ? 1 : 0
             Behavior on opacity { FadeAnimation {} }
             Behavior on x { NumberAnimation {} }
+        }
+
+        // PageHeader didn't have "interactive" in earlier versions of SFOS
+        Component.onCompleted: {
+            if ('interactive' in header) {
+                header.interactive = false
+            }
         }
     }
 
