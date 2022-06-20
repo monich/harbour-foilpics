@@ -130,7 +130,10 @@ SilicaListView {
         selectable: view.selectable
         expanded: groupExpanded
 
-        onToggleExpanded: groupExpanded = !groupExpanded
+        onToggleExpanded: {
+            groupExpanded = !groupExpanded
+            if (groupExpanded) scrollDecorator.showDecorator()
+        }
 
         Connections {
             target: view
@@ -167,5 +170,7 @@ SilicaListView {
         }
     }
 
-    VerticalScrollDecorator { }
+    VerticalScrollDecorator {
+        id: scrollDecorator
+    }
 }

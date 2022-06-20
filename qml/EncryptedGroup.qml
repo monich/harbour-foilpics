@@ -54,12 +54,27 @@ Item {
             }
         }
 
-        SectionHeader {
-            id: groupHeaderLabel
+        HarbourBadge {
+            id: badge
 
             anchors {
                 left: parent.left
                 leftMargin: Theme.horizontalPageMargin
+                verticalCenter: parent.verticalCenter
+            }
+            text: picsModel.count ? picsModel.count : ""
+            opacity: (picsModel.count > 0 && expanded) ? 1 : 0
+            backgroundColor: Theme.rgba(groupHeaderLabel.color, 0.2)
+            textColor: groupHeaderLabel.color
+        }
+
+        SectionHeader {
+            id: groupHeaderLabel
+
+            color: (groupHeader.highlighted || !groupHeader.isInteractive)? Theme.highlightColor : Theme.primaryColor
+            anchors {
+                left: badge.visible ? badge.right : parent.left
+                leftMargin: badge.visible ? Theme.paddingLarge : Theme.horizontalPageMargin
                 right: groupHeader.isInteractive ? arrow.left : parent.right
                 rightMargin: groupHeader.isInteractive ? Theme.paddingMedium : Theme.horizontalPageMargin
                 verticalCenter: parent.verticalCenter
