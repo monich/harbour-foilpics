@@ -71,7 +71,7 @@ Item {
         SectionHeader {
             id: groupHeaderLabel
 
-            color: (groupHeader.highlighted || !groupHeader.isInteractive)? Theme.highlightColor : Theme.primaryColor
+            color: (groupHeader.highlighted || selectable)? Theme.highlightColor : Theme.primaryColor
             anchors {
                 left: badge.visible ? badge.right : parent.left
                 leftMargin: badge.visible ? Theme.paddingLarge : Theme.horizontalPageMargin
