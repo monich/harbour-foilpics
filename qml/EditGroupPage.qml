@@ -2,7 +2,8 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 
 Page {
-    id: page
+    id: thisPage
+
     allowedOrientations: Orientation.All
     property alias groupModel: list.model
     property string selectedGroupId
@@ -122,11 +123,14 @@ Page {
 
             onClicked: {
                 selectedGroupId = groupId
-                page.groupSelected(index)
+                thisPage.groupSelected(index)
             }
 
-            readonly property real dragThreshold: height/5
+            readonly property real dragEdge: Theme.horizontalPageMargin
+            readonly property real dragThresholdX: Theme.itemSizeSmall/2
+            readonly property real dragThresholdY: Theme.itemSizeSmall/5
             readonly property bool dragging: dragItem === delegate
+            property real pressX
             property real pressY
             property real dragStartY
 
@@ -136,6 +140,7 @@ Page {
             }
 
             onPressed: {
+                pressX = mouseX
                 pressY = mouseY
                 dragTimer.restart()
             }
@@ -156,8 +161,19 @@ Page {
 
             onReleased: stopDrag()
             onCanceled: stopDrag()
+            onMouseXChanged: {
+                // Don't start drag if the initial touch was too close to the edge
+                if (!dragging && pressed && !menuOpen && !dragTimer.running &&
+                        pressX > dragEdge && pressX < (width - dragEdge) &&
+                        Math.abs(mouseX - pressX) > dragThresholdX) {
+                    startDrag(mouseY)
+                }
+            }
             onMouseYChanged: {
-                if (!dragging && pressed && !menuOpen && !dragTimer.running && Math.abs(mouseY - pressY) > dragThreshold) {
+                // Don't start drag if the initial touch was too close to the edge
+                if (!dragging && pressed && !menuOpen && !dragTimer.running &&
+                        pressX > dragEdge && pressX < (width - dragEdge) &&
+                        Math.abs(mouseY - pressY) > dragThresholdY) {
                     startDrag(mouseY)
                 }
             }
