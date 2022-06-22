@@ -3,11 +3,15 @@ import Sailfish.Silica 1.0
 import harbour.foilpics 1.0
 
 Page {
-    id: page
-    allowedOrientations: Orientation.All
+    id: thisPage
+
     property var details
     property var foilModel
-    readonly property var groupModel: foilModel ? foilModel.groupModel : null
+
+    allowedOrientations: Orientation.All
+
+    property alias _groupId: groupIdWatch.value
+    readonly property var _groupModel: foilModel ? foilModel.groupModel : null
 
     signal titleChanged(var title)
     signal requestIndex(int index)
@@ -24,43 +28,23 @@ Page {
     //% "%1 TB"
     readonly property string _formatTB: qsTrId("foilpics-file_size-terabytes")
 
+    Component.onCompleted: groupIdWatch.keyValue = details.imageId
+
     onStatusChanged: {
         if (status === PageStatus.Deactivating) {
-            page.titleChanged(titleDetail.value)
+            thisPage.titleChanged(titleDetail.value)
         }
-    }
-
-    function groupLabel() {
-        return details.groupId ?
-            groupModel.groupName(details.groupId) :
-            //: Name of the default group
-            //% "Default"
-            qsTrId("foilpics-default_group")
     }
 
     // ImageId is the hash of the original file, it doesn't change
     // when we move the image between the groups.
     FoilPicsModelWatch {
         id: groupIdWatch
+
         model: foilModel
         keyRole: "imageId"
-        keyValue: details.imageId
         role: "groupId"
-        onIndexChanged: page.requestIndex(index)
-        onValueChanged: {
-            details.groupId = value
-            groupNameWatch.keyValue = value
-            groupDetailName.text = page.groupLabel()
-        }
-    }
-
-    FoilPicsModelWatch {
-        id: groupNameWatch
-        model: groupModel
-        keyRole: "groupId"
-        keyValue: details.groupId
-        role: "groupName"
-        onValueChanged: groupDetailName.text = page.groupLabel()
+        onIndexChanged: thisPage.requestIndex(index)
     }
 
     SilicaFlickable {
@@ -69,6 +53,7 @@ Page {
 
         Column {
             id: column
+
             width: parent.width
 
             PageHeader {
@@ -164,16 +149,18 @@ Page {
                 label: qsTrId("foilpics-details-image_title-label")
                 value: details.title
                 defaultValue: details.defaultTitle
-                onApply: page.titleChanged(value)
+                onApply: thisPage.titleChanged(value)
             }
 
             Item {
                 id: groupDetail
+
                 width: parent.width
                 height: Math.max(groupDetailLabel.height, groupDetailItem.height)
 
                 Text {
                     id: groupDetailLabel
+
                     anchors {
                         left: parent.left
                         leftMargin: Theme.horizontalPageMargin
@@ -193,6 +180,7 @@ Page {
 
                 ListItem {
                     id: groupDetailItem
+
                     y: Theme.paddingSmall
                     anchors {
                         left: parent.horizontalCenter
@@ -201,9 +189,14 @@ Page {
                         rightMargin: Theme.horizontalPageMargin
                         verticalCenter: parent.verticalCenter
                     }
+
                     Label {
                         id: groupDetailName
-                        text: page.groupLabel()
+
+                        text: _groupId ? _groupModel.groupName(_groupId) :
+                            //: Name of the default group
+                            //% "Default"
+                            qsTrId("foilpics-default_group")
                         anchors {
                             fill: parent
                             leftMargin: Theme.paddingSmall
@@ -213,19 +206,15 @@ Page {
                         font.pixelSize: Theme.fontSizeSmall
                         truncationMode: TruncationMode.Fade
                     }
+
                     onClicked: {
                         var groupPage = pageStack.push(Qt.resolvedUrl("EditGroupPage.qml"), {
-                            groupModel: groupModel,
-                            selectedGroupId: details.groupId
+                            allowedOrientations: thisPage.allowedOrientations,
+                            groupModel: _groupModel,
+                            selectedGroupId: _groupId
                         })
                         groupPage.groupSelected.connect(function(index) {
-                            var groupId = groupModel.groupId(index)
-                            groupDetailName.text = groupModel.defaultGroupAt(index) ?
-                                //: Name of the default group
-                                //% "Default"
-                                qsTrId("foilpics-default_group") :
-                                groupModel.groupNameAt(index)
-                            foilModel.setGroupIdAt(groupIdWatch.index, groupId)
+                            foilModel.setGroupIdAt(groupIdWatch.index, _groupModel.groupId(index))
                             pageStack.pop()
                         })
                     }
