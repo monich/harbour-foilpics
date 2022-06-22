@@ -14,6 +14,7 @@ Page {
 
     SilicaListView {
         id: list
+
         anchors.fill: parent
         interactive: !Drag.active
         readonly property real maxContentY: Math.max(originY + contentHeight - height, originY)
@@ -26,6 +27,7 @@ Page {
 
         delegate: ListItem {
             id: delegate
+
             width: parent.width
             showMenuOnPressAndHold: !defaultGroup && !dragging
             highlighted: down && !dragging
@@ -37,11 +39,7 @@ Page {
                         //: Group context menu item
                         //% "Rename"
                         text: qsTrId("foilpics-edit_group_page-menu-rename")
-                        onClicked: {
-                            groupItem.editText = groupName
-                            editItem = delegate
-                            groupItem.startEditing()
-                        }
+                        onClicked: delegate.startEditing()
                     }
                     MenuItem {
                         //: Group context menu item
@@ -65,8 +63,15 @@ Page {
                 }
             }
 
+            function startEditing() {
+                groupItem.editText = groupName
+                editItem = delegate
+                groupItem.startEditing()
+            }
+
             GroupListItem {
                 id: groupItem
+
                 width: delegate.width
                 height: delegate.contentHeight
                 defaultGroup: model.defaultGroup
@@ -79,7 +84,7 @@ Page {
                 color: dragging ? Theme.rgba(Theme.highlightBackgroundColor, 0.2) : "transparent"
                 onDoneEditing: {
                     editItem = null
-                    if (editText.length > 1) {
+                    if (editText.length > 0) {
                         model.groupName = editText
                     }
                 }
@@ -136,6 +141,7 @@ Page {
 
             Timer {
                 id: dragTimer
+
                 interval: 150
             }
 
@@ -195,12 +201,15 @@ Page {
 
         footer: BackgroundItem {
             id: addGroupItem
+
             Image {
                 id: addIcon
+
                 x: Theme.horizontalPageMargin
                 anchors.verticalCenter: parent.verticalCenter
                 source: "image://theme/icon-m-add" + (addGroupItem.highlighted ? "?" + Theme.highlightColor : "")
             }
+
             Label {
                 //: Button label
                 //% "Add group"
@@ -215,9 +224,13 @@ Page {
                 color: addGroupItem.highlighted ? Theme.highlightColor : Theme.primaryColor
             }
 
-            //: Name for the newly created group
-            //% "New group"
-            onClicked: groupModel.addGroup(qsTrId("foilpics-edit_group_page-new_group_name"))
+            onClicked: {
+                //: Name for the newly created group
+                //% "New group"
+                groupModel.addGroup(qsTrId("foilpics-edit_group_page-new_group_name"))
+                list.currentIndex = groupModel.count - 1
+                list.currentItem.startEditing()
+            }
         }
 
         VerticalScrollDecorator { }
