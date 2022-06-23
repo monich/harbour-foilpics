@@ -43,6 +43,11 @@
         <extracomment>Context menu item</extracomment>
         <translation type="unfinished">Kopiera till urklipp</translation>
     </message>
+    <message id="foilpics-menu-move">
+        <source>Move</source>
+        <extracomment>Generic menu item</extracomment>
+        <translation type="unfinished">Flytta</translation>
+    </message>
     <message id="foilpics-pulley_menu-generate_key">
         <source>Generate a new key</source>
         <extracomment>Pulley menu item</extracomment>

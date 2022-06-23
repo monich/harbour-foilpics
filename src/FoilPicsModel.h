@@ -111,6 +111,7 @@ public:
     Q_INVOKABLE void removeAt(int aIndex);
     Q_INVOKABLE void removeFiles(QList<int> aRows);
     Q_INVOKABLE void setTitleAt(int aIndex, QString aTitle);
+    Q_INVOKABLE void setGroupId(QString aImageId, QString aId);
     Q_INVOKABLE void setGroupIdAt(int aIndex, QString aId);
     Q_INVOKABLE void setGroupIdForRows(QList<int> aRows, QString aId);
     Q_INVOKABLE int groupIndexAt(int aIndex) const;

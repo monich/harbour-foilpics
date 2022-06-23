@@ -118,6 +118,7 @@ SilicaListView {
         flickable: view
         foilModel: view.foilModel
         title: groupName
+        groupId: model.groupId
         picsModel: groupPicsModel
         picsCount: groupPicsCount
         isFirstGroup: firstGroup

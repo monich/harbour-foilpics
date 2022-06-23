@@ -1907,6 +1907,7 @@ public:
 
     FoilPicsModel* parentModel();
     ModelData* dataAt(int aIndex);
+    int find(QString aImageId);
     int compare(const ModelData* aData1, const ModelData* aData2) const;
     static int sortProc(const void* aPtr1, const void* aPtr2, void* aThis);
 
@@ -2133,6 +2134,18 @@ FoilPicsModel::ModelData* FoilPicsModel::Private::dataAt(int aIndex)
     } else {
         return NULL;
     }
+}
+
+int FoilPicsModel::Private::find(QString aImageId)
+{
+    const int n = iData.count();
+    for (int i = 0; i < n; i++) {
+        ModelData* data = iData.at(i);
+        if (data->iImageId == aImageId) {
+            return i;
+        }
+    }
+    return -1;
 }
 
 void FoilPicsModel::Private::queueSignal(Signal aSignal)
@@ -3558,6 +3571,17 @@ int FoilPicsModel::groupIndexAt(int aIndex) const
         return iPrivate->iGroupModel->indexOfGroup(data->iGroupId);
     } else {
         return -1;
+    }
+}
+
+void FoilPicsModel::setGroupId(QString aImageId, QString aId)
+{
+    int i = iPrivate->find(aImageId);
+    if (i >= 0) {
+        iPrivate->setGroupIdAt(i, aId.toLatin1());
+        iPrivate->emitQueuedSignals();
+    } else {
+        HWARN("Invalid image id" << aImageId);
     }
 }
 

@@ -14,6 +14,7 @@ Item {
 
     property var foilModel
     property var flickable
+    property string groupId
     property alias title: groupHeaderLabel.text
     property alias picsModel: grid.model
     property alias cellSize: grid.cellSize
@@ -29,6 +30,7 @@ Item {
     property bool expanded: true
 
     property bool _constructed
+    readonly property var _groupModel: foilModel ? foilModel.groupModel : null
 
     signal decryptItem(int globalIndex)
     signal deleteItem(int globalIndex)
@@ -144,6 +146,19 @@ Item {
                 clip: true
             }
 
+            function selectGroup() {
+                var imageId = model.imageId
+                var stack = pageStack
+                var page = stack.push(Qt.resolvedUrl("EditGroupPage.qml"), {
+                    groupModel: _groupModel,
+                    selectedGroupId: groupId
+                })
+                page.groupSelected.connect(function(index) {
+                    foilModel.setGroupId(imageId, _groupModel.groupId(index))
+                    stack.pop()
+                })
+            }
+
             function decrypt() {
                 thisItem.decryptItem(picsModel.mapToSource(modelIndex))
             }
@@ -201,6 +216,7 @@ Item {
 
         ContextMenu {
             id: contextMenuItem
+
             x: parent !== null ? -parent.x : 0.0
 
             function openMenu(item) {
@@ -231,6 +247,12 @@ Item {
                 //% "Decrypt"
                 text: qsTrId("foilpics-menu-decrypt")
                 onClicked: grid.expandItem.decrypt()
+            }
+            MenuItem {
+                //: Generic menu item
+                //% "Move"
+                text: qsTrId("foilpics-menu-move")
+                onClicked: grid.expandItem.selectGroup()
             }
             MenuItem {
                 //: Generic menu item
