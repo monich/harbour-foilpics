@@ -13,6 +13,7 @@ Page {
 
     readonly property var galleryModel: Qt.createQmlObject(FoilPics.documentGalleryModelQml, page, "GalleryModel")
     readonly property int galleryModelCount: galleryModel ? galleryModel.count : 0
+    readonly property string galleryKeyRole: "url"
 
     // Selection model is fairly expensive, we create and maintain it
     // only in selection mode
@@ -21,7 +22,7 @@ Page {
 
         FoilPicsSelection {
             model: galleryModel
-            role: "url"
+            role: galleryKeyRole
         }
     }
 
@@ -94,7 +95,7 @@ Page {
             //: Generic remorse popup text
             //% "Deleting %0 selected pictures"
             bulkAction(qsTrId("foilpics-remorse-deleting_selected", list.length).arg(list.length), list, function() {
-                FoilPics.deleteLocalFilesFromModel(galleryModel, galleryModel.keyRole, list)
+                FoilPics.deleteLocalFilesFromModel(galleryModel, galleryKeyRole, list)
                 dropSelectionModels()
             })
         })
