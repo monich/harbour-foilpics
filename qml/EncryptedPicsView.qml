@@ -5,7 +5,7 @@ import harbour.foilpics 1.0
 import "harbour"
 
 Item {
-    id: view
+    id: thisView
 
     property Page mainPage
     property var hints
@@ -34,7 +34,7 @@ Item {
 
         clip: true
         anchors.fill: parent
-        foilModel: view.foilModel
+        foilModel: thisView.foilModel
         model: foilModel.groupModel
         busy: foilModel.busy || progressTimer.running
         //: Encrypted grid title
@@ -42,22 +42,22 @@ Item {
         title: qsTrId("foilpics-encrypted_grid-title")
 
         PullDownMenu {
-            visible: view.ready
+            visible: thisView.ready
             MenuItem {
                 text: foilUi.qsTrEnterPasswordViewMenuGenerateNewKey()
                 onClicked: {
-                    var warning = pageStack.push(Qt.resolvedUrl("foil-ui/FoilUiGenerateKeyWarning.qml"), {
+                    pageStack.push(Qt.resolvedUrl("foil-ui/FoilUiGenerateKeyWarning.qml"), {
                         allowedOrientations: mainPage.allowedOrientations,
-                        foilUi: view.foilUi
+                        foilUi: thisView.foilUi,
+                        acceptDestinationProperties: {
+                            allowedOrientations: mainPage.allowedOrientations,
+                            mainPage: thisView.mainPage,
+                            foilUi: thisView.foilUi,
+                            foilModel: thisView.foilModel
+                        },
+                        acceptDestinationAction: PageStackAction.Replace,
+                        acceptDestination: Qt.resolvedUrl("foil-ui/FoilUiGenerateKeyPage.qml")
                     })
-                    warning.acceptDestinationProperties = {
-                        allowedOrientations: mainPage.allowedOrientations,
-                        mainPage: view.mainPage,
-                        foilUi: view.foilUi,
-                        foilModel: view.foilModel
-                    }
-                    warning.acceptDestinationAction = PageStackAction.Replace
-                    warning.acceptDestination = Qt.resolvedUrl("foil-ui/FoilUiGenerateKeyPage.qml")
                 }
             }
             MenuItem {
@@ -66,9 +66,9 @@ Item {
                 text: qsTrId("foilpics-pulley_menu-change_password")
                 onClicked: {
                     pageStack.push(Qt.resolvedUrl("foil-ui/FoilUiChangePasswordPage.qml"), {
-                        mainPage: view.mainPage,
-                        foilUi: view.foilUi,
-                        foilModel: view.foilModel,
+                        mainPage: thisView.mainPage,
+                        foilUi: thisView.foilUi,
+                        foilModel: thisView.foilModel,
                         //: Password change prompt
                         //% "Please enter the current and the new password"
                         promptText: qsTrId("foilpics-change_password_page-label-enter_passwords"),
@@ -102,7 +102,7 @@ Item {
                 //: Placeholder text
                 //% "You don't have any encrypted pictures"
                 qsTrId("foilpics-encrypted_grid-placeholder-no_pictures")
-            enabled: !view.busy && foilModel && foilModel.count === 0
+            enabled: foilModel && foilModel.count === 0
         }
     }
 
@@ -180,8 +180,8 @@ Item {
         selectionModel = selectionModelComponent.createObject(mainPage)
         var selectionPage = pageStack.push(Qt.resolvedUrl("EncryptedSelectionPage.qml"), {
             allowedOrientations: mainPage.allowedOrientations,
-            selectionModel: view.selectionModel,
-            foilModel: view.foilModel
+            selectionModel: thisView.selectionModel,
+            foilModel: thisView.foilModel
         })
         selectionPage.deletePictures.connect(function(list) {
             //: Generic remorse popup text
