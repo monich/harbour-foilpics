@@ -176,6 +176,12 @@ Page {
 
     Notification {
         id: notification
+
+        Component.onCompleted: {
+            if ('icon' in notification) {
+                notification.icon = "icon-s-certificates"
+            }
+        }
     }
 
     Timer {
