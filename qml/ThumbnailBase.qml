@@ -15,12 +15,8 @@ MouseArea {
     property GridView grid: GridView.view
     property var selectionModel
     property string selectionKey
-
-    property var selectionState
-    property var busyState
-
-    readonly property bool isBusy: busyState ? busyState.busy : false
-    readonly property bool isSelected: selectionState ? selectionState.selected : false
+    property alias isBusy: busyState.busy
+    property alias isSelected: selectionState.selected
 
     width: size
     height: size
@@ -33,36 +29,18 @@ MouseArea {
     onReleased: pressedAndHeld = false
     onCanceled: pressedAndHeld = false
 
-    onSelectionModelChanged: selectionStateCheck()
-    onSelectionKeyChanged: selectionStateCheck()
+    FoilPicsSelectionState {
+        id: selectionState
 
-    function selectionStateCheck() {
-        if (selectionState) {
-            selectionState.destroy()
-            selectionState = null
-            busyState.destroy()
-            busyState = null
-        }
-        if (selectionModel && selectionKey) {
-            selectionState = selectionStateComponent.createObject(thumbnail, {
-                model: selectionModel,
-                key: selectionKey})
-            busyState = busyStateComponent.createObject(thumbnail, {
-                model: selectionModel,
-                key: selectionKey})
-        }
+        model: selectionModel ? selectionModel : null
+        key: selectionKey
     }
 
-    Component {
-        id: selectionStateComponent
+    FoilPicsBusyState {
+        id: busyState
 
-        FoilPicsSelectionState { }
-    }
-
-    Component {
-        id: busyStateComponent
-
-        FoilPicsBusyState { }
+        model: selectionModel ? selectionModel : null
+        key: selectionKey
     }
 
     Loader {
@@ -90,7 +68,6 @@ MouseArea {
         }
         Behavior on opacity { FadeAnimation { duration: 100 } }
     }
-
 
     Loader {
         z: thumbnail.z + 2
