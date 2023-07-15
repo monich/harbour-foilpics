@@ -47,6 +47,15 @@ Page {
         onIndexChanged: thisPage.requestIndex(index)
     }
 
+    FoilPicsModelWatch {
+        id: groupNameWatch
+
+        model: _groupModel
+        keyRole: "groupId"
+        keyValue: _groupId
+        role: "groupName"
+    }
+
     SilicaFlickable {
         anchors.fill: parent
         contentHeight: column.height + Theme.paddingLarge
@@ -193,7 +202,7 @@ Page {
                     Label {
                         id: groupDetailName
 
-                        text: _groupId ? _groupModel.groupName(_groupId) :
+                        text: _groupId ? groupNameWatch.value :
                             //: Name of the default group
                             //% "Default"
                             qsTrId("foilpics-default_group")
