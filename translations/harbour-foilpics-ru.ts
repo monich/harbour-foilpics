@@ -58,6 +58,11 @@
         <extracomment>Pulley menu item</extracomment>
         <translation>Поменять пароль</translation>
     </message>
+    <message id="foilpics-pulley_menu-lock">
+        <source>Lock</source>
+        <extracomment>Pulley menu item</extracomment>
+        <translation>Заблокировать</translation>
+    </message>
     <message id="foilpics-pulley_menu-select_photos">
         <source>Select photos</source>
         <extracomment>Pulley menu item</extracomment>

@@ -58,6 +58,11 @@
         <extracomment>Pulley menu item</extracomment>
         <translation>Zmień hasło</translation>
     </message>
+    <message id="foilpics-pulley_menu-lock">
+        <source>Lock</source>
+        <extracomment>Pulley menu item</extracomment>
+        <translation type="unfinished">Zablokować</translation>
+    </message>
     <message id="foilpics-pulley_menu-select_photos">
         <source>Select photos</source>
         <extracomment>Pulley menu item</extracomment>

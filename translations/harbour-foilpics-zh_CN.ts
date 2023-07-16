@@ -58,6 +58,11 @@
         <extracomment>Pulley menu item</extracomment>
         <translation>更改密码</translation>
     </message>
+    <message id="foilpics-pulley_menu-lock">
+        <source>Lock</source>
+        <extracomment>Pulley menu item</extracomment>
+        <translation type="unfinished">锁</translation>
+    </message>
     <message id="foilpics-pulley_menu-select_photos">
         <source>Select photos</source>
         <extracomment>Pulley menu item</extracomment>

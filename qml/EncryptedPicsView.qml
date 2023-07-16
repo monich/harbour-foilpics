@@ -17,6 +17,9 @@ Item {
     property var selectionModel
     property bool dropSelectionModelsWhenDecryptionDone
 
+    // 400 ms is the pulley menu bounce-back duration
+    Behavior on opacity { FadeAnimation { duration: 400 } }
+
     Component.onCompleted: {
         isCurrentView = parent.isCurrentItem
         listView.maximizeCacheBuffer()
@@ -42,7 +45,20 @@ Item {
         title: qsTrId("foilpics-encrypted_grid-title")
 
         PullDownMenu {
+            id: pullDownMenu
+
+            property var _deferredAction: null
+
             visible: thisView.ready
+
+            onActiveChanged: {
+                if (!active && _deferredAction) {
+                    var action = _deferredAction
+                    _deferredAction = null
+                    action()
+                }
+            }
+
             MenuItem {
                 text: foilUi.qsTrEnterPasswordViewMenuGenerateNewKey()
                 onClicked: {
@@ -85,7 +101,18 @@ Item {
                 }
             }
             MenuItem {
-                id: selectPhotosMenuItem
+                //: Pulley menu item
+                //% "Lock"
+                text: qsTrId("foilpics-pulley_menu-lock")
+                onClicked: {
+                    thisView.opacity = 0 // with a 400 ms animation
+                    pullDownMenu._deferredAction = action
+                }
+                function action() {
+                    foilModel.lock(false)
+                }
+            }
+            MenuItem {
                 //: Pulley menu item
                 //% "Select photos"
                 text: qsTrId("foilpics-pulley_menu-select_photos")

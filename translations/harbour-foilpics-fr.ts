@@ -58,6 +58,11 @@
         <extracomment>Pulley menu item</extracomment>
         <translation>Modifier le mot de passe</translation>
     </message>
+    <message id="foilpics-pulley_menu-lock">
+        <source>Lock</source>
+        <extracomment>Pulley menu item</extracomment>
+        <translation type="unfinished">Verrouiller</translation>
+    </message>
     <message id="foilpics-pulley_menu-select_photos">
         <source>Select photos</source>
         <extracomment>Pulley menu item</extracomment>
