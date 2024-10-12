@@ -8,7 +8,7 @@ openrepos {
 
 TARGET = $${PREFIX}-$${NAME}
 CONFIG += sailfishapp link_pkgconfig
-PKGCONFIG += sailfishapp mlite5 glib-2.0 gobject-2.0
+PKGCONFIG += sailfishapp keepalive mlite5 glib-2.0 gobject-2.0
 QT += qml quick dbus
 
 QMAKE_CXXFLAGS += -Wno-unused-parameter -Wno-psabi
@@ -152,6 +152,7 @@ HEADERS += \
     $${HARBOUR_LIB_INCLUDE}/HarbourTask.h \
     $${HARBOUR_LIB_INCLUDE}/HarbourTransferMethodInfo.h \
     $${HARBOUR_LIB_INCLUDE}/HarbourTransferMethodsModel.h \
+    $${HARBOUR_LIB_INCLUDE}/HarbourWakeupTimer.h \
     $${HARBOUR_LIB_SRC}/HarbourMce.h
 
 SOURCES += \
@@ -162,7 +163,8 @@ SOURCES += \
     $${HARBOUR_LIB_SRC}/HarbourSystemState.cpp \
     $${HARBOUR_LIB_SRC}/HarbourTask.cpp \
     $${HARBOUR_LIB_SRC}/HarbourTransferMethodInfo.cpp \
-    $${HARBOUR_LIB_SRC}/HarbourTransferMethodsModel.cpp
+    $${HARBOUR_LIB_SRC}/HarbourTransferMethodsModel.cpp \
+    $${HARBOUR_LIB_SRC}/HarbourWakeupTimer.cpp
 
 HARBOUR_QML_COMPONENTS = \
     $${HARBOUR_LIB_QML}/HarbourBadge.qml \

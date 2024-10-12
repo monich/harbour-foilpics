@@ -1,6 +1,6 @@
 /*
+ * Copyright (C) 2017-2024 Slava Monich <slava@monich.com>
  * Copyright (C) 2017-2022 Jolla Ltd.
- * Copyright (C) 2017-2022 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -8,15 +8,17 @@
  * modification, are permitted provided that the following conditions
  * are met:
  *
- *   1. Redistributions of source code must retain the above copyright
- *      notice, this list of conditions and the following disclaimer.
- *   2. Redistributions in binary form must reproduce the above copyright
- *      notice, this list of conditions and the following disclaimer
- *      in the documentation and/or other materials provided with the
- *      distribution.
- *   3. Neither the names of the copyright holders nor the names of its
- *      contributors may be used to endorse or promote products derived
- *      from this software without specific prior written permission.
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer
+ *     in the documentation and/or other materials provided with the
+ *     distribution.
+ *
+ *  3. Neither the names of the copyright holders nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -29,6 +31,10 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * The views and conclusions contained in the software and documentation
+ * are those of the authors and should not be interpreted as representing
+ * any official policies, either expressed or implied.
  */
 
 #include "FoilPicsBusyState.h"
@@ -46,11 +52,12 @@
 #include "HarbourSystemInfo.h"
 #include "HarbourSystemState.h"
 #include "HarbourTransferMethodsModel.h"
+#include "HarbourWakeupTimer.h"
 
 #include <sailfishapp.h>
 #include <gutil_log.h>
 
-#include <QGuiApplication>
+#include <QtGui/QGuiApplication>
 #include <QtQuick>
 
 static void register_types(const char* uri, int v1 = 1, int v2 = 0)
@@ -61,10 +68,12 @@ static void register_types(const char* uri, int v1 = 1, int v2 = 0)
     qmlRegisterSingletonType<Class>(uri, v1, v2, #Class, \
     Class::createSingleton)
 
-    REGISTER_SINGLETON_TYPE(uri, v1, v2, HarbourSystemState);
     REGISTER_SINGLETON_TYPE(uri, v1, v2, HarbourProcessState);
     REGISTER_SINGLETON_TYPE(uri, v1, v2, HarbourSystemInfo);
+    REGISTER_SINGLETON_TYPE(uri, v1, v2, HarbourSystemState);
     REGISTER_SINGLETON_TYPE(uri, v1, v2, HarbourTransferMethodsModel);
+    REGISTER_TYPE(uri, v1, v2, HarbourWakeupTimer);
+
     REGISTER_SINGLETON_TYPE(uri, v1, v2, FoilPicsSettings);
     REGISTER_SINGLETON_TYPE(uri, v1, v2, FoilPics);
     REGISTER_TYPE(uri, v1, v2, FoilPicsBusyState);

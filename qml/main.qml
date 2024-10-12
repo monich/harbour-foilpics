@@ -15,61 +15,42 @@ ApplicationWindow {
 
     Component.onCompleted: if (!_jailed) pageStack.pushAttached(galleryPageComponent)
 
+    function resetAutoLock() {
+        lockTimer.stop()
+        if (appFoilModel.foilState === FoilPicsModel.FoilPicsReady &&
+            FoilPicsSettings.autoLock && HarbourSystemState.locked) {
+            lockTimer.start()
+        }
+    }
+
     FoilPicsModel {
         id: appFoilModel
+
         thumbnailSize: Qt.size(Theme.itemSizeHuge,Theme.itemSizeHuge)
         onMediaDeleted: FoilPics.mediaDeleted(url)
+        onFoilStateChanged: resetAutoLock()
     }
 
     FoilPicsHints {
         id: appHints
     }
 
-    Timer {
+
+    HarbourWakeupTimer {
         id: lockTimer
 
         interval: FoilPicsSettings.autoLockTime
-        onTriggered: appFoilModel.lock(true);
+        onTriggered: appFoilModel.lock(false);
     }
 
     Connections {
         target: HarbourSystemState
-
-        property bool wasDimmed
-
-        onDisplayStatusChanged: {
-            if (target.displayStatus === HarbourSystemState.MCE_DISPLAY_DIM) {
-                wasDimmed = true
-            } else if (target.displayStatus === HarbourSystemState.MCE_DISPLAY_ON) {
-                wasDimmed = false
-            }
-        }
-
-        onLockedChanged: {
-            lockTimer.stop()
-            if (FoilPicsSettings.autoLock && target.locked) {
-                if (wasDimmed) {
-                    // Give the user some time to wake wake up the screen
-                    // and prevent encrypted pictures from being locked
-                    lockTimer.start()
-                } else {
-                    appFoilModel.lock(false);
-                }
-            }
-        }
+        onLockedChanged: resetAutoLock()
     }
 
     Connections {
         target: FoilPicsSettings
-
-        onAutoLockChanged: {
-            lockTimer.stop()
-            // It's so unlikely that settings change when the device is locked
-            // But it's possible!
-            if (target.autoLock && HarbourSystemState.locked) {
-                appFoilModel.lock(false);
-            }
-        }
+        onAutoLockChanged: resetAutoLock()
     }
 
     Component {
