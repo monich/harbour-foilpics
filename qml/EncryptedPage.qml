@@ -286,7 +286,12 @@ Page {
             active: opacity > 0
             opacity: (foilModel.foilState === FoilPicsModel.FoilDecrypting ||
                       decryptingTimer.running) ? 1 : 0
-            sourceComponent: Component { DecryptingView { foilModel: thisPage.foilModel } }
+            sourceComponent: Component {
+                DecryptingView {
+                    foilModel: thisPage.foilModel
+                    isLandscape: thisPage.isLandscape
+                }
+            }
             Behavior on opacity { FadeAnimation {} }
         }
 

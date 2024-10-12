@@ -5,11 +5,15 @@ import harbour.foilpics 1.0
 ApplicationWindow {
     id: app
 
-    readonly property bool jailed: HarbourProcessState.jailedApp
-    readonly property int appAllowedOrientations: Orientation.All
-    readonly property bool appLandscapeMode: orientation === Qt.LandscapeOrientation ||
-        orientation === Qt.InvertedLandscapeOrientation
-    allowedOrientations: appAllowedOrientations
+    allowedOrientations: Orientation.All
+    initialPage: _jailed ? jailPageComponent : encryptedPageComponent
+
+    //: Application title
+    //% "Foil Pics"
+    readonly property string _appTitle: qsTrId("foilpics-app_name")
+    readonly property bool _jailed: HarbourProcessState.jailedApp
+
+    Component.onCompleted: if (!_jailed) pageStack.pushAttached(galleryPageComponent)
 
     FoilPicsModel {
         id: appFoilModel
@@ -68,20 +72,12 @@ ApplicationWindow {
         }
     }
 
-    //: Application title
-    //% "Foil Pics"
-    readonly property string appTitle: qsTrId("foilpics-app_name")
-
-    initialPage: jailed ? jailPageComponent : encryptedPageComponent
-
-    Component.onCompleted: if (!jailed) pageStack.pushAttached(galleryPageComponent)
-
     Component {
         id: encryptedPageComponent
         EncryptedPage {
             hints: appHints
             foilModel: appFoilModel
-            allowedOrientations: appAllowedOrientations
+            allowedOrientations: app.allowedOrientations
         }
     }
 
@@ -90,14 +86,14 @@ ApplicationWindow {
         GalleryPage {
             hints: appHints
             foilModel: appFoilModel
-            allowedOrientations: appAllowedOrientations
+            allowedOrientations: app.allowedOrientations
         }
     }
 
     Component {
         id: jailPageComponent
         JailPage {
-            allowedOrientations: appAllowedOrientations
+            allowedOrientations: app.allowedOrientations
         }
     }
 
