@@ -3,12 +3,13 @@ import Sailfish.Silica 1.0
 import org.nemomobile.configuration 1.0
 
 Page {
-    readonly property string rootPath: "/apps/harbour-foilpics/"
     property alias title: pageHeader.title
 
     // jolla-settings expects these properties:
     property var applicationName
     property var applicationIcon
+
+    readonly property string _rootPath: "/apps/harbour-foilpics/"
 
     SilicaFlickable {
         anchors.fill: parent
@@ -16,6 +17,7 @@ Page {
 
         Column {
             id: content
+
             width: parent.width
 
             PageHeader {
@@ -56,8 +58,45 @@ Page {
                 ConfigurationValue {
                     id: autoLockConfig
 
-                    key: rootPath + "autoLock"
+                    key: _rootPath + "autoLock"
                     defaultValue: true
+                }
+            }
+
+            Slider {
+                readonly property int min: value / 60
+                readonly property int sec: value % 60
+
+                visible: opacity > 0
+                opacity: autoLockConfig.value ? 1.0 : 0.0
+                width: parent.width
+                minimumValue: 0
+                maximumValue: 300
+                value: autoLockTimeConfig.value / 1000
+                stepSize: 5
+                //: Slider label
+                //% "Locking delay"
+                label: qsTrId("foilpics-settings_page-autolock_delay-label")
+                valueText: !value ?
+                    //: Slider value (no delay)
+                    //% "No delay"
+                    qsTrId("foilpics-settings_page-autolock_delay-value-no_delay") :
+                    //: Slider value
+                    //% "%1 sec"
+                    !min ? qsTrId("foilpics-settings_page-autolock_delay-value-sec",value).arg(sec) :
+                    //: Slider value
+                    //% "%1 min"
+                    !sec ? qsTrId("foilpics-settings_page-autolock_delay-value-min",value).arg(min) :
+                    qsTrId("foilpics-settings_page-autolock_delay-value-min",value).arg(min) + " " +
+                    qsTrId("foilpics-settings_page-autolock_delay-value-sec",value).arg(sec)
+                onSliderValueChanged: autoLockTimeConfig.value = value * 1000
+                Behavior on opacity { FadeAnimation { } }
+
+                ConfigurationValue {
+                    id: autoLockTimeConfig
+
+                    key: _rootPath + "autoLockTime"
+                    defaultValue: 15000
                 }
             }
         }

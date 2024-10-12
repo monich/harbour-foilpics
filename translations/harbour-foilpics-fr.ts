@@ -465,6 +465,16 @@
         <extracomment>Warning text, small size label below the password prompt</extracomment>
         <translation>Sachez que toutes les applications Foil partagent leur clef de chiffrement et leur mot de passe.</translation>
     </message>
+    <message id="jail-explanation">
+        <source>This application is not designed to function in a sandbox. Try installing the latest version from &lt;b&gt;&lt;a href=&apos;%1&apos;&gt;OpenRepos&lt;/a&gt;&lt;/b&gt; or &lt;b&gt;&lt;a href=&apos;%2&apos;&gt;GitHub&lt;/a&gt;&lt;/b&gt;, it may implement some sort of a workaround. No guarantee, though.</source>
+        <extracomment>Label text explaining the sandbox situation</extracomment>
+        <translation type="unfinished">Cette application n&apos;est pas conçue pour fonctionner dans un bac à sable. Essayez d&apos;installer la dernière version d&apos;&lt;b&gt;&lt;a href=&apos;%1&apos;&gt;OpenRepos&lt;/a&gt;&lt;/b&gt; ou de &lt;b&gt;&lt;a href=&apos;%2&apos;&gt;GitHub&lt;/a&gt;&lt;/b&gt;, cela peut implémenter une sorte de solution de contournement. Aucune garantie, cependant.</translation>
+    </message>
+    <message id="jail-terminal_hint">
+        <source>If you have developer mode enabled, you may also try running &lt;b&gt;%1&lt;/b&gt; from the terminal. Sorry for the inconvenience!</source>
+        <extracomment>Hint suggesting to run the app from the terminal</extracomment>
+        <translation type="unfinished">Si vous avez activé le mode développeur, vous pouvez également essayer d&apos;exécuter foilnotes à partir du terminal. Désolé pour le dérangement!</translation>
+    </message>
     <message id="foilpics-settings_page-header-version">
         <source>Version %1</source>
         <extracomment>Settings page header description (app version)</extracomment>
@@ -480,15 +490,31 @@
         <extracomment>Text switch description</extracomment>
         <translation type="unfinished">Nécessite d&apos;entrer le mot de passe Foil après avoir déverrouillé l&apos;écran.</translation>
     </message>
-    <message id="jail-explanation">
-        <source>This application is not designed to function in a sandbox. Try installing the latest version from &lt;b&gt;&lt;a href=&apos;%1&apos;&gt;OpenRepos&lt;/a&gt;&lt;/b&gt; or &lt;b&gt;&lt;a href=&apos;%2&apos;&gt;GitHub&lt;/a&gt;&lt;/b&gt;, it may implement some sort of a workaround. No guarantee, though.</source>
-        <extracomment>Label text explaining the sandbox situation</extracomment>
-        <translation type="unfinished">Cette application n&apos;est pas conçue pour fonctionner dans un bac à sable. Essayez d&apos;installer la dernière version d&apos;&lt;b&gt;&lt;a href=&apos;%1&apos;&gt;OpenRepos&lt;/a&gt;&lt;/b&gt; ou de &lt;b&gt;&lt;a href=&apos;%2&apos;&gt;GitHub&lt;/a&gt;&lt;/b&gt;, cela peut implémenter une sorte de solution de contournement. Aucune garantie, cependant.</translation>
+    <message id="foilpics-settings_page-autolock_delay-label">
+        <source>Locking delay</source>
+        <extracomment>Slider label</extracomment>
+        <translation type="unfinished">Délai de verrouillage</translation>
     </message>
-    <message id="jail-terminal_hint">
-        <source>If you have developer mode enabled, you may also try running &lt;b&gt;%1&lt;/b&gt; from the terminal. Sorry for the inconvenience!</source>
-        <extracomment>Hint suggesting to run the app from the terminal</extracomment>
-        <translation type="unfinished">Si vous avez activé le mode développeur, vous pouvez également essayer d&apos;exécuter foilnotes à partir du terminal. Désolé pour le dérangement!</translation>
+    <message id="foilpics-settings_page-autolock_delay-value-no_delay">
+        <source>No delay</source>
+        <extracomment>Slider value (no delay)</extracomment>
+        <translation type="unfinished">Sans délais</translation>
+    </message>
+    <message id="foilpics-settings_page-autolock_delay-value-min" numerus="yes">
+        <source>%1 min</source>
+        <extracomment>Slider value</extracomment>
+        <translation type="unfinished">
+            <numerusform>%1 min</numerusform>
+            <numerusform>%1 min</numerusform>
+        </translation>
+    </message>
+    <message id="foilpics-settings_page-autolock_delay-value-sec" numerus="yes">
+        <source>%1 sec</source>
+        <extracomment>Slider value</extracomment>
+        <translation type="unfinished">
+            <numerusform>%1 sec</numerusform>
+            <numerusform>%1 sec</numerusform>
+        </translation>
     </message>
 </context>
 </TS>
