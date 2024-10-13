@@ -12,6 +12,7 @@ Page {
     property var hints
     property var foilUi
     property var foilModel
+    readonly property string fullScreenThumbnail: encryptedPicsViewLoader.item ? encryptedPicsViewLoader.item.fullScreenThumbnail : ""
 
     // nextPage is either
     // a) our attached page; or
@@ -297,6 +298,8 @@ Page {
 
         // EncryptedPicsView
         Loader {
+            id: encryptedPicsViewLoader
+
             anchors.fill: parent
             active: opacity > 0
             opacity: (foilModel.foilState === FoilPicsModel.FoilPicsReady &&

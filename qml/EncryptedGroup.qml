@@ -35,6 +35,7 @@ Item {
     signal decryptItem(int globalIndex)
     signal deleteItem(int globalIndex)
     signal requestIndex(int globalIndex)
+    signal openFullscreenView(int globalIndex)
     signal toggleExpanded()
 
     Component.onCompleted: _constructed = true
@@ -185,17 +186,7 @@ Item {
                 if (selectable) {
                     selectionModel.toggleSelection(selectionKey)
                 } else if (!grid.contextMenu.active && !delegate.isBusy) {
-                    var sourceIndex = picsModel.mapToSource(modelIndex)
-                    var page = pageStack.push(Qt.resolvedUrl("EncryptedFullscreenPage.qml"),{
-                        currentIndex: sourceIndex,
-                        model: foilModel
-                    })
-                    if (page) {
-                        thisItem.requestIndex(sourceIndex)
-                        page.decryptItem.connect(thisItem.decryptItem)
-                        page.deleteItem.connect(thisItem.deleteItem)
-                        page.requestIndex.connect(thisItem.requestIndex)
-                    }
+                    thisItem.openFullscreenView(picsModel.mapToSource(modelIndex))
                 }
             }
 

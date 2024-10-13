@@ -7,14 +7,17 @@ Page {
 
     property alias model: imageList.model
     property alias currentIndex: imageList.currentIndex
-    property var currentImageItem
+    readonly property string thumbnail: _currentImageItem ? _currentImageItem['thumbnail'] : ""
+
+    property var _currentImageItem
+
+    allowedOrientations: Orientation.All
+    backNavigation: drawer.open
 
     signal decryptItem(int index)
     signal deleteItem(int index)
     signal requestIndex(int index)
-
-    allowedOrientations: Orientation.All
-    backNavigation: drawer.open
+    signal pageDestroyed()
 
     onCurrentIndexChanged: {
         updateCurrentImageItem()
@@ -24,13 +27,14 @@ Page {
     }
 
     Component.onCompleted: updateCurrentImageItem()
+    Component.onDestruction: page.pageDestroyed()
 
     function updateCurrentImageItem() {
         if (model && currentIndex >= 0 && currentIndex < model.count) {
-            currentImageItem = model.get(currentIndex)
+            _currentImageItem = model.get(currentIndex)
             return true
         } else {
-            currentImageItem = null
+            _currentImageItem = null
             return false
         }
     }
@@ -46,12 +50,12 @@ Page {
                 text: qsTrId("foilpics-menu-details")
                 onClicked: {
                     var details = pageStack.push(Qt.resolvedUrl("EncryptedDetailsPage.qml"), {
-                        details: currentImageItem,
+                        details: _currentImageItem,
                         foilModel: model
                     })
                     details.titleChanged.connect(function(title) {
                         imageList.model.setTitleAt(currentIndex, title)
-                        currentImageItem = model.get(currentIndex)
+                        _currentImageItem = model.get(currentIndex)
                     })
                     details.requestIndex.connect(function(index) {
                         // onCurrentIndexChanged won't emit requestIndex
@@ -77,6 +81,7 @@ Page {
 
         Drawer {
             id: drawer
+
             dock: Dock.Top
             hideOnMinimize: true
             anchors.fill: parent
@@ -85,6 +90,7 @@ Page {
 
             background: Item {
                 id: header
+
                 height: page.isPortrait ? portraitHeader.height : landscapeHeader.height
                 width: parent.width
                 PageHeader {

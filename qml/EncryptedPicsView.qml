@@ -13,6 +13,7 @@ Item {
     property var foilModel
     property bool isCurrentView
     readonly property bool ready: foilModel.foilState === FoilPicsModel.FoilPicsReady
+    property alias fullScreenThumbnail: listView.fullScreenThumbnail
     property alias remorseSelectionModel: listView.selectionModel
     property var selectionModel
     property bool dropSelectionModelsWhenDecryptionDone

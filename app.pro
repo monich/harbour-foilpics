@@ -173,6 +173,7 @@ HARBOUR_QML_COMPONENTS = \
     $${HARBOUR_LIB_QML}/HarbourHighlightIcon.qml \
     $${HARBOUR_LIB_QML}/HarbourIconTextButton.qml \
     $${HARBOUR_LIB_QML}/HarbourPasswordInputField.qml \
+    $${HARBOUR_LIB_QML}/HarbourPressEffect.qml \
     $${HARBOUR_LIB_QML}/HarbourShakeAnimation.qml \
     $${HARBOUR_LIB_QML}/HarbourShareMethodList.qml
 

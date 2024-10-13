@@ -17,8 +17,7 @@ ApplicationWindow {
 
     function resetAutoLock() {
         lockTimer.stop()
-        if (appFoilModel.foilState === FoilPicsModel.FoilPicsReady &&
-            FoilPicsSettings.autoLock && HarbourSystemState.locked) {
+        if (appFoilModel.keyAvailable && FoilPicsSettings.autoLock && HarbourSystemState.locked) {
             lockTimer.start()
         }
     }
@@ -34,7 +33,6 @@ ApplicationWindow {
     FoilPicsHints {
         id: appHints
     }
-
 
     HarbourWakeupTimer {
         id: lockTimer
@@ -55,15 +53,18 @@ ApplicationWindow {
 
     Component {
         id: encryptedPageComponent
+
         EncryptedPage {
             hints: appHints
             foilModel: appFoilModel
             allowedOrientations: app.allowedOrientations
+            onFullScreenThumbnailChanged: app.cover.fullScreenThumbnail = fullScreenThumbnail
         }
     }
 
     Component {
         id: galleryPageComponent
+
         GalleryPage {
             hints: appHints
             foilModel: appFoilModel
@@ -73,14 +74,13 @@ ApplicationWindow {
 
     Component {
         id: jailPageComponent
+
         JailPage {
             allowedOrientations: app.allowedOrientations
         }
     }
 
-    cover: Component {
-        CoverPage {
-            foilModel: appFoilModel
-        }
+    cover: CoverPage {
+        foilModel: appFoilModel
     }
 }

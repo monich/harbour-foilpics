@@ -12,17 +12,18 @@ SilicaListView {
     property string title
     property bool selectable
     property bool busy
+    property string fullScreenThumbnail
 
     property int requestedGroupIndex: -1
     property var requestedGroup
 
-    readonly property real cellSize: Math.floor(width / columnCount)
-    readonly property int columnCount: Math.floor(width / Theme.itemSizeHuge)
+    readonly property real _cellSize: Math.floor(width / _columnCount)
+    readonly property int _columnCount: Math.floor(width / Theme.itemSizeHuge)
 
     function maximizeCacheBuffer() {
         // cacheBuffer is just a rough estimate just to keep all delegate
         // instantiated, so that scroll indicator shows the actual position.
-        cacheBuffer = cellSize * (Math.floor(foilModel.count / columnCount) + model.count)
+        cacheBuffer = _cellSize * (Math.floor(foilModel.count / _columnCount) + model.count)
     }
 
     function jumpToIndex(index) {
@@ -33,11 +34,11 @@ SilicaListView {
         positionViewAtIndex(requestedGroupIndex, ListView.Visible)
         requestedGroup.currentIndex = groupIndex
         var groupTop = requestedGroup.y + requestedGroup.headerHeight
-        var cellTop = groupTop + Math.floor(groupIndex/columnCount) * cellSize
+        var cellTop = groupTop + Math.floor(groupIndex/_columnCount) * _cellSize
         if (cellTop < contentY) {
             contentY = cellTop
         } else {
-            var cellBottom = cellTop + cellSize
+            var cellBottom = cellTop + _cellSize
             var viewportBottom = contentY + view.height
             if (cellBottom > viewportBottom) {
                 contentY += (cellBottom - viewportBottom)
@@ -123,14 +124,34 @@ SilicaListView {
         picsCount: groupPicsCount
         isFirstGroup: firstGroup
         isDefault: defaultGroup
-        onDecryptItem: view.decryptItem(globalIndex)
-        onDeleteItem: view.deleteItem(globalIndex)
-        onRequestIndex: view.jumpToIndex(globalIndex)
         modelIndex: model.index
         selectionModel: view.selectionModel
         selectable: view.selectable
         expanded: groupExpanded
 
+        onDecryptItem: view.decryptItem(globalIndex)
+        onDeleteItem: view.deleteItem(globalIndex)
+        onRequestIndex: view.jumpToIndex(globalIndex)
+        onOpenFullscreenView: {
+            var page = pageStack.push(Qt.resolvedUrl("EncryptedFullscreenPage.qml"),{
+                currentIndex: globalIndex,
+                model: foilModel
+            })
+            if (page) {
+                view.jumpToIndex(globalIndex)
+                view.fullScreenThumbnail = page.thumbnail
+                page.decryptItem.connect(view.decryptItem)
+                page.deleteItem.connect(view.deleteItem)
+                page.requestIndex.connect(view.jumpToIndex)
+                page.pageDestroyed.connect(function() {
+                    // view may be undefined if the entire stack is getting purged
+                    if (view) {
+                        view.fullScreenThumbnail = ""
+                    }
+                })
+                page.thumbnailChanged.connect(function() { view.fullScreenThumbnail = page.thumbnail })
+            }
+        }
         onToggleExpanded: {
             groupExpanded = !groupExpanded
             if (groupExpanded) scrollDecorator.showDecorator()
