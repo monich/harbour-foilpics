@@ -1,6 +1,6 @@
 /*
+ * Copyright (C) 2017-2026 Slava Monich <slava@monich.com>
  * Copyright (C) 2017-2022 Jolla Ltd.
- * Copyright (C) 2017-2022 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -8,35 +8,42 @@
  * modification, are permitted provided that the following conditions
  * are met:
  *
- *   1. Redistributions of source code must retain the above copyright
- *      notice, this list of conditions and the following disclaimer.
- *   2. Redistributions in binary form must reproduce the above copyright
- *      notice, this list of conditions and the following disclaimer
- *      in the documentation and/or other materials provided with the
- *      distribution.
- *   3. Neither the names of the copyright holders nor the names of its
- *      contributors may be used to endorse or promote products derived
- *      from this software without specific prior written permission.
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer
+ *     in the documentation and/or other materials provided with the
+ *     distribution.
+ *
+ *  3. Neither the names of the copyright holders nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
  * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
  * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
  * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * The views and conclusions contained in the software and documentation
+ * are those of the authors and should not be interpreted as representing
+ * any official policies, either expressed or implied.
  */
 
 #include "FoilPicsGroupModel.h"
+
 #include "FoilPicsModel.h"
 
-#include "foil_random.h"
-
 #include "HarbourDebug.h"
+
+#include "foil_random.h"
 
 #define GROUP_ID_SEPARATOR ':'
 #define GROUP_LIST_SEPARATOR ','
@@ -45,46 +52,62 @@
 // FoilPicsGroupModel::Group::Private
 // ==========================================================================
 
-class FoilPicsGroupModel::Group::Private {
+class FoilPicsGroupModel::Group::Private
+{
 public:
-    static void encode(QByteArray* aDest, QByteArray aSrc);
-    static const char* decode(const char* aStart, char aStop, QByteArray* aBuf);
-    static int find(QList<Group> aList, QByteArray aId);
+    static QByteArray& encode(QByteArray&, const QByteArray&);
+    static const char* decode(const char*, char, QByteArray&);
+    static int find(const QList<Group>&, const QByteArray&);
 };
 
-void FoilPicsGroupModel::Group::Private::encode(QByteArray* aDest, QByteArray aSrc)
+/* static */
+QByteArray&
+FoilPicsGroupModel::Group::Private::encode(
+    QByteArray& aDest,
+    const QByteArray& aSrc)
 {
     for (const char* ptr = aSrc.constData(); *ptr; ptr++) {
         switch (*ptr) {
         case GROUP_ID_SEPARATOR:
         case GROUP_LIST_SEPARATOR:
         case '\\':
-            aDest->append('\\');
-            /* fallthrough */
+            aDest.append('\\');
+            // fallthrough
         default:
-            aDest->append(*ptr);
+            aDest.append(*ptr);
             break;
         }
     }
+    return aDest;
 }
 
-const char* FoilPicsGroupModel::Group::Private::decode(const char* aStart,
-    char aStop, QByteArray* aBuf)
+/* static */
+const char*
+FoilPicsGroupModel::Group::Private::decode(
+    const char* aStart,
+    char aStop,
+    QByteArray& aBuf)
 {
     const char* ptr = aStart;
-    aBuf->clear();
+
+    aBuf.clear();
     while (*ptr && *ptr != aStop) {
         if (*ptr == '\\') {
             if (!*++ptr) break;
         }
-        aBuf->append(*ptr++);
+        aBuf.append(*ptr++);
     }
     return ptr;
 }
 
-int FoilPicsGroupModel::Group::Private::find(QList<Group> aList, QByteArray aId)
+/* static */
+int
+FoilPicsGroupModel::Group::Private::find(
+    const QList<Group>& aList,
+    const QByteArray& aId)
 {
     const int n = aList.count();
+
     for (int i = 0; i < n; i++) {
         if (aList.at(i).iId == aId) {
             return i;
@@ -99,20 +122,25 @@ int FoilPicsGroupModel::Group::Private::find(QList<Group> aList, QByteArray aId)
 
 FoilPicsGroupModel::Group::Group() :
     iExpanded(true)
-{
-}
+{}
 
-FoilPicsGroupModel::Group::Group(QByteArray aId, QString aName) :
-    iId(aId), iName(aName), iExpanded(true)
-{
-}
+FoilPicsGroupModel::Group::Group(
+    QByteArray aId,
+    QString aName) :
+    iId(aId),
+    iName(aName),
+    iExpanded(true)
+{}
 
-FoilPicsGroupModel::Group::Group(const Group& aGroup) :
-    iId(aGroup.iId), iName(aGroup.iName), iExpanded(aGroup.iExpanded)
-{
-}
+FoilPicsGroupModel::Group::Group(
+    const Group& aGroup) :
+    iId(aGroup.iId),
+    iName(aGroup.iName),
+    iExpanded(aGroup.iExpanded)
+{}
 
-FoilPicsGroupModel::Group& FoilPicsGroupModel::Group::operator=(
+FoilPicsGroupModel::Group&
+FoilPicsGroupModel::Group::operator=(
     const Group& aGroup)
 {
     iId = aGroup.iId;
@@ -120,41 +148,53 @@ FoilPicsGroupModel::Group& FoilPicsGroupModel::Group::operator=(
     return *this;
 }
 
-bool FoilPicsGroupModel::Group::operator==(const Group& aGroup) const
+bool
+FoilPicsGroupModel::Group::operator==(
+    const Group& aGroup) const
 {
     return equals(aGroup);
 }
 
-bool FoilPicsGroupModel::Group::operator!=(const Group& aGroup) const
+bool
+FoilPicsGroupModel::Group::operator!=(
+    const Group& aGroup) const
 {
     return !equals(aGroup);
 }
 
-bool FoilPicsGroupModel::Group::equals(const Group& aGroup) const
+bool
+FoilPicsGroupModel::Group::equals(
+    const Group& aGroup) const
 {
-    return iExpanded == aGroup.iExpanded && iId == aGroup.iId &&
+    return iExpanded == aGroup.iExpanded &&
+        iId == aGroup.iId &&
         iName == aGroup.iName;
 }
 
-bool FoilPicsGroupModel::Group::isDefault() const
+bool
+FoilPicsGroupModel::Group::isDefault() const
 {
     return iId.isEmpty();
 }
 
 // Serialization format: "id1:name1,id2:name2"
 
+/* static */
 FoilPicsGroupModel::GroupList
-FoilPicsGroupModel::Group::decodeList(const char* aString, const char* aCollapsed)
+FoilPicsGroupModel::Group::decodeList(
+    const char* aString,
+    const char* aCollapsed)
 {
     QByteArray buf;
     GroupList groups;
-
     const char* ptr = aString;
+
     while (*ptr) {
-        ptr = Private::decode(ptr, GROUP_ID_SEPARATOR, &buf);
+        ptr = Private::decode(ptr, GROUP_ID_SEPARATOR, buf);
         if (*ptr == GROUP_ID_SEPARATOR) {
             QByteArray id(buf);
-            ptr = Private::decode(++ptr, GROUP_LIST_SEPARATOR, &buf);
+
+            ptr = Private::decode(++ptr, GROUP_LIST_SEPARATOR, buf);
             groups.append(Group(id, QString::fromUtf8(buf)));
             if (*ptr == GROUP_LIST_SEPARATOR) ptr++;
         }
@@ -164,7 +204,7 @@ FoilPicsGroupModel::Group::decodeList(const char* aString, const char* aCollapse
     if (aCollapsed) {
         ptr = aCollapsed;
         while (*ptr) {
-            ptr = Private::decode(ptr, GROUP_LIST_SEPARATOR, &buf);
+            ptr = Private::decode(ptr, GROUP_LIST_SEPARATOR, buf);
             if (*ptr == GROUP_LIST_SEPARATOR) ptr++;
             if (!buf.isEmpty()) {
                 int i = Private::find(groups, buf);
@@ -178,43 +218,48 @@ FoilPicsGroupModel::Group::decodeList(const char* aString, const char* aCollapse
     return groups;
 }
 
+/* static */
 FoilPicsGroupModel::GroupInfo
-FoilPicsGroupModel::Group::encodeList(QList<Group> aList)
+FoilPicsGroupModel::Group::encodeList(
+    QList<Group> aList)
 {
     QByteArray groups, collapsed;
     const int n = aList.count();
+
     for (int i = 0; i < n; i++) {
         const Group& group = aList.at(i);
+
         if (!groups.isEmpty()) groups.append(GROUP_LIST_SEPARATOR);
-        Private::encode(&groups, group.iId);
-        groups.append(GROUP_ID_SEPARATOR);
-        Private::encode(&groups, group.iName.toUtf8());
+        Private::encode(groups, group.iId).append(GROUP_ID_SEPARATOR);
+        Private::encode(groups, group.iName.toUtf8());
         // Default group is always expanded but let's double-check...
         if (!group.iExpanded && !group.iId.isEmpty()) {
             if (!collapsed.isEmpty()) collapsed.append(GROUP_LIST_SEPARATOR);
-            Private::encode(&collapsed, group.iId);
+            Private::encode(collapsed, group.iId);
         }
     }
-    return GroupInfo(groups,collapsed);
+    return GroupInfo(groups, collapsed);
 }
 
 // ==========================================================================
 // FoilPicsGroupModel::ProxyModel
 // ==========================================================================
 
-class FoilPicsGroupModel::ProxyModel : public QSortFilterProxyModel {
+class FoilPicsGroupModel::ProxyModel :
+    public QSortFilterProxyModel
+{
     Q_OBJECT
     Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
 
 public:
-    ProxyModel(FoilPicsModel* aPicsModel, QString aId, QObject* aParent);
-    bool filterAcceptsRow(int aRow, const QModelIndex& aParent) const;
+    ProxyModel(FoilPicsModel*, const QString&, QObject*);
+    bool filterAcceptsRow(int, const QModelIndex&) const Q_DECL_OVERRIDE;
 
     FoilPicsModel* sourcePicsModel() const;
-    Q_INVOKABLE int mapToSource(int aIndex) const;
-    Q_INVOKABLE void setTitleAt(int aIndex, QString aTitle);
-    Q_INVOKABLE void setGroupIdAt(int aIndex, QString aId);
-    Q_INVOKABLE QVariantMap get(int aIndex) const;
+    Q_INVOKABLE int mapToSource(int) const;
+    Q_INVOKABLE void setTitleAt(int, const QString&);
+    Q_INVOKABLE void setGroupIdAt(int, const QString&);
+    Q_INVOKABLE QVariantMap get(int) const;
 
 Q_SIGNALS:
     void countChanged();
@@ -226,8 +271,11 @@ public:
     int iLastKnownCount;
 };
 
-FoilPicsGroupModel::ProxyModel::ProxyModel(FoilPicsModel* aPicsModel,
-    QString aId, QObject* aParent) : QSortFilterProxyModel(aParent)
+FoilPicsGroupModel::ProxyModel::ProxyModel(
+    FoilPicsModel* aPicsModel,
+    const QString& aId,
+    QObject* aParent) :
+    QSortFilterProxyModel(aParent)
 {
     setSourceModel(aPicsModel);
     setFilterRole(FoilPicsModel::groupIdRole());
@@ -239,52 +287,71 @@ FoilPicsGroupModel::ProxyModel::ProxyModel(FoilPicsModel* aPicsModel,
     connect(this, SIGNAL(modelReset()), SLOT(checkCount()));
 }
 
-bool FoilPicsGroupModel::ProxyModel::filterAcceptsRow(int aSourceRow,
+bool
+FoilPicsGroupModel::ProxyModel::filterAcceptsRow(
+    int aSourceRow,
     const QModelIndex& aParent) const
 {
     QRegExp re(filterRegExp());
+
     if (re.isEmpty()) {
         // QSortFilterProxyModel cannot select empty strings.
         // If the filter is an empty string, it just accepts
         // everything - and that's not what we want.
         QAbstractItemModel* model = sourceModel();
-        QModelIndex index = model->index(aSourceRow, 0, aParent);
-        QString value = model->data(index, filterRole()).toString();
+        const QModelIndex index = model->index(aSourceRow, 0, aParent);
+        const QString value = model->data(index, filterRole()).toString();
+
         return value.isEmpty();
     } else {
         return QSortFilterProxyModel::filterAcceptsRow(aSourceRow, aParent);
     }
 }
 
-inline FoilPicsModel* FoilPicsGroupModel::ProxyModel::sourcePicsModel() const
+inline
+FoilPicsModel*
+FoilPicsGroupModel::ProxyModel::sourcePicsModel() const
 {
     return qobject_cast<FoilPicsModel*>(sourceModel());
 }
 
-int FoilPicsGroupModel::ProxyModel::mapToSource(int aIndex) const
+int
+FoilPicsGroupModel::ProxyModel::mapToSource(
+    int aIndex) const
 {
     QModelIndex source(QSortFilterProxyModel::mapToSource(index(aIndex, 0)));
+
     return source.isValid() ? source.row() : -1;
 }
 
-void FoilPicsGroupModel::ProxyModel::setTitleAt(int aIndex, QString aTitle)
+void
+FoilPicsGroupModel::ProxyModel::setTitleAt(
+    int aIndex,
+    const QString& aTitle)
 {
     sourcePicsModel()->setTitleAt(mapToSource(aIndex), aTitle);
 }
 
-void FoilPicsGroupModel::ProxyModel::setGroupIdAt(int aIndex, QString aId)
+void
+FoilPicsGroupModel::ProxyModel::setGroupIdAt(
+    int aIndex,
+    const QString& aId)
 {
     sourcePicsModel()->setGroupIdAt(mapToSource(aIndex), aId);
 }
 
-QVariantMap FoilPicsGroupModel::ProxyModel::get(int aIndex) const
+QVariantMap
+FoilPicsGroupModel::ProxyModel::get(
+    int aIndex) const
 {
     return sourcePicsModel()->get(mapToSource(aIndex));
 }
 
-void FoilPicsGroupModel::ProxyModel::checkCount()
+void
+FoilPicsGroupModel::ProxyModel::checkCount()
 {
     const int count = rowCount();
+
     if (iLastKnownCount != count) {
         iLastKnownCount = count;
         Q_EMIT countChanged();
@@ -295,7 +362,9 @@ void FoilPicsGroupModel::ProxyModel::checkCount()
 // FoilPicsGroupModel::ModelData
 // ==========================================================================
 
-class FoilPicsGroupModel::ModelData : public QObject {
+class FoilPicsGroupModel::ModelData :
+    public QObject
+{
     Q_OBJECT
 
 public:
@@ -309,12 +378,10 @@ public:
         DefaultGroupRole
     };
 
-    ModelData(FoilPicsModel* aPicsModel);
-    ModelData(FoilPicsModel* aPicsModel, const Group& aGroup);
-    ModelData(FoilPicsModel* aPicsModel, QByteArray aId, QString aName);
-    void init();
+    ModelData(FoilPicsModel*);
+    ModelData(FoilPicsModel*, const Group&);
 
-    QVariant get(Role aRole) const;
+    QVariant get(Role) const;
     ProxyModel* createProxyModel() const;
     QAbstractProxyModel* proxyModel() const;
     bool isFirstGroup() const;
@@ -325,7 +392,7 @@ Q_SIGNALS:
     void proxyModelCountChanged();
 
 public Q_SLOTS:
-    void onProxyModelDestroyed(QObject* aModel);
+    void onProxyModelDestroyed();
 
 public:
     Group iGroup;
@@ -334,33 +401,26 @@ public:
     mutable bool iLastKnownFirstGroup;
 };
 
-FoilPicsGroupModel::ModelData::ModelData(FoilPicsModel* aPicsModel) :
-    QObject(aPicsModel), iPicsModel(aPicsModel)
-{
-    init();
-}
+FoilPicsGroupModel::ModelData::ModelData(
+    FoilPicsModel* aPicsModel) :
+    QObject(aPicsModel),
+    iPicsModel(aPicsModel),
+    iProxyModel(Q_NULLPTR),
+    iLastKnownFirstGroup(isFirstGroup())
+{}
 
-FoilPicsGroupModel::ModelData::ModelData(FoilPicsModel* aPicsModel,
-    const Group& aGroup) : QObject(aPicsModel),
-    iGroup(aGroup), iPicsModel(aPicsModel)
-{
-    init();
-}
+FoilPicsGroupModel::ModelData::ModelData(
+    FoilPicsModel* aPicsModel,
+    const Group& aGroup) :
+    QObject(aPicsModel),
+    iGroup(aGroup),
+    iPicsModel(aPicsModel),
+    iProxyModel(Q_NULLPTR),
+    iLastKnownFirstGroup(isFirstGroup())
+{}
 
-FoilPicsGroupModel::ModelData::ModelData(FoilPicsModel* aPicsModel,
-    QByteArray aId, QString aName) : QObject(aPicsModel),
-    iGroup(aId, aName), iPicsModel(aPicsModel)
-{
-    init();
-}
-
-void FoilPicsGroupModel::ModelData::init()
-{
-    iProxyModel = NULL;
-    iLastKnownFirstGroup = isFirstGroup();
-}
-
-QAbstractProxyModel* FoilPicsGroupModel::ModelData::proxyModel() const
+QAbstractProxyModel*
+FoilPicsGroupModel::ModelData::proxyModel() const
 {
     if (!iProxyModel) {
         iProxyModel = createProxyModel();
@@ -368,28 +428,35 @@ QAbstractProxyModel* FoilPicsGroupModel::ModelData::proxyModel() const
     return iProxyModel;
 }
 
-FoilPicsGroupModel::ProxyModel* FoilPicsGroupModel::ModelData::createProxyModel() const
+FoilPicsGroupModel::ProxyModel*
+FoilPicsGroupModel::ModelData::createProxyModel() const
 {
     // Using parent() here to avoid cast, because this is const
     ProxyModel* model = new ProxyModel(iPicsModel, iGroup.iId, parent());
-    connect(model, SIGNAL(destroyed(QObject*)), SLOT(onProxyModelDestroyed(QObject*)));
+
+    connect(model, SIGNAL(destroyed(QObject*)), SLOT(onProxyModelDestroyed()));
     connect(model, SIGNAL(countChanged()), SIGNAL(proxyModelCountChanged()));
     HDEBUG(model->rowCount() << iGroup.iId.data());
     return model;
 }
 
-bool FoilPicsGroupModel::ModelData::isFirstGroup() const
+bool
+FoilPicsGroupModel::ModelData::isFirstGroup() const
 {
     QAbstractProxyModel* model = proxyModel();
+
     return model->rowCount() && !model->mapToSource(model->index(0, 0)).row();
 }
 
-bool FoilPicsGroupModel::ModelData::firstGroupMayHaveChanged() const
+bool
+FoilPicsGroupModel::ModelData::firstGroupMayHaveChanged() const
 {
     return iLastKnownFirstGroup != isFirstGroup();
 }
 
-QVariant FoilPicsGroupModel::ModelData::get(Role aRole) const
+QVariant
+FoilPicsGroupModel::ModelData::get(
+    Role aRole) const
 {
     switch (aRole) {
     case GroupIdRole: return QString::fromLatin1(iGroup.iId);
@@ -405,9 +472,10 @@ QVariant FoilPicsGroupModel::ModelData::get(Role aRole) const
     return QVariant();
 }
 
-void FoilPicsGroupModel::ModelData::onProxyModelDestroyed(QObject* aModel)
+void
+FoilPicsGroupModel::ModelData::onProxyModelDestroyed()
 {
-    iProxyModel = NULL;
+    iProxyModel = Q_NULLPTR;
     Q_EMIT proxyModelDestroyed();
 }
 
@@ -415,34 +483,36 @@ void FoilPicsGroupModel::ModelData::onProxyModelDestroyed(QObject* aModel)
 // FoilPicsGroupModel::Private
 // ==========================================================================
 
-class FoilPicsGroupModel::Private : public QObject {
+class FoilPicsGroupModel::Private :
+    public QObject
+{
     Q_OBJECT
 
 public:
-    Private(FoilPicsGroupModel* aParent, FoilPicsModel* aPicsModel);
+    Private(FoilPicsGroupModel*, FoilPicsModel*);
     ~Private();
 
     FoilPicsGroupModel* parentModel() const;
-    ModelData* dataAt(int aIndex) const;
+    ModelData* dataAt(int) const;
     ModelData* createDefaultData() const;
-    ModelData* createData(const Group& aGroup) const;
-    ModelData* createData(QByteArray aId, QString aName) const;
-    ModelData* connectData(ModelData* aData) const;
+    ModelData* createData(const Group&) const;
+    ModelData* createData(const QByteArray&, const QString&) const;
+    ModelData* connectData(ModelData*) const;
 
     static QByteArray generateRandomId();
-    int findId(QByteArray aId) const;
+    int findId(const QByteArray&) const;
     void appendDefaultGroup();
     void clear();
-    void setDragIndex(int aIndex);
-    void setDragPos(int aPos);
+    void setDragIndex(int);
+    void setDragPos(int);
     void stopDrag();
-    int mapRow(int aRow) const;
-    void moveGroup(int aFrom, int aTo);
+    int mapRow(int) const;
+    void moveGroup(int, int);
     QByteArray generateUniqueId() const;
-    void setGroups(GroupList aGroups);
-    bool equalGroups(GroupList aGroups);
-    void dataChanged(int aRow, QVector<int> aRoles);
-    void dataChanged(int aRow, ModelData::Role aRole);
+    void setGroups(const GroupList&);
+    bool equalGroups(const GroupList&);
+    void dataChanged(int, ModelData::Role);
+    void dataChanged(int, const QVector<int>&);
 
 public Q_SLOTS:
     void onProxyModelDestroyed();
@@ -459,8 +529,11 @@ public:
     int iDragPos;
 };
 
-FoilPicsGroupModel::Private::Private(FoilPicsGroupModel* aParent,
-    FoilPicsModel* aPicsModel) : QObject(aParent), iPicsModel(aPicsModel),
+FoilPicsGroupModel::Private::Private(
+    FoilPicsGroupModel* aParent,
+    FoilPicsModel* aPicsModel) :
+    QObject(aParent),
+    iPicsModel(aPicsModel),
     iLastKnownCount(0),
     iDragIndex(-1),
     iDragPos(-1)
@@ -490,37 +563,48 @@ FoilPicsGroupModel::Private::~Private()
     qDeleteAll(iData);
 }
 
-inline FoilPicsGroupModel* FoilPicsGroupModel::Private::parentModel() const
+inline
+FoilPicsGroupModel*
+FoilPicsGroupModel::Private::parentModel() const
 {
     return qobject_cast<FoilPicsGroupModel*>(parent());
 }
 
-FoilPicsGroupModel::ModelData* FoilPicsGroupModel::Private::dataAt(int aRow) const
+FoilPicsGroupModel::ModelData*
+FoilPicsGroupModel::Private::dataAt(
+    int aRow) const
 {
     const int index = mapRow(aRow);
+
     if (index >= 0 && index < iData.count()) {
         return iData.at(index);
     } else {
-        return NULL;
+        return Q_NULLPTR;
     }
 }
 
-inline FoilPicsGroupModel::ModelData*
+inline
+FoilPicsGroupModel::ModelData*
 FoilPicsGroupModel::Private::createDefaultData() const
 {
     return connectData(new ModelData(iPicsModel));
 }
 
-inline FoilPicsGroupModel::ModelData*
-FoilPicsGroupModel::Private::createData(const Group& aGroup) const
+inline
+FoilPicsGroupModel::ModelData*
+FoilPicsGroupModel::Private::createData(
+    const Group& aGroup) const
 {
     return connectData(new ModelData(iPicsModel, aGroup));
 }
 
-inline FoilPicsGroupModel::ModelData*
-FoilPicsGroupModel::Private::createData(QByteArray aId, QString aName) const
+inline
+FoilPicsGroupModel::ModelData*
+FoilPicsGroupModel::Private::createData(
+    const QByteArray& aId,
+    const QString& aName) const
 {
-    return connectData(new ModelData(iPicsModel, aId, aName));
+    return connectData(new ModelData(iPicsModel, Group(aId, aName)));
 }
 
 inline FoilPicsGroupModel::ModelData*
@@ -535,9 +619,12 @@ FoilPicsGroupModel::Private::connectData(ModelData* aData) const
     return aData;
 }
 
-bool FoilPicsGroupModel::Private::equalGroups(GroupList aGroups)
+bool
+FoilPicsGroupModel::Private::equalGroups(
+    const GroupList& aGroups)
 {
     const int n = iData.count();
+
     if (aGroups.count() == n) {
         for (int i = 0; i < n; i++) {
             if (!iData.at(i)->iGroup.equals(aGroups.at(i))) {
@@ -549,21 +636,28 @@ bool FoilPicsGroupModel::Private::equalGroups(GroupList aGroups)
     return false;
 }
 
-void FoilPicsGroupModel::Private::setGroups(GroupList aGroups)
+void
+FoilPicsGroupModel::Private::setGroups(
+    const GroupList& aGroups)
 {
     if (!equalGroups(aGroups)) {
         FoilPicsGroupModel* model = parentModel();
+
         model->beginResetModel();
         qDeleteAll(iData);
         iData.clear();
         iMap.clear();
-        ModelData* defaultData = NULL;
+
+        ModelData* defaultData = Q_NULLPTR;
         const int n = aGroups.count();
+
         for (int i = 0; i < n; i++) {
             const Group& group = aGroups.at(i);
-            bool isDefault = group.isDefault();
+            const bool isDefault = group.isDefault();
+
             if (!defaultData || !isDefault) {
                 ModelData* data = createData(group);
+
                 if (isDefault) {
                     defaultData = data;
                 }
@@ -580,7 +674,8 @@ void FoilPicsGroupModel::Private::setGroups(GroupList aGroups)
     }
 }
 
-void FoilPicsGroupModel::Private::appendDefaultGroup()
+void
+FoilPicsGroupModel::Private::appendDefaultGroup()
 {
     ModelData* defaultItem = createDefaultData();
     iMap.insert(defaultItem->iGroup.iId, 0);
@@ -592,11 +687,14 @@ void FoilPicsGroupModel::Private::appendDefaultGroup()
     }
 }
 
-void FoilPicsGroupModel::Private::clear()
+void
+FoilPicsGroupModel::Private::clear()
 {
-    ModelData* defaultData = NULL;
+    ModelData* defaultData = Q_NULLPTR;
+
     for (int i = iData.count() - 1; i >= 0; i--) {
         ModelData* data = iData.at(i);
+
         if (!defaultData && data->iGroup.isDefault()) {
             defaultData = data;
         } else {
@@ -611,7 +709,9 @@ void FoilPicsGroupModel::Private::clear()
     iDragIndex = iDragPos = -1;
 }
 
-void FoilPicsGroupModel::Private::setDragIndex(int aIndex)
+void
+FoilPicsGroupModel::Private::setDragIndex(
+    int aIndex)
 {
     HDEBUG(aIndex);
     if (aIndex < 0) {
@@ -619,6 +719,7 @@ void FoilPicsGroupModel::Private::setDragIndex(int aIndex)
         if (iDragPos != iDragIndex) {
             const int dragIndex = iDragIndex;
             const int dragPos = iDragPos;
+
             iDragPos = iDragIndex = -1;
             moveGroup(dragIndex, dragPos);
             Q_EMIT parentModel()->rowsActuallyMoved();
@@ -632,39 +733,51 @@ void FoilPicsGroupModel::Private::setDragIndex(int aIndex)
     }
 }
 
-inline void FoilPicsGroupModel::Private::stopDrag()
+inline
+void
+FoilPicsGroupModel::Private::stopDrag()
 {
     setDragIndex(-1);
 }
 
-void FoilPicsGroupModel::Private::setDragPos(int aPos)
+void
+FoilPicsGroupModel::Private::setDragPos(
+    int aPos)
 {
     const int n = iData.count();
+
     if (aPos >= 0 && aPos < n && iDragIndex >= 0 && iDragPos != aPos) {
-        HDEBUG(aPos);
         const int dest = (aPos > iDragPos) ? (aPos + 1) : aPos;
         FoilPicsGroupModel* model = parentModel();
-        QModelIndex parent;
+        const QModelIndex parent;
+
+        HDEBUG(aPos);
         model->beginMoveRows(parent, iDragPos, iDragPos, parent, dest);
         iDragPos = aPos;
         model->endMoveRows();
     }
 }
 
-void FoilPicsGroupModel::Private::moveGroup(int aFrom, int aTo)
+void
+FoilPicsGroupModel::Private::moveGroup(
+    int aFrom,
+    int aTo)
 {
+    const int i1 = qMin(aFrom, aTo);
+    const int i2 = qMax(aFrom, aTo);
+
     // The caller has already checked the indices
     iData.move(aFrom, aTo);
 
     // Update damaged map entries
-    const int i1 = qMin(aFrom, aTo);
-    const int i2 = qMax(aFrom, aTo);
     for (int i = i1; i <= i2; i++) {
         iMap.insert(iData.at(i)->iGroup.iId, i);
     }
 }
 
-int FoilPicsGroupModel::Private::mapRow(int aRow) const
+int
+FoilPicsGroupModel::Private::mapRow(
+    int aRow) const
 {
     if (iDragIndex < iDragPos) {
         if (aRow < iDragIndex || aRow > iDragPos) {
@@ -686,19 +799,25 @@ int FoilPicsGroupModel::Private::mapRow(int aRow) const
     return aRow;
 }
 
-QByteArray FoilPicsGroupModel::Private::generateRandomId()
+/* static */
+QByteArray
+FoilPicsGroupModel::Private::generateRandomId()
 {
     guint8 data[8];
     char buf[2*sizeof(data)+1];
+
     foil_random_generate(FOIL_RANDOM_DEFAULT, data, sizeof(data));
     snprintf(buf, sizeof(buf), "%02X%02X%02X%02X%02X%02X%02X%02X",
         data[0],data[1],data[2],data[3],data[4],data[5],data[6],data[7]);
     return QByteArray(buf);
 }
 
-int FoilPicsGroupModel::Private::findId(QByteArray aId) const
+int
+FoilPicsGroupModel::Private::findId(
+    const QByteArray& aId) const
 {
     int i = iMap.value(aId);
+
     if (i > 0) {
         // It's definitely there
         return i;
@@ -708,33 +827,45 @@ int FoilPicsGroupModel::Private::findId(QByteArray aId) const
     }
 }
 
-QByteArray FoilPicsGroupModel::Private::generateUniqueId() const
+QByteArray
+FoilPicsGroupModel::Private::generateUniqueId() const
 {
     QByteArray id(generateRandomId());
+
     while (findId(id) >= 0) {
         id = generateRandomId();
     }
     return id;
 }
 
-void FoilPicsGroupModel::Private::dataChanged(int aRow, ModelData::Role aRole)
+void
+FoilPicsGroupModel::Private::dataChanged(
+    int aRow,
+    ModelData::Role aRole)
 {
     QVector<int> roles;
+
     roles.append(aRole);
     dataChanged(aRow, roles);
 }
 
-void FoilPicsGroupModel::Private::dataChanged(int aRow, QVector<int> aRoles)
+void
+FoilPicsGroupModel::Private::dataChanged(
+    int aRow,
+    const QVector<int>& aRoles)
 {
     FoilPicsGroupModel* model = parentModel();
-    QModelIndex modelIndex(model->index(aRow));
+    const QModelIndex modelIndex(model->index(aRow));
+
     Q_EMIT model->dataChanged(modelIndex, modelIndex, aRoles);
 }
 
-void FoilPicsGroupModel::Private::onProxyModelDestroyed()
+void
+FoilPicsGroupModel::Private::onProxyModelDestroyed()
 {
     ModelData* data = qobject_cast<ModelData*>(sender());
     const int row = iData.indexOf(data);
+
     HDEBUG(row);
     if (row >= 0) {
         QVector<int> roles;
@@ -744,10 +875,12 @@ void FoilPicsGroupModel::Private::onProxyModelDestroyed()
     }
 }
 
-void FoilPicsGroupModel::Private::onProxyModelCountChanged()
+void
+FoilPicsGroupModel::Private::onProxyModelCountChanged()
 {
     ModelData* data = qobject_cast<ModelData*>(sender());
     const int row = iData.indexOf(data);
+
     HDEBUG(row << data->proxyModel()->rowCount());
     if (row >= 0) {
         dataChanged(row, ModelData::GroupPicsCountRole);
@@ -757,20 +890,24 @@ void FoilPicsGroupModel::Private::onProxyModelCountChanged()
     }
 }
 
-void FoilPicsGroupModel::Private::onParentModelReset()
+void
+FoilPicsGroupModel::Private::onParentModelReset()
 {
     FoilPicsGroupModel* model = parentModel();
     const int count = model->rowCount();
+
     if (iLastKnownCount != count) {
         iLastKnownCount = count;
         Q_EMIT model->countChanged();
     }
 }
 
-void FoilPicsGroupModel::Private::updateFirstGroup()
+void
+FoilPicsGroupModel::Private::updateFirstGroup()
 {
     for (int i = 0; i < iData.count(); i++) {
         ModelData* data = iData.at(i);
+
         if (data->firstGroupMayHaveChanged()) {
             HDEBUG(i << data->isFirstGroup());
             dataChanged(i, ModelData::FirstGroupRole);
@@ -782,7 +919,8 @@ void FoilPicsGroupModel::Private::updateFirstGroup()
 // FoilPicsGroupModel
 // ==========================================================================
 
-FoilPicsGroupModel::FoilPicsGroupModel(FoilPicsModel* aParent) :
+FoilPicsGroupModel::FoilPicsGroupModel(
+    FoilPicsModel* aParent) :
     QAbstractListModel(aParent),
     iPrivate(new Private(this, aParent))
 {
@@ -793,12 +931,15 @@ FoilPicsGroupModel::FoilPicsGroupModel(FoilPicsModel* aParent) :
     connect(this, SIGNAL(modelReset()), SIGNAL(countChanged()));
 }
 
-Qt::ItemFlags FoilPicsGroupModel::flags(const QModelIndex& aIndex) const
+Qt::ItemFlags
+FoilPicsGroupModel::flags(
+    const QModelIndex& aIndex) const
 {
     return QAbstractListModel::flags(aIndex) | Qt::ItemIsEditable;
 }
 
-QHash<int,QByteArray> FoilPicsGroupModel::roleNames() const
+QHash<int,QByteArray>
+FoilPicsGroupModel::roleNames() const
 {
     QHash<int,QByteArray> roles;
     roles.insert(ModelData::GroupIdRole, "groupId");
@@ -811,26 +952,38 @@ QHash<int,QByteArray> FoilPicsGroupModel::roleNames() const
     return roles;
 }
 
-int FoilPicsGroupModel::rowCount(const QModelIndex& aParent) const
+int
+FoilPicsGroupModel::rowCount(
+    const QModelIndex&) const
 {
     return iPrivate->iData.count();
 }
 
-QVariant FoilPicsGroupModel::data(const QModelIndex& aIndex, int aRole) const
+QVariant
+FoilPicsGroupModel::data(
+    const QModelIndex& aIndex,
+    int aRole) const
 {
-    ModelData* data = iPrivate->dataAt(aIndex.row());
+    const ModelData* data = iPrivate->dataAt(aIndex.row());
+
     return data ? data->get((ModelData::Role)aRole) : QVariant();
 }
 
-bool FoilPicsGroupModel::setData(const QModelIndex& aIndex, const QVariant& aValue, int aRole)
+bool
+FoilPicsGroupModel::setData(
+    const QModelIndex& aIndex,
+    const QVariant& aValue,
+    int aRole)
 {
     const int row = aIndex.row();
     ModelData* data = iPrivate->dataAt(row);
+
     if (data) {
         switch ((ModelData::Role)aRole) {
         case ModelData::GroupNameRole:
             {
                 const QString name(aValue.toString());
+
                 if (data->iGroup.iName != name) {
                     data->iGroup.iName = name;
                     QVector<int> roles;
@@ -845,6 +998,7 @@ bool FoilPicsGroupModel::setData(const QModelIndex& aIndex, const QVariant& aVal
         case ModelData::GroupExpandedRole:
             {
                 const bool expanded = aValue.toBool();
+
                 if (data->iGroup.iExpanded != expanded) {
                     data->iGroup.iExpanded = expanded;
                     QVector<int> roles;
@@ -867,32 +1021,42 @@ bool FoilPicsGroupModel::setData(const QModelIndex& aIndex, const QVariant& aVal
     return false;
 }
 
-QList<FoilPicsGroupModel::Group> FoilPicsGroupModel::groups() const
+QList<FoilPicsGroupModel::Group>
+FoilPicsGroupModel::groups() const
 {
     GroupList list;
     const int n = iPrivate->iData.count();
+
+    list.reserve(n);
     for (int i = 0; i < n; i++) {
         list.append(iPrivate->dataAt(i)->iGroup);
     }
     return list;
 }
 
-void FoilPicsGroupModel::setGroups(GroupList aGroups)
+void
+FoilPicsGroupModel::setGroups(
+    GroupList aGroups)
 {
     iPrivate->setGroups(aGroups);
 }
 
-bool FoilPicsGroupModel::isKnownGroup(QByteArray aId) const
+bool
+FoilPicsGroupModel::isKnownGroup(
+    QByteArray aId) const
 {
     return iPrivate->iMap.contains(aId);
 }
 
-int FoilPicsGroupModel::indexOfGroup(QByteArray aId) const
+int
+FoilPicsGroupModel::indexOfGroup(
+    QByteArray aId) const
 {
     return iPrivate->findId(aId);
 }
 
-void FoilPicsGroupModel::clear()
+void
+FoilPicsGroupModel::clear()
 {
     // There's always at least one group (the default one)
     if (iPrivate->iData.count() > 1) {
@@ -902,52 +1066,77 @@ void FoilPicsGroupModel::clear()
     }
 }
 
-QString FoilPicsGroupModel::groupName(QString aId) const
+QString
+FoilPicsGroupModel::groupName(
+    QString aId) const
 {
-    return groupNameAt(iPrivate->findId(aId.toLatin1()));
+    const QByteArray id(aId.toLatin1());
+
+    return groupNameAt(iPrivate->findId(id));
 }
 
-QString FoilPicsGroupModel::groupNameAt(int aIndex) const
+QString
+FoilPicsGroupModel::groupNameAt(
+    int aIndex) const
 {
-    ModelData* data = iPrivate->dataAt(aIndex);
+    const ModelData* data = iPrivate->dataAt(aIndex);
+
     return data ? data->iGroup.iName : QString();
 }
 
-QString FoilPicsGroupModel::groupId(int aIndex) const
+QString
+FoilPicsGroupModel::groupId(
+    int aIndex) const
 {
-    ModelData* data = iPrivate->dataAt(aIndex);
+    const ModelData* data = iPrivate->dataAt(aIndex);
+
     return data ? QString::fromLatin1(data->iGroup.iId) : QString();
 }
 
-bool FoilPicsGroupModel::defaultGroupAt(int aIndex) const
+bool
+FoilPicsGroupModel::defaultGroupAt(
+    int aIndex) const
 {
-    ModelData* data = iPrivate->dataAt(aIndex);
+    const ModelData* data = iPrivate->dataAt(aIndex);
+
     return !data || data->iGroup.isDefault();
 }
 
-int FoilPicsGroupModel::groupPicsCountAt(int aIndex) const
+int
+FoilPicsGroupModel::groupPicsCountAt(
+    int aIndex) const
 {
-    ModelData* data = iPrivate->dataAt(aIndex);
+    const ModelData* data = iPrivate->dataAt(aIndex);
+
     return data ? data->proxyModel()->rowCount() : 0;
 }
 
-void FoilPicsGroupModel::clearGroupAt(int aIndex)
+void
+FoilPicsGroupModel::clearGroupAt(
+    int aIndex)
 {
-    ModelData* data = iPrivate->dataAt(aIndex);
+    const ModelData* data = iPrivate->dataAt(aIndex);
+
     if (data && !data->iGroup.isDefault()) {
         iPrivate->iPicsModel->clearGroup(data->iGroup.iId);
     }
 }
 
-int FoilPicsGroupModel::offsetWithinGroup(int aIndex, int aSource) const
+int
+FoilPicsGroupModel::offsetWithinGroup(
+    int aIndex,
+    int aSource) const
 {
-    ModelData* data = iPrivate->dataAt(aIndex);
+    const ModelData* data = iPrivate->dataAt(aIndex);
+
     if (data) {
         QAbstractProxyModel* model = data->proxyModel();
         const int n = model->rowCount();
         const int first = model->mapToSource(model->index(0, 0)).row();
+
         if (first >= 0 && aSource >= first && aSource < (first + n)) {
             const int off = aSource - first;
+
             HASSERT(model->mapToSource(model->index(off, 0)).row() == aSource);
             return off;
         }
@@ -955,22 +1144,27 @@ int FoilPicsGroupModel::offsetWithinGroup(int aIndex, int aSource) const
     return -1;
 }
 
-void FoilPicsGroupModel::addGroup(QString aName)
+void
+FoilPicsGroupModel::addGroup(
+    QString aName)
 {
     const int pos = iPrivate->iData.count();
+    const QByteArray id(iPrivate->generateUniqueId());
+
     iPrivate->stopDrag();
     beginInsertRows(QModelIndex(), pos, pos);
-    QByteArray id(iPrivate->generateUniqueId());
-    ModelData* data = iPrivate->createData(id, aName);
-    iPrivate->iData.insert(pos, data);
+    iPrivate->iData.insert(pos, iPrivate->createData(id, aName));
     iPrivate->iMap.insert(id, pos);
     endInsertRows();
 }
 
-void FoilPicsGroupModel::removeGroupAt(int aIndex)
+void
+FoilPicsGroupModel::removeGroupAt(
+    int aIndex)
 {
     // UI makes sure that the group is empty before it's removed
     ModelData* data = iPrivate->dataAt(aIndex);
+
     if (data && !data->iGroup.isDefault()) {
         iPrivate->stopDrag();
         beginRemoveRows(QModelIndex(), aIndex, aIndex);
@@ -981,12 +1175,17 @@ void FoilPicsGroupModel::removeGroupAt(int aIndex)
     }
 }
 
-void FoilPicsGroupModel::moveGroup(int aFrom, int aTo)
+void
+FoilPicsGroupModel::moveGroup(
+    int aFrom,
+    int aTo)
 {
     const int n = iPrivate->iData.count();
+
     if (aFrom != aTo && aFrom >= 0 && aFrom < n && aTo >= 0 && aTo < n) {
         QModelIndex parent;
         const int dest = (aTo > aFrom) ? (aTo + 1) : aTo;
+
         iPrivate->stopDrag();
         if (beginMoveRows(parent, aFrom, aFrom, parent, dest)) {
             iPrivate->moveGroup(aFrom, aTo);
@@ -999,12 +1198,16 @@ void FoilPicsGroupModel::moveGroup(int aFrom, int aTo)
     }
 }
 
-void FoilPicsGroupModel::setDragIndex(int aIndex)
+void
+FoilPicsGroupModel::setDragIndex(
+    int aIndex)
 {
     iPrivate->setDragIndex(aIndex);
 }
 
-void FoilPicsGroupModel::setDragPos(int aPos)
+void
+FoilPicsGroupModel::setDragPos(
+    int aPos)
 {
     iPrivate->setDragPos(aPos);
 }

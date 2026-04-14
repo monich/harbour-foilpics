@@ -45,10 +45,15 @@
 #include "foil_util.h"
 #include "foilmsg.h"
 
+#include "gutil_misc.h"
+
 #include "HarbourDebug.h"
+#include "HarbourParentSignalQueueObject.h"
 #include "HarbourTask.h"
 
-#include <QStandardPaths>
+#include <QtCore/QDir>
+#include <QtCore/QStandardPaths>
+#include <QtGui/QImage>
 
 #include <errno.h>
 #include <unistd.h>
@@ -134,15 +139,15 @@ class FoilPicsModel::ModelData {
 public:
     enum Role {
         FirstRole = Qt::UserRole,
-#define ROLE(X,x) X##Role,
+        #define ROLE(X,x) X##Role,
         FOILPICS_ROLES(ROLE)
-#undef ROLE
+        #undef ROLE
         LastRole
     };
 
-#define ROLE(X,x) static const QString RoleName##X;
+    #define ROLE(X,x) static const QString RoleName##X;
     FOILPICS_ROLES(ROLE)
-#undef ROLE
+    #undef ROLE
 
     typedef QList<ModelData*> List;
     typedef List::ConstIterator ConstIterator;
@@ -151,33 +156,30 @@ public:
         const char* imageFormat;
     };
 
-    ModelData(QString aOriginalPath, int aOriginalSize, QSize aFullDimensions,
-        GBytes* aDigest, QString aPath, QString aThumbFile, QImage aThumbImage,
-        QString aTitle, const char* aContentType, QDateTime aSortTime,
-        int aOrientation, QString aCameraManufacturer, QString aCameraModel,
-        const char* aLatitude, const char* aLongitude, const char* aAltitude,
-        QDateTime aImageDate, const char* aGroupId);
+    ModelData(const QString&, int, const QSize&, GBytes*, const QString&,
+        const QString&, const QImage&, const QString&, const char*,
+        const QDateTime&, int, const QString&, const QString&, const char*,
+        const char*, const char*, const QDateTime&, const char*);
     ~ModelData();
 
-    QVariant get(Role aRole) const;
+    QVariant get(Role) const;
     QVariantMap toVariantMap() const;
-    void updateVariantMap(Role aRole);
+    void updateVariantMap(Role);
 
-    static QString defaultTitle(QString aPath);
-    static QString defaultTitle(QFileInfo aFileInfo);
-    static QImage thumbnail(const QImage aImage, QSize aSize, int aRotate);
-    static const char* format(const char* aContentType);
-    static int compareFormatMap(const void* aElem1, const void* aElem2);
+    static QString defaultTitle(const QString&);
+    static QString defaultTitle(const QFileInfo&);
+    static QImage thumbnail(const QImage&, const QSize&, int);
+    static const char* format(const char*);
+    static int compareFormatMap(const void*, const void*);
 
-    static double* toDouble(const char* aString);
-    static QString headerString(const FoilMsg* aMsg, const char* aKey);
-    static QDateTime headerTime(const FoilMsg* aMsg, const char* aKey);
-    static QDateTime headerSortTime(const FoilMsg* aMsg);
-    static int headerInt(const FoilMsg* aMsg, const char* aKey, int aDef = 0);
+    static double* toDouble(const char*);
+    static QString headerString(const FoilMsg*, const char*);
+    static QDateTime headerTime(const FoilMsg*, const char*);
+    static QDateTime headerSortTime(const FoilMsg*);
+    static int headerInt(const FoilMsg*, const char*, int aDef = 0);
 
-    static ModelData* fromFoilMsg(FoilMsg* aFoilMsg, QString aOriginalPath,
-        QSize aFullDimensions, QString aPath, QString aThumbFile,
-        QImage aThumbImage, const char* aContentType, int aOrientation);
+    static ModelData* fromFoilMsg(FoilMsg*, const QString&, const QSize&,
+        const QString&, const QString&, const QImage&, const char*, int);
 
 public:
     QString iPath;
@@ -214,20 +216,42 @@ public:
 FOILPICS_ROLES(ROLE)
 #undef ROLE
 
-FoilPicsModel::ModelData::ModelData(QString aOriginalPath, int aOriginalSize,
-    QSize aFullDimensions, GBytes* aDigest, QString aPath, QString aThumbFile,
-    QImage aThumbImage, QString aTitle, const char* aContentType,
-    QDateTime aSortTime, int aOrientation, QString aCameraManufacturer,
-    QString aCameraModel, const char* aLatitude, const char* aLongitude,
-    const char* aAltitude, QDateTime aImageDate, const char* aGroupId) :
-    iPath(aPath), iThumbFile(aThumbFile), iTitle(aTitle),
-    iFullDimensions(aFullDimensions), iThumbnail(aThumbImage),
-    iSortTime(aSortTime), iOriginalSize(aOriginalSize),
-    iOrientation(aOrientation), iCameraManufacturer(aCameraManufacturer),
-    iCameraModel(aCameraModel), iImageDate(aImageDate),
-    iLatitude(toDouble(aLatitude)), iLongitude(toDouble(aLongitude)),
-    iAltitude(toDouble(aAltitude)), iDecryptTask(NULL), iSetTitleTask(NULL),
-    iSetGroupTask(NULL)
+FoilPicsModel::ModelData::ModelData(
+    const QString& aOriginalPath,
+    int aOriginalSize,
+    const QSize& aFullDimensions,
+    GBytes* aDigest,
+    const QString& aPath,
+    const QString& aThumbFile,
+    const QImage& aThumbImage,
+    const QString& aTitle,
+    const char* aContentType,
+    const QDateTime& aSortTime,
+    int aOrientation,
+    const QString& aCameraManufacturer,
+    const QString& aCameraModel,
+    const char* aLatitude,
+    const char* aLongitude,
+    const char* aAltitude,
+    const QDateTime& aImageDate,
+    const char* aGroupId) :
+    iPath(aPath),
+    iThumbFile(aThumbFile),
+    iTitle(aTitle),
+    iFullDimensions(aFullDimensions),
+    iThumbnail(aThumbImage),
+    iSortTime(aSortTime),
+    iOriginalSize(aOriginalSize),
+    iOrientation(aOrientation),
+    iCameraManufacturer(aCameraManufacturer),
+    iCameraModel(aCameraModel),
+    iImageDate(aImageDate),
+    iLatitude(toDouble(aLatitude)),
+    iLongitude(toDouble(aLongitude)),
+    iAltitude(toDouble(aAltitude)),
+    iDecryptTask(Q_NULLPTR),
+    iSetTitleTask(Q_NULLPTR),
+    iSetGroupTask(Q_NULLPTR)
 {
     QFileInfo fileInfo(aOriginalPath);
     iOriginalPath = fileInfo.absoluteFilePath();
@@ -260,9 +284,16 @@ FoilPicsModel::ModelData::~ModelData()
     delete iAltitude;
 }
 
-FoilPicsModel::ModelData* FoilPicsModel::ModelData::fromFoilMsg(FoilMsg* aMsg,
-    QString aOriginalPath, QSize aFullDimensions, QString aPath,
-    QString aThumbFile, QImage aThumbImage, const char* aContentType,
+/* static */
+FoilPicsModel::ModelData*
+FoilPicsModel::ModelData::fromFoilMsg(
+    FoilMsg* aMsg,
+    const QString& aOriginalPath,
+    const QSize& aFullDimensions,
+    const QString& aPath,
+    const QString& aThumbFile,
+    const QImage& aThumbImage,
+    const char* aContentType,
     int aOrientation)
 {
     GBytes* digest = foil_digest_bytes(DIGEST_TYPE, aMsg->data);
@@ -278,29 +309,33 @@ FoilPicsModel::ModelData* FoilPicsModel::ModelData::fromFoilMsg(FoilMsg* aMsg,
         foilmsg_get_value(aMsg, HEADER_ALTITUDE),
         headerTime(aMsg, HEADER_IMAGE_DATE),
         foilmsg_get_value(aMsg, HEADER_GROUP));
+
     g_bytes_unref(digest);
     return data;
 }
 
-QVariantMap FoilPicsModel::ModelData::toVariantMap() const
+QVariantMap
+FoilPicsModel::ModelData::toVariantMap() const
 {
     // Fill the variant map (groupName renames empty)
     if (iVariantMap.isEmpty()) {
-#define ROLE(X,x) iVariantMap.insert(RoleName##X, get(X##Role));
+        #define ROLE(X,x) iVariantMap.insert(RoleName##X, get(X##Role));
         FOILPICS_ROLES(ROLE)
-#undef ROLE
+        #undef ROLE
     }
     return iVariantMap;
 }
 
-void FoilPicsModel::ModelData::updateVariantMap(Role aRole)
+void
+FoilPicsModel::ModelData::updateVariantMap(
+    Role aRole)
 {
     if (!iVariantMap.isEmpty()) {
         switch (aRole) {
-#define ROLE(X,x) case X##Role: \
-        iVariantMap.insert(RoleName##X, get(X##Role)); break;
+        #define ROLE(X,x) case X##Role: \
+            iVariantMap.insert(RoleName##X, get(X##Role)); break;
         FOILPICS_ROLES(ROLE)
-#undef ROLE
+        #undef ROLE
         case ModelData::FirstRole:
         case ModelData::LastRole:
             break;
@@ -308,7 +343,9 @@ void FoilPicsModel::ModelData::updateVariantMap(Role aRole)
     }
 }
 
-QVariant FoilPicsModel::ModelData::get(Role aRole) const
+QVariant
+FoilPicsModel::ModelData::get(
+    Role aRole) const
 {
     switch (aRole) {
     case UrlRole: return iImageSource;
@@ -350,45 +387,63 @@ QVariant FoilPicsModel::ModelData::get(Role aRole) const
     return QVariant();
 }
 
-double* FoilPicsModel::ModelData::toDouble(const char* aString)
+/* static */
+double*
+FoilPicsModel::ModelData::toDouble(
+    const char* aString)
 {
     if (aString && aString[0]) {
-        double q = g_ascii_strtod(aString, NULL);
+        const double q = g_ascii_strtod(aString, Q_NULLPTR);
+
         if (!errno) {
             return new double(q);
         }
     }
-    return NULL;
+    return Q_NULLPTR;
 }
 
-QString FoilPicsModel::ModelData::defaultTitle(QString aPath)
+/* static */
+QString
+FoilPicsModel::ModelData::defaultTitle(
+    const QString& aPath)
 {
     return defaultTitle(QFileInfo(aPath));
 }
 
-QString FoilPicsModel::ModelData::defaultTitle(QFileInfo aFileInfo)
+/* static */
+QString
+FoilPicsModel::ModelData::defaultTitle(
+    const QFileInfo& aFileInfo)
 {
     return aFileInfo.baseName();
 }
 
-QImage FoilPicsModel::ModelData::thumbnail(const QImage aImage, QSize aSize,
+/* static */
+QImage
+FoilPicsModel::ModelData::thumbnail(
+    const QImage& aImage,
+    const QSize& aSize,
     int aRotate)
 {
     QImage cropped;
     const QSize imageSize(aImage.size());
     const Qt::TransformationMode txMode(Qt::SmoothTransformation);
+
     if (imageSize.width()*aSize.height() > aSize.width()*imageSize.height()) {
-        QImage scaled(aImage.scaledToHeight(aSize.height(), txMode));
+        const QImage scaled(aImage.scaledToHeight(aSize.height(), txMode));
         const int x = (scaled.width() - aSize.width())/2;
+
         cropped = scaled.copy(x, 0, aSize.width(), aSize.height());
     } else {
-        QImage scaled(aImage.scaledToWidth(aSize.width(), txMode));
+        const QImage scaled(aImage.scaledToWidth(aSize.width(), txMode));
         const int y = (scaled.height() - aSize.height())/2;
+
         cropped = scaled.copy(0, y, aSize.width(), aSize.height());
     }
     if (aRotate) {
         const qreal x = ((qreal)aSize.width())/2;
         const qreal y = ((qreal)aSize.height())/2;
+
         return cropped.transformed(QTransform::fromTranslate(x, y).
             rotate(-aRotate).translate(-x, -y));
     } else {
@@ -396,7 +451,10 @@ QImage FoilPicsModel::ModelData::thumbnail(const QImage aImage, QSize aSize,
     }
 }
 
-const char* FoilPicsModel::ModelData::format(const char* aContentType)
+/* static */
+const char*
+FoilPicsModel::ModelData::format(
+    const char* aContentType)
 {
     static const struct FormatMap {
         const char* contentType;
@@ -418,63 +476,73 @@ const char* FoilPicsModel::ModelData::format(const char* aContentType)
 
     if (aContentType && aContentType[0]) {
         FormatMap key;
+
         key.contentType = aContentType;
-        key.imageFormat = NULL;
+        key.imageFormat = Q_NULLPTR;
+
         const FormatMap* res = (const FormatMap*)bsearch(&key, formatMap,
             G_N_ELEMENTS(formatMap), sizeof(formatMap[0]), compareFormatMap);
+
         if (res) {
             return res->imageFormat;
         }
         HDEBUG("Unknown content type" << aContentType);
     }
-    return NULL;
+    return Q_NULLPTR;
 }
 
-int FoilPicsModel::ModelData::compareFormatMap(const void* aElem1,
+/* static */
+int
+FoilPicsModel::ModelData::compareFormatMap(
+    const void* aElem1,
     const void* aElem2)
 {
     return strcmp(((const FormatMap*)aElem1)->contentType,
         ((const FormatMap*)aElem2)->contentType);
 }
 
-int FoilPicsModel::ModelData::headerInt(const FoilMsg* aMsg,
-    const char* aKey, int aDefaultValue)
+/* static */
+int
+FoilPicsModel::ModelData::headerInt(
+    const FoilMsg* aMsg,
+    const char* aKey,
+    int aDefaultValue)
 {
     int result = aDefaultValue;
-    const char* str = foilmsg_get_value(aMsg, aKey);
-    if (str && str[0]) {
-        gboolean ok;
-        char *str2 = g_strstrip(g_strdup(str));
-        char *end = str2;
-        long l;
-        errno = 0;
-        l = strtol(str2, &end, 0);
-        ok = !*end && errno != ERANGE && l >= INT_MIN && l <= INT_MAX;
-        if (ok) {
-            result = (int)l;
-        }
-        g_free(str2);
-    }
+
+    gutil_parse_int(foilmsg_get_value(aMsg, aKey), 0, &result);
     return result;
 }
 
-QString FoilPicsModel::ModelData::headerString(const FoilMsg* aMsg,
+/* static */
+QString
+FoilPicsModel::ModelData::headerString(
+    const FoilMsg* aMsg,
     const char* aKey)
 {
     const char* value = foilmsg_get_value(aMsg, aKey);
+
     return (value && value[0]) ? QString(value) : QString();
 }
 
-QDateTime FoilPicsModel::ModelData::headerTime(const FoilMsg* aMsg,
+/* static */
+QDateTime
+FoilPicsModel::ModelData::headerTime(
+    const FoilMsg* aMsg,
     const char* aKey)
 {
     const char* value = foilmsg_get_value(aMsg, aKey);
+
     return value ? QDateTime::fromString(value, Qt::ISODate) : QDateTime();
 }
 
-QDateTime FoilPicsModel::ModelData::headerSortTime(const FoilMsg* aMsg)
+/* static */
+QDateTime
+FoilPicsModel::ModelData::headerSortTime(
+    const FoilMsg* aMsg)
 {
     QDateTime time = headerTime(aMsg, HEADER_IMAGE_DATE);
+
     return time.isValid() ? time : headerTime(aMsg, HEADER_MODIFICATION_TIME);
 }
 
@@ -482,18 +550,17 @@ QDateTime FoilPicsModel::ModelData::headerSortTime(const FoilMsg* aMsg)
 // FoilPicsModel::ModelInfo
 // ==========================================================================
 
-class FoilPicsModel::ModelInfo {
+class FoilPicsModel::ModelInfo
+{
 public:
     ModelInfo() {}
-    ModelInfo(const FoilMsg* msg);
-    ModelInfo(const ModelInfo& aInfo);
-    ModelInfo(const ModelData::List aData, FoilPicsGroupModel::GroupList aGroups);
+    ModelInfo(const FoilMsg*);
+    ModelInfo(const ModelInfo&);
+    ModelInfo(const ModelData::List&, const FoilPicsGroupModel::GroupList&);
+    ModelInfo& operator=(const ModelInfo&);
 
-    static ModelInfo load(QString aDir, FoilPrivateKey* aPrivate,
-        FoilKey* aPublic);
-
-    void save(QString aDir, FoilPrivateKey* aPrivate, FoilKey* aPublic);
-    ModelInfo& operator = (const ModelInfo& aInfo);
+    static ModelInfo load(const QString&, FoilPrivateKey*, FoilKey*);
+    void save(const QString&, FoilPrivateKey*, FoilKey*) const;
 
 public:
     QStringList iOrder;
@@ -501,12 +568,17 @@ public:
     FoilPicsGroupModel::GroupList iGroups;
 };
 
-FoilPicsModel::ModelInfo::ModelInfo(const ModelInfo& aInfo) :
-    iOrder(aInfo.iOrder), iThumbMap(aInfo.iThumbMap), iGroups(aInfo.iGroups)
+FoilPicsModel::ModelInfo::ModelInfo(
+    const ModelInfo& aInfo) :
+    iOrder(aInfo.iOrder),
+    iThumbMap(aInfo.iThumbMap),
+    iGroups(aInfo.iGroups)
 {
 }
 
-FoilPicsModel::ModelInfo& FoilPicsModel::ModelInfo::operator=(const ModelInfo& aInfo)
+FoilPicsModel::ModelInfo&
+FoilPicsModel::ModelInfo::operator=(
+    const ModelInfo& aInfo)
 {
     iOrder = aInfo.iOrder;
     iThumbMap = aInfo.iThumbMap;
@@ -514,14 +586,18 @@ FoilPicsModel::ModelInfo& FoilPicsModel::ModelInfo::operator=(const ModelInfo& a
     return *this;
 }
 
-FoilPicsModel::ModelInfo::ModelInfo(const ModelData::List aData,
-    FoilPicsGroupModel::GroupList aGroups) :
+FoilPicsModel::ModelInfo::ModelInfo(
+    const ModelData::List& aData,
+    const FoilPicsGroupModel::GroupList& aGroups) :
     iGroups(aGroups)
 {
     const int n = aData.count();
+
+    iOrder.reserve(n);
     for (int i = 0; i < n; i++) {
         const ModelData* data = aData.at(i);
         QString name(QFileInfo(data->iPath).fileName());
+
         iOrder.append(name);
         if (!data->iThumbFile.isEmpty()) {
             iThumbMap.insert(name, data->iThumbFile);
@@ -529,18 +605,24 @@ FoilPicsModel::ModelInfo::ModelInfo(const ModelData::List aData,
     }
 }
 
-FoilPicsModel::ModelInfo::ModelInfo(const FoilMsg* msg)
+FoilPicsModel::ModelInfo::ModelInfo(
+    const FoilMsg* msg)
 {
     const char* order = foilmsg_get_value(msg, INFO_ORDER_HEADER);
+
     if (order) {
         char** strv = g_strsplit(order, INFO_ORDER_DELIMITER_S, -1);
+
         for (char** ptr = strv; *ptr; ptr++) {
             char* name = g_strstrip(*ptr);
+
             if (name[0]) {
                 const char* d = strchr(name, INFO_ORDER_THUMB_DELIMITER);
+
                 if (d) {
                     QString img(QLatin1String(name, d - name));
                     QString thumb(QLatin1String(d + 1));
+
                     iOrder.append(img);
                     iThumbMap.insert(img, thumb);
                 } else {
@@ -551,9 +633,12 @@ FoilPicsModel::ModelInfo::ModelInfo(const FoilMsg* msg)
         g_strfreev(strv);
         HDEBUG(order);
     }
+
     const char* groups = foilmsg_get_value(msg, INFO_GROUPS_HEADER);
+
     if (groups) {
         const char* collapsed = foilmsg_get_value(msg, INFO_COLLAPSED_HEADER);
+
 #if HARBOUR_DEBUG
         HDEBUG(INFO_GROUPS_HEADER << groups);
         if (collapsed) {
@@ -564,15 +649,22 @@ FoilPicsModel::ModelInfo::ModelInfo(const FoilMsg* msg)
     }
 }
 
-FoilPicsModel::ModelInfo FoilPicsModel::ModelInfo::load(QString aDir,
-    FoilPrivateKey* aPrivate, FoilKey* aPublic)
+/* static */
+FoilPicsModel::ModelInfo
+FoilPicsModel::ModelInfo::load(
+    const QString& aDir,
+    FoilPrivateKey* aPrivate,
+    FoilKey* aPublic)
 {
     ModelInfo info;
     QString fullPath(aDir + "/" INFO_FILE);
     const QByteArray path(fullPath.toUtf8());
     const char* fname = path.constData();
+
     HDEBUG("Loading" << fname);
-    FoilMsg* msg = foilmsg_decrypt_file(aPrivate, fname, NULL);
+
+    FoilMsg* msg = foilmsg_decrypt_file(aPrivate, fname, Q_NULLPTR);
+
     if (msg) {
         if (foilmsg_verify(msg, aPublic)) {
             info = ModelInfo(msg);
@@ -584,20 +676,26 @@ FoilPicsModel::ModelInfo FoilPicsModel::ModelInfo::load(QString aDir,
     return info;
 }
 
-void FoilPicsModel::ModelInfo::save(QString aDir, FoilPrivateKey* aPrivate,
-    FoilKey* aPublic)
+void
+FoilPicsModel::ModelInfo::save(
+    const QString& aDir,
+    FoilPrivateKey* aPrivate,
+    FoilKey* aPublic) const
 {
     QString fullPath(aDir + "/" INFO_FILE);
     const QByteArray path(fullPath.toUtf8());
     const char* fname = path.constData();
     FoilOutput* out = foil_output_file_new_open(fname);
+
     if (out) {
         QString buf;
         const int n = iOrder.count();
+
         for (int i = 0; i < n; i++) {
+            const QString img(iOrder.at(i));
+            const QString thumb(iThumbMap.value(img));
+
             if (!buf.isEmpty()) buf += QChar(INFO_ORDER_DELIMITER);
-            QString img(iOrder.at(i));
-            QString thumb(iThumbMap.value(img));
             buf += img;
             if (!thumb.isEmpty()) {
                 buf += QChar(INFO_ORDER_THUMB_DELIMITER);
@@ -639,8 +737,8 @@ void FoilPicsModel::ModelInfo::save(QString aDir, FoilPrivateKey* aPrivate,
 
         FoilBytes data;
         foil_bytes_from_string(&data, INFO_CONTENTS);
-        foilmsg_encrypt(out, &data, NULL, &headers, aPrivate, aPublic,
-            &opt, NULL);
+        foilmsg_encrypt(out, &data, Q_NULLPTR, &headers, aPrivate, aPublic,
+            &opt, Q_NULLPTR);
         foil_output_unref(out);
     } else {
         HWARN("Failed to open" << fname);
@@ -648,48 +746,59 @@ void FoilPicsModel::ModelInfo::save(QString aDir, FoilPrivateKey* aPrivate,
 }
 
 // ==========================================================================
-// FoilPicsModel::BaseTask
+// FoilPicsModel::Task
 // ==========================================================================
 
-class FoilPicsModel::BaseTask : public HarbourTask {
+class FoilPicsModel::Task :
+    public HarbourTask
+{
     Q_OBJECT
 
 public:
-    BaseTask(QThreadPool* aPool, FoilPrivateKey* aPrivateKey,
-        FoilKey* aPublicKey);
-    virtual ~BaseTask();
+    class Encrypt;
+    class Decrypt;
+    class GenerateKey;
+    class ImageRequest;
+    class SaveInfo;
+    class SetHeader;
 
-    FoilMsg* decryptAndVerify(QString aFileName) const;
-    FoilMsg* decryptAndVerify(const char* aFileName) const;
-    QString writeThumb(QImage aImage, const FoilMsgHeaders* aHeaders,
-        const char* aContentType, QImage aThumb, QString aDestDir) const;
+    Task(QThreadPool*, FoilPrivateKey*, FoilKey*);
+    ~Task() Q_DECL_OVERRIDE;
 
-    static bool removeFile(QString aPath);
-    static QImage toImage(const FoilMsg* aMsg);
-    static FoilOutput* createFoilFile(QString aDestDir, GString* aOutPath);
-    static bool getHeader(FoilMsgHeader* aHeader,
-        const FoilMsgHeaders* aHeaders, const char* aKey);
+    FoilMsg* decryptAndVerify(const QString&) const;
+    FoilMsg* decryptAndVerify(const char*) const;
+    QString writeThumb(const QImage&, const FoilMsgHeaders*,
+        const char*, const QImage&, const QString&) const;
+
+    static bool removeFile(const QString&);
+    static QImage toImage(const FoilMsg*);
+    static FoilOutput* createFoilFile(const QString&, GString*);
+    static bool getHeader(FoilMsgHeader*, const FoilMsgHeaders*, const char*);
 
 public:
     FoilPrivateKey* iPrivateKey;
     FoilKey* iPublicKey;
 };
 
-FoilPicsModel::BaseTask::BaseTask(QThreadPool* aPool,
-    FoilPrivateKey* aPrivateKey, FoilKey* aPublicKey) :
+FoilPicsModel::Task::Task(
+    QThreadPool* aPool,
+    FoilPrivateKey* aPrivateKey,
+    FoilKey* aPublicKey) :
     HarbourTask(aPool),
     iPrivateKey(foil_private_key_ref(aPrivateKey)),
     iPublicKey(foil_key_ref(aPublicKey))
-{
-}
+{}
 
-FoilPicsModel::BaseTask::~BaseTask()
+FoilPicsModel::Task::~Task()
 {
     foil_private_key_unref(iPrivateKey);
     foil_key_unref(iPublicKey);
 }
 
-bool FoilPicsModel::BaseTask::removeFile(QString aPath)
+/* static */
+bool
+FoilPicsModel::Task::removeFile(
+    const QString& aPath)
 {
     if (!aPath.isEmpty()) {
         if (QFile::remove(aPath)) {
@@ -700,21 +809,28 @@ bool FoilPicsModel::BaseTask::removeFile(QString aPath)
     return false;
 }
 
-FoilMsg* FoilPicsModel::BaseTask::decryptAndVerify(QString aFileName) const
+FoilMsg*
+FoilPicsModel::Task::decryptAndVerify(
+    const QString& aFileName) const
 {
     if (!aFileName.isEmpty()) {
         const QByteArray fileNameBytes(aFileName.toUtf8());
+
         return decryptAndVerify(fileNameBytes.constData());
     } else{
-        return NULL;
+        return Q_NULLPTR;
     }
 }
 
-FoilMsg* FoilPicsModel::BaseTask::decryptAndVerify(const char* aFileName) const
+FoilMsg*
+FoilPicsModel::Task::decryptAndVerify(
+    const char* aFileName) const
 {
     if (aFileName) {
         HDEBUG("Decrypting" << aFileName);
-        FoilMsg* msg = foilmsg_decrypt_file(iPrivateKey, aFileName, NULL);
+
+        FoilMsg* msg = foilmsg_decrypt_file(iPrivateKey, aFileName, Q_NULLPTR);
+
         if (msg) {
 #if HARBOUR_DEBUG
             for (uint i = 0; i < msg->headers.count; i++) {
@@ -730,16 +846,21 @@ FoilMsg* FoilPicsModel::BaseTask::decryptAndVerify(const char* aFileName) const
             foilmsg_free(msg);
         }
     }
-    return NULL;
+    return Q_NULLPTR;
 }
 
-QImage FoilPicsModel::BaseTask::toImage(const FoilMsg* aMsg)
+/* static */
+QImage
+FoilPicsModel::Task::toImage(
+    const FoilMsg* aMsg)
 {
     if (aMsg) {
         const char* type = aMsg->content_type;
+
         if (!type || g_str_has_prefix(type, "image/")) {
             gsize size;
             const uchar* data = (uchar*)g_bytes_get_data(aMsg->data, &size);
+
             if (data && size) {
                 return QImage::fromData(data, size, ModelData::format(type));
             }
@@ -750,8 +871,12 @@ QImage FoilPicsModel::BaseTask::toImage(const FoilMsg* aMsg)
     return QImage();
 }
 
-bool FoilPicsModel::BaseTask::getHeader(FoilMsgHeader* aHeader,
-    const FoilMsgHeaders* aHeaders, const char* aKey)
+/* static */
+bool
+FoilPicsModel::Task::getHeader(
+    FoilMsgHeader* aHeader,
+    const FoilMsgHeaders* aHeaders,
+    const char* aKey)
 {
     if (aHeaders) {
         for (uint i = 0; i < aHeaders->count; i++) {
@@ -765,18 +890,25 @@ bool FoilPicsModel::BaseTask::getHeader(FoilMsgHeader* aHeader,
     return false;
 }
 
-FoilOutput* FoilPicsModel::BaseTask::createFoilFile(QString aDestDir,
+/* static */
+FoilOutput*
+FoilPicsModel::Task::createFoilFile(
+    const QString& aDestDir,
     GString* aOutPath)
 {
     // Generate random name for the encrypted file
-    FoilOutput* out = NULL;
+    FoilOutput* out = Q_NULLPTR;
     const QByteArray dir(aDestDir.toUtf8());
+
     g_string_truncate(aOutPath, 0);
     g_string_append_len(aOutPath, dir.constData(), dir.size());
     g_string_append_c(aOutPath, '/');
+
     const gsize prefix_len = aOutPath->len;
+
     for (int i = 0; i < 100 && !out; i++) {
         guint8 data[8];
+
         foil_random_generate(FOIL_RANDOM_DEFAULT, data, sizeof(data));
         g_string_truncate(aOutPath, prefix_len);
         g_string_append_printf(aOutPath, "%02X%02X%02X%02X%02X%02X%02X%02X",
@@ -787,11 +919,16 @@ FoilOutput* FoilPicsModel::BaseTask::createFoilFile(QString aDestDir,
     return out;
 }
 
-QString FoilPicsModel::BaseTask::writeThumb(QImage aImage,
-    const FoilMsgHeaders* aHeaders, const char* aContentType,
-    QImage aThumb, QString aDestDir) const
+QString
+FoilPicsModel::Task::writeThumb(
+    const QImage& aImage,
+    const FoilMsgHeaders* aHeaders,
+    const char* aContentType,
+    const QImage& aThumb,
+    const QString& aDestDir) const
 {
     QString thumbName;
+
     if (!aThumb.isNull()) {
         static const char* keys[] = {
             HEADER_ORIGINAL_PATH,
@@ -850,7 +987,7 @@ QString FoilPicsModel::BaseTask::writeThumb(QImage aImage,
             bytes.len = thumbData.size();
             HDEBUG("Writing thumbnail to" << dest->str);
             if (foilmsg_encrypt(out, &bytes, aContentType, &headers,
-                iPrivateKey, iPublicKey, &opt, NULL)) {
+                iPrivateKey, iPublicKey, &opt, Q_NULLPTR)) {
                 thumbName = QFileInfo(dest->str).fileName();
             }
             foil_output_unref(out);
@@ -861,46 +998,51 @@ QString FoilPicsModel::BaseTask::writeThumb(QImage aImage,
 }
 
 // ==========================================================================
-// FoilPicsModel::GenerateKeyTask
+// FoilPicsModel::Task::GenerateKey
 // ==========================================================================
 
-class FoilPicsModel::GenerateKeyTask : public BaseTask {
+class FoilPicsModel::Task::GenerateKey :
+    public Task
+{
     Q_OBJECT
 
 public:
-    GenerateKeyTask(QThreadPool* aPool, QString aKeyFile, int aBits,
-        QString aPassword);
+    GenerateKey(QThreadPool*, const QString&, int, const QString&);
 
-    virtual void performTask() Q_DECL_OVERRIDE;
+    void performTask() Q_DECL_OVERRIDE;
 
 public:
-    QString iKeyFile;
-    int iBits;
-    QString iPassword;
+    const QString iKeyFile;
+    const int iBits;
+    const QString iPassword;
 };
 
-FoilPicsModel::GenerateKeyTask::GenerateKeyTask(QThreadPool* aPool,
-    QString aKeyFile, int aBits, QString aPassword) :
-    BaseTask(aPool, NULL, NULL),
+FoilPicsModel::Task::GenerateKey::GenerateKey(
+    QThreadPool* aPool,
+    const QString& aKeyFile,
+    int aBits,
+    const QString& aPassword) :
+    Task(aPool, Q_NULLPTR, Q_NULLPTR),
     iKeyFile(aKeyFile),
     iBits(aBits),
     iPassword(aPassword)
-{
-}
+{}
 
-void FoilPicsModel::GenerateKeyTask::performTask()
+void
+FoilPicsModel::Task::GenerateKey::performTask()
 {
     HDEBUG("Generating key..." << iBits << "bits");
     FoilKey* key = foil_key_generate_new(FOIL_KEY_RSA_PRIVATE, iBits);
+
     if (key) {
-        GError* error = NULL;
+        GError* error = Q_NULLPTR;
         const QByteArray path(iKeyFile.toUtf8());
         const QByteArray passphrase(iPassword.toUtf8());
         FoilOutput* out = foil_output_file_new_open(path.constData());
         FoilPrivateKey* pk = FOIL_PRIVATE_KEY(key);
+
         if (foil_private_key_encrypt(pk, out, FOIL_KEY_EXPORT_FORMAT_DEFAULT,
-            passphrase.constData(),
-            NULL, &error)) {
+            passphrase.constData(), Q_NULLPTR, &error)) {
             iPrivateKey = pk;
             iPublicKey = foil_public_key_new_from_private(pk);
         } else {
@@ -914,48 +1056,67 @@ void FoilPicsModel::GenerateKeyTask::performTask()
 }
 
 // ==========================================================================
-// FoilPicsModel::EncryptTask
+// FoilPicsModel::Task::Encrypt
 // ==========================================================================
 
-class FoilPicsModel::EncryptTask : public BaseTask {
+class FoilPicsModel::Task::Encrypt :
+    public Task
+{
     Q_OBJECT
 
 public:
-    EncryptTask(QThreadPool* aPool, QString aSourceFile, QString aDestDir,
-        FoilPrivateKey* aPrivateKey, FoilKey* aPublicKey, QSize aThumbSize,
-        QVariantMap aMetaData);
+    Encrypt(QThreadPool*, const QString&, const QString&,
+        FoilPrivateKey*, FoilKey*, const QSize&, const QVariantMap&);
+    ~Encrypt() Q_DECL_OVERRIDE;
 
-    virtual void performTask() Q_DECL_OVERRIDE;
+    void performTask() Q_DECL_OVERRIDE;
 
-    static bool addDoubleHeader(QVariant aValue, FoilMsgHeader* aHeader,
-        const char* aName, char* aBuffer);
+    static bool addDoubleHeader(const QVariant&, FoilMsgHeader*, const char*, char*);
 
 public:
-    QString iSourceFile;
-    QString iDestDir;
-    QSize iThumbSize;
-    QVariantMap iMetaData;
+    const QString iSourceFile;
+    const QString iDestDir;
+    const QSize iThumbSize;
+    const QVariantMap iMetaData;
     ModelData* iData;
 };
 
-FoilPicsModel::EncryptTask::EncryptTask(QThreadPool* aPool, QString aSourceFile,
-    QString aDestDir, FoilPrivateKey* aPrivateKey, FoilKey* aPublicKey,
-    QSize aThumbSize, QVariantMap aMetaData) :
-    BaseTask(aPool, aPrivateKey, aPublicKey), iSourceFile(aSourceFile),
+FoilPicsModel::Task::Encrypt::Encrypt(
+    QThreadPool* aPool,
+    const QString& aSourceFile,
+    const QString& aDestDir,
+    FoilPrivateKey* aPrivateKey,
+    FoilKey* aPublicKey,
+    const QSize& aThumbSize,
+    const QVariantMap& aMetaData) :
+    Task(aPool, aPrivateKey, aPublicKey),
+    iSourceFile(aSourceFile),
     iDestDir(aDestDir),
     iThumbSize(aThumbSize),
     iMetaData(aMetaData),
-    iData(NULL)
+    iData(Q_NULLPTR)
 {
     HDEBUG("Encrypting" << qPrintable(aSourceFile) << aMetaData);
 }
 
-bool FoilPicsModel::EncryptTask::addDoubleHeader(QVariant aValue,
-    FoilMsgHeader* aHeader, const char* aName, char* aBuffer)
+FoilPicsModel::Task::Encrypt::~Encrypt()
+{
+    // Normally, iData is null here
+    delete iData;
+}
+
+/* static */
+bool
+FoilPicsModel::Task::Encrypt::addDoubleHeader(
+    const QVariant& aValue,
+    FoilMsgHeader* aHeader,
+    const char* aName,
+    char* aBuffer) // at least G_ASCII_DTOSTR_BUF_SIZE bytes long
 {
     if (aValue.isValid()) {
         bool ok = false;
         double d = aValue.toDouble(&ok);
+
         if (ok) {
             g_ascii_dtostr(aBuffer, G_ASCII_DTOSTR_BUF_SIZE, d);
             aHeader->name = aName;
@@ -967,21 +1128,27 @@ bool FoilPicsModel::EncryptTask::addDoubleHeader(QVariant aValue,
     return false;
 }
 
-void FoilPicsModel::EncryptTask::performTask()
+void
+FoilPicsModel::Task::Encrypt::performTask()
 {
     const QByteArray path(iSourceFile.toUtf8());
     const char* fname = path.constData();
+
     HDEBUG(fname);
-    GError* error = NULL;
+
+    GError* error = Q_NULLPTR;
     GMappedFile* map = g_mapped_file_new(fname, FALSE, &error);
+
     if (map) {
         GString* dest = g_string_sized_new(iDestDir.size() + 9);
         FoilOutput* out = createFoilFile(iDestDir, dest);
+
         if (out) {
             QMimeDatabase db;
             QMimeType type = db.mimeTypeForFile(iSourceFile);
             QByteArray mimeTypeBytes;
-            const char* content_type = NULL;
+            const char* content_type = Q_NULLPTR;
+
             if (type.isValid()) {
                 mimeTypeBytes = type.name().toUtf8();
                 content_type = mimeTypeBytes.constData();
@@ -989,17 +1156,20 @@ void FoilPicsModel::EncryptTask::performTask()
             }
 
             FoilBytes bytes;
+
             bytes.val = (guint8*)g_mapped_file_get_contents(map);
             bytes.len = g_mapped_file_get_length(map);
+
             QImage image = QImage::fromData(bytes.val, bytes.len,
                 ModelData::format(content_type));
+
             if (!image.isNull()) {
-                char* mtime = NULL;
-                char* atime = NULL;
-                char* ttime = NULL;
-                QDateTime sortTime, dateTaken;
-                QString title(ModelData::defaultTitle(iSourceFile));
+                char* mtime = Q_NULLPTR;
+                char* atime = Q_NULLPTR;
+                char* ttime = Q_NULLPTR;
+                const QString title(ModelData::defaultTitle(iSourceFile));
                 const QByteArray titleBytes(title.toUtf8());
+                QDateTime sortTime, dateTaken;
                 QString cameraMaker, cameraModel;
                 QByteArray cameraMakerBytes, cameraModelBytes;
 
@@ -1057,11 +1227,11 @@ void FoilPicsModel::EncryptTask::performTask()
 
                 // Metadata
                 char degrees[16];
-                int orientation = 0;
+                int o = 0;
                 QVariant var(iMetaData.value(MetaOrientation));
                 if (var.isValid()) {
-                    orientation = var.toInt();
-                    snprintf(degrees, sizeof(degrees), "%d", orientation);
+                    o = var.toInt();
+                    snprintf(degrees, sizeof(degrees), "%d", o);
                     header[headers.count].name = HEADER_ORIENTATION;
                     header[headers.count].value = degrees;
                     headers.count++;
@@ -1128,11 +1298,11 @@ void FoilPicsModel::EncryptTask::performTask()
                 HASSERT(headers.count <= G_N_ELEMENTS(header));
                 HDEBUG("Writing" << dest->str);
                 if (foilmsg_encrypt(out, &bytes, content_type, &headers,
-                    iPrivateKey, iPublicKey, &opt, NULL)) {
+                    iPrivateKey, iPublicKey, &opt, Q_NULLPTR)) {
                     if (atime && mtime) {
                         foil_output_close(out);
                         foil_output_unref(out);
-                        out = NULL;
+                        out = Q_NULLPTR;
 
                         struct timeval times[2];
                         times[0].tv_sec = st.st_atim.tv_sec;
@@ -1147,15 +1317,15 @@ void FoilPicsModel::EncryptTask::performTask()
 
                     GBytes* digest = foil_digest_data(DIGEST_TYPE,
                         bytes.val, bytes.len);
-                    QImage thumb = ModelData::thumbnail(image, iThumbSize,
-                        orientation);
-                    QString thumbName = writeThumb(image, &headers,
-                        content_type, thumb, iDestDir);
+                    QImage thumb(ModelData::thumbnail(image, iThumbSize, o));
+                    const QString thumbName(writeThumb(image, &headers,
+                        content_type, thumb, iDestDir));
+
                     iData = new ModelData(iSourceFile, bytes.len, image.size(),
                         digest, dest->str, thumbName, thumb, title,
-                        content_type, sortTime, orientation, cameraMaker,
+                        content_type, sortTime, o, cameraMaker,
                         cameraModel, latitude, longitude, altitude,
-                        dateTaken, NULL);
+                        dateTaken, Q_NULLPTR);
                     g_bytes_unref(digest);
                 }
                 g_free(mtime);
@@ -1179,32 +1349,37 @@ void FoilPicsModel::EncryptTask::performTask()
 }
 
 // ==========================================================================
-// FoilPicsModel::SaveInfoTask
+// FoilPicsModel::Task::SaveInfo
 // ==========================================================================
 
-class FoilPicsModel::SaveInfoTask : public BaseTask {
+class FoilPicsModel::Task::SaveInfo :
+    public Task
+{
     Q_OBJECT
 
 public:
-    SaveInfoTask(QThreadPool* aPool, ModelInfo aInfo, QString aDir,
-        FoilPrivateKey* aPrivateKey, FoilKey* aPublicKey);
+    SaveInfo(QThreadPool*, const ModelInfo&, const QString&,
+        FoilPrivateKey*, FoilKey*);
 
-    virtual void performTask() Q_DECL_OVERRIDE;
+    void performTask() Q_DECL_OVERRIDE;
 
 public:
-    ModelInfo iInfo;
-    QString iFoilDir;
+    const ModelInfo iInfo;
+    const QString iFoilDir;
 };
 
-FoilPicsModel::SaveInfoTask::SaveInfoTask(QThreadPool* aPool, ModelInfo aInfo,
-    QString aFoilDir, FoilPrivateKey* aPrivateKey, FoilKey* aPublicKey) :
-    BaseTask(aPool, aPrivateKey, aPublicKey),
+FoilPicsModel::Task::SaveInfo::SaveInfo(
+    QThreadPool* aPool,
+    const ModelInfo& aInfo,
+    const QString& aFoilDir,
+    FoilPrivateKey* aPrivateKey,
+    FoilKey* aPublicKey) :
+    Task(aPool, aPrivateKey, aPublicKey),
     iInfo(aInfo),
     iFoilDir(aFoilDir)
-{
-}
+{}
 
-void FoilPicsModel::SaveInfoTask::performTask()
+void FoilPicsModel::Task::SaveInfo::performTask()
 {
     if (!isCanceled()) {
         iInfo.save(iFoilDir, iPrivateKey, iPublicKey);
@@ -1214,24 +1389,31 @@ void FoilPicsModel::SaveInfoTask::performTask()
 // ==========================================================================
 // FoilPicsModel::CheckPicsTask
 // ==========================================================================
-class FoilPicsModel::CheckPicsTask : public HarbourTask {
+
+class FoilPicsModel::CheckPicsTask :
+    public HarbourTask
+{
     Q_OBJECT
 public:
-    CheckPicsTask(QThreadPool* aPool, QString aDir);
+    CheckPicsTask(QThreadPool*, const QString&);
 
-    virtual void performTask() Q_DECL_OVERRIDE;
+    void performTask() Q_DECL_OVERRIDE;
 
 public:
-    QString iDir;
+    const QString iDir;
     bool iMayHaveEncryptedPictures;
 };
 
-FoilPicsModel::CheckPicsTask::CheckPicsTask(QThreadPool* aPool, QString aDir) :
-    HarbourTask(aPool), iDir(aDir), iMayHaveEncryptedPictures(false)
-{
-}
+FoilPicsModel::CheckPicsTask::CheckPicsTask(
+    QThreadPool* aPool,
+    const QString& aDir) :
+    HarbourTask(aPool),
+    iDir(aDir),
+    iMayHaveEncryptedPictures(false)
+{}
 
-void FoilPicsModel::CheckPicsTask::performTask()
+void
+FoilPicsModel::CheckPicsTask::performTask()
 {
     const QString path(iDir);
     HDEBUG("Checking" << iDir);
@@ -1243,15 +1425,20 @@ void FoilPicsModel::CheckPicsTask::performTask()
     const QString infoFile(INFO_FILE);
     for (int i = 0; i < list.count() && !iMayHaveEncryptedPictures; i++) {
         const QFileInfo& info = list.at(i);
+
         if (info.isFile() && info.fileName() != infoFile) {
             const QByteArray fileNameBytes(info.filePath().toUtf8());
             const char* fname = fileNameBytes.constData();
-            GMappedFile* map = g_mapped_file_new(fname, FALSE, NULL);
+            GMappedFile* map = g_mapped_file_new(fname, FALSE, Q_NULLPTR);
+
             if (map) {
                 FoilBytes bytes;
+
                 bytes.val = (guint8*)g_mapped_file_get_contents(map);
                 bytes.len = g_mapped_file_get_length(map);
+
                 FoilMsgInfo* info = foilmsg_parse(&bytes);
+
                 if (info) {
                     HDEBUG(fname << "may be a foiled picture");
                     iMayHaveEncryptedPictures = true;
@@ -1267,7 +1454,9 @@ void FoilPicsModel::CheckPicsTask::performTask()
 // FoilPicsModel::DecryptPicsTask
 // ==========================================================================
 
-class FoilPicsModel::DecryptPicsTask : public BaseTask {
+class FoilPicsModel::DecryptPicsTask :
+    public Task
+{
     Q_OBJECT
 
 public:
@@ -1280,7 +1469,8 @@ public:
     // Progress destructor. If the signal never reaches the slot, then
     // ModelData is deallocated together with when the last reference
     // to Progress
-    class Progress {
+    class Progress
+    {
     public:
         typedef QSharedPointer<Progress> Ptr;
 
@@ -1293,53 +1483,59 @@ public:
         DecryptPicsTask* iTask;
     };
 
-    DecryptPicsTask(QThreadPool* aPool, QString aDir,
-        FoilPrivateKey* aPrivateKey, FoilKey* aPublicKey,
-        QSize aThumbSize);
+    DecryptPicsTask(QThreadPool*, const QString&, FoilPrivateKey*, FoilKey*,
+        const QSize&);
 
-    virtual void performTask() Q_DECL_OVERRIDE;
+    void performTask() Q_DECL_OVERRIDE;
 
-    ModelData* decryptThumb(QString aImagePath, QString aThumbPath);
-    ModelData* decryptImage(QString aImagePath);
-    bool decryptFile(QString aPath, QString aThumbPath);
+    ModelData* decryptThumb(const QString&, const QString&);
+    ModelData* decryptImage(const QString&);
+    bool decryptFile(const QString&, const QString&);
 
 Q_SIGNALS:
     void groupsDecrypted(FoilPicsGroupModel::GroupList aGroups);
     void progress(DecryptPicsTask::Progress::Ptr aProgress);
 
 public:
-    QString iDir;
-    QSize iThumbSize;
+    const QString iDir;
+    const QSize iThumbSize;
     bool iSaveInfo;
 };
 
 Q_DECLARE_METATYPE(FoilPicsModel::DecryptPicsTask::Progress::Ptr)
 
-FoilPicsModel::DecryptPicsTask::DecryptPicsTask(QThreadPool* aPool,
-    QString aDir, FoilPrivateKey* aPrivateKey, FoilKey* aPublicKey,
-    QSize aThumbSize) :
-    BaseTask(aPool, aPrivateKey, aPublicKey),
+FoilPicsModel::DecryptPicsTask::DecryptPicsTask(
+    QThreadPool* aPool,
+    const QString& aDir,
+    FoilPrivateKey* aPrivateKey,
+    FoilKey* aPublicKey,
+    const QSize& aThumbSize) :
+    Task(aPool, aPrivateKey, aPublicKey),
     iDir(aDir),
     iThumbSize(aThumbSize),
     iSaveInfo(false)
-{
-}
+{}
 
 FoilPicsModel::ModelData*
-FoilPicsModel::DecryptPicsTask::decryptImage(QString aImagePath)
+FoilPicsModel::DecryptPicsTask::decryptImage(
+    const QString& aImagePath)
 {
-    FoilPicsModel::ModelData* data = NULL;
+    FoilPicsModel::ModelData* data = Q_NULLPTR;
     FoilMsg* msg = decryptAndVerify(aImagePath);
+
     if (msg) {
-        QString origPath = ModelData::headerString(msg, HEADER_ORIGINAL_PATH);
+        QString origPath(ModelData::headerString(msg, HEADER_ORIGINAL_PATH));
+
         if (!origPath.isEmpty()) {
-            QImage image = toImage(msg);
+            const QImage image(toImage(msg));
+
             if (!image.isNull()) {
                 HDEBUG("Loaded image from" << qPrintable(aImagePath));
                 int deg = ModelData::headerInt(msg, HEADER_ORIENTATION);
-                QImage thumb = ModelData::thumbnail(image, iThumbSize, deg);
-                QString thumbName = writeThumb(image, &msg->headers,
-                    msg->content_type, thumb, iDir);
+                QImage thumb(ModelData::thumbnail(image, iThumbSize, deg));
+                QString thumbName(writeThumb(image, &msg->headers,
+                    msg->content_type, thumb, iDir));
+
                 data = ModelData::fromFoilMsg(msg, origPath, image.size(),
                     aImagePath, thumbName, thumb, msg->content_type, deg);
             }
@@ -1350,20 +1546,24 @@ FoilPicsModel::DecryptPicsTask::decryptImage(QString aImagePath)
 }
 
 FoilPicsModel::ModelData*
-FoilPicsModel::DecryptPicsTask::decryptThumb(QString aImagePath,
-    QString aThumbPath)
+FoilPicsModel::DecryptPicsTask::decryptThumb(
+    const QString& aImagePath,
+    const QString& aThumbPath)
 {
-    FoilPicsModel::ModelData* data = NULL;
+    FoilPicsModel::ModelData* data = Q_NULLPTR;
     FoilMsg* msg = decryptAndVerify(aThumbPath);
+
     if (msg) {
         // Thumbnail absolutely must have these:
         const int w = ModelData::headerInt(msg, HEADER_THUMB_FULL_WIDTH);
         const int h = ModelData::headerInt(msg, HEADER_THUMB_FULL_HEIGHT);
         QString origPath = ModelData::headerString(msg, HEADER_ORIGINAL_PATH);
+
         if (w > 0 && h > 0 && !origPath.isEmpty()) {
             // Make sure that the size is right
             QImage thumbImage = toImage(msg);
             QString thumbName = QFileInfo(aThumbPath).fileName();
+
             HDEBUG(thumbName << thumbImage.size());
             if (!thumbImage.isNull() && thumbImage.size() == iThumbSize) {
                 // This thumb is good to go
@@ -1378,10 +1578,13 @@ FoilPicsModel::DecryptPicsTask::decryptThumb(QString aImagePath,
     return data;
 }
 
-bool FoilPicsModel::DecryptPicsTask::decryptFile(QString aImagePath,
-    QString aThumbPath)
+bool
+FoilPicsModel::DecryptPicsTask::decryptFile(
+    const QString& aImagePath,
+    const QString& aThumbPath)
 {
     ModelData* data = decryptThumb(aImagePath, aThumbPath);
+
     if (!data) {
         data = decryptImage(aImagePath);
     }
@@ -1393,7 +1596,8 @@ bool FoilPicsModel::DecryptPicsTask::decryptFile(QString aImagePath,
     return false;
 }
 
-void FoilPicsModel::DecryptPicsTask::performTask()
+void
+FoilPicsModel::DecryptPicsTask::performTask()
 {
     if (!isCanceled()) {
         const QString path(iDir);
@@ -1463,46 +1667,51 @@ void FoilPicsModel::DecryptPicsTask::performTask()
 }
 
 // ==========================================================================
-// FoilPicsModel::DecryptTask
+// FoilPicsModel::Task::Decrypt
 // ==========================================================================
 
-class FoilPicsModel::DecryptTask : public BaseTask {
+class FoilPicsModel::Task::Decrypt :
+    public Task
+{
     Q_OBJECT
 
 public:
-    DecryptTask(QThreadPool* aPool, ModelData* aData,
-        FoilPrivateKey* aPrivateKey, FoilKey* aPublicKey);
+    Decrypt(QThreadPool*, ModelData*, FoilPrivateKey*, FoilKey*);
 
-    virtual void performTask() Q_DECL_OVERRIDE;
+    void performTask() Q_DECL_OVERRIDE;
 
-    QString decryptionPath(FoilMsg* msg);
-    bool saveDecrypted(FoilMsg* msg);
+    QString decryptionPath(FoilMsg*);
+    bool saveDecrypted(FoilMsg*);
 
     static QString defaultDecryptDir();
-    static void setTimeVal(struct timeval* aTimeVal, const char* aIso8601,
-        const struct timespec* aDefaultTime);
-    static void setFileTimes(const char* aPath, const char* aAccessTime,
-        const char* aModificationTime);
+    static void setTimeVal(struct timeval*, const char*, const struct timespec*);
+    static void setFileTimes(const char*, const char*, const char*);
 
 public:
     ModelData* iData;
-    QString iPath;
-    QString iThumbFile;
+    const QString iPath;
+    const QString iThumbFile;
     bool iOk;
 };
 
-FoilPicsModel::DecryptTask::DecryptTask(QThreadPool* aPool, ModelData* aData,
-    FoilPrivateKey* aPrivateKey, FoilKey* aPublicKey) :
-    BaseTask(aPool, aPrivateKey, aPublicKey),
+FoilPicsModel::Task::Decrypt::Decrypt(
+    QThreadPool* aPool,
+    ModelData* aData,
+    FoilPrivateKey* aPrivateKey,
+    FoilKey* aPublicKey) :
+    Task(aPool, aPrivateKey, aPublicKey),
     iData(aData),
     iPath(aData->iPath),
     iThumbFile(aData->iThumbFile),
     iOk(false)
-{
-}
+{}
 
-void FoilPicsModel::DecryptTask::setTimeVal(struct timeval* aTimeVal,
-    const char* aIso8601, const struct timespec* aDefaultTime)
+/* static */
+void
+FoilPicsModel::Task::Decrypt::setTimeVal(
+    struct timeval* aTimeVal,
+    const char* aIso8601,
+    const struct timespec* aDefaultTime)
 {
     /*
      * Ignore deprecation warnings for GTimeVal and
@@ -1520,12 +1729,18 @@ void FoilPicsModel::DecryptTask::setTimeVal(struct timeval* aTimeVal,
     G_GNUC_END_IGNORE_DEPRECATIONS;
 }
 
-void FoilPicsModel::DecryptTask::setFileTimes(const char* aPath,
-    const char* aAccessTime, const char* aModificationTime)
+/* static */
+void
+FoilPicsModel::Task::Decrypt::setFileTimes(
+    const char* aPath,
+    const char* aAccessTime,
+    const char* aModificationTime)
 {
     struct stat st;
+
     if ((aAccessTime || aModificationTime) && stat(aPath, &st) == 0) {
         struct timeval times[2];
+
         setTimeVal(times + 0, aAccessTime, &st.st_atim);
         setTimeVal(times + 1, aModificationTime, &st.st_mtim);
         if (utimes(aPath, times) < 0) {
@@ -1534,18 +1749,26 @@ void FoilPicsModel::DecryptTask::setFileTimes(const char* aPath,
     }
 }
 
-QString FoilPicsModel::DecryptTask::defaultDecryptDir()
+/* static */
+QString
+FoilPicsModel::Task::Decrypt::defaultDecryptDir()
 {
     // ~/Pictures/FoilPics
-    return QStandardPaths::writableLocation(QStandardPaths::PicturesLocation) +
-        QDir::separator() + QString("FoilPics");
+    static const QString decryptDir(QDir(QStandardPaths::
+        writableLocation(QStandardPaths::PicturesLocation)).
+        absoluteFilePath("FoilPics"));
+
+    return decryptDir;
 }
 
-QString FoilPicsModel::DecryptTask::decryptionPath(FoilMsg* aMsg)
+QString
+FoilPicsModel::Task::Decrypt::decryptionPath(
+    FoilMsg* aMsg)
 {
     const char* origPath = foilmsg_get_value(aMsg, HEADER_ORIGINAL_PATH);
     QFileInfo fileInfo;
     QString filePath;
+
     if (origPath && origPath[0]) {
         filePath = QString::fromUtf8(origPath);
     }
@@ -1553,6 +1776,7 @@ QString FoilPicsModel::DecryptTask::decryptionPath(FoilMsg* aMsg)
         // File name is unknown, pick the default
         QDir defaultDir(defaultDecryptDir());
         const char* format = ModelData::format(aMsg->content_type);
+
         if (format) {
             fileInfo = QFileInfo(defaultDir, QString("image.").append(QString::fromLatin1(format)));
         } else {
@@ -1562,11 +1786,14 @@ QString FoilPicsModel::DecryptTask::decryptionPath(FoilMsg* aMsg)
     } else {
         fileInfo = QFileInfo(filePath);
     }
+
     QDir dir(fileInfo.dir());
+
     if (!dir.exists()) {
         // Destination directory doesn't exist. Try to create but only
         // if it's under home.
         QString dirPath(dir.absolutePath());
+
         if (!dirPath.startsWith(QDir::homePath() + QDir::separator())) {
             HDEBUG("Directory" << qPrintable(dirPath) << "is missing (not trying to create)");
         } else if (dir.mkpath(dirPath)) {
@@ -1577,6 +1804,7 @@ QString FoilPicsModel::DecryptTask::decryptionPath(FoilMsg* aMsg)
         if (!dir.exists()) {
             // Try the default location ~/Pictures/FoilPics
             const QString defaultDir(defaultDecryptDir());
+
             if (dirPath.compare(defaultDir)) {
                 dir.setPath(defaultDir);
                 dirPath = dir.absolutePath();
@@ -1599,6 +1827,7 @@ QString FoilPicsModel::DecryptTask::decryptionPath(FoilMsg* aMsg)
         const QString baseName(fileInfo.baseName());
         const QString suffix(fileInfo.suffix());
         int i = 1;
+
         do {
             if (isCanceled()) {
                 return QString();
@@ -1612,16 +1841,20 @@ QString FoilPicsModel::DecryptTask::decryptionPath(FoilMsg* aMsg)
     return filePath;
 }
 
-bool FoilPicsModel::DecryptTask::saveDecrypted(FoilMsg* aMsg)
+bool
+FoilPicsModel::Task::Decrypt::saveDecrypted(
+    FoilMsg* aMsg)
 {
     bool ok = false;
     const QString destPath(decryptionPath(aMsg));
+
     if (destPath.isEmpty()) {
         HWARN("Can't figure out file name for decryption");
     } else {
         const QByteArray destBytes(destPath.toUtf8());
         const char* dest = destBytes.constData();
         FoilOutput* out = foil_output_file_new_open(dest);
+
         if (out) {
             if (foil_output_write_bytes_all(out, aMsg->data) &&
                 foil_output_flush(out)) {
@@ -1642,9 +1875,11 @@ bool FoilPicsModel::DecryptTask::saveDecrypted(FoilMsg* aMsg)
     return ok;
 }
 
-void FoilPicsModel::DecryptTask::performTask()
+void
+FoilPicsModel::Task::Decrypt::performTask()
 {
     FoilMsg* msg = decryptAndVerify(iPath);
+
     if (msg) {
         iOk = (!isCanceled() && saveDecrypted(msg));
         foilmsg_free(msg);
@@ -1659,54 +1894,60 @@ void FoilPicsModel::DecryptTask::performTask()
 }
 
 // ==========================================================================
-// FoilPicsModel::ImageRequestTask
+// FoilPicsModel::Task::ImageRequest
 // ==========================================================================
 
-class FoilPicsModel::ImageRequestTask : public BaseTask {
+class FoilPicsModel::Task::ImageRequest :
+    public Task
+{
     Q_OBJECT
 
 public:
-    ImageRequestTask(QThreadPool* aPool, QString aPath,
-        QByteArray aBytes, QString aContentType,
-        FoilPrivateKey* aPrivateKey, FoilKey* aPublicKey,
-        FoilPicsImageRequest aRequest);
-    virtual ~ImageRequestTask();
+    ImageRequest(QThreadPool*, const QString&, const QByteArray&,
+        const QString&, FoilPrivateKey*, FoilKey*, FoilPicsImageRequest);
+    ~ImageRequest() Q_DECL_OVERRIDE;
 
-    virtual void performTask() Q_DECL_OVERRIDE;
+    void performTask() Q_DECL_OVERRIDE;
 
 public:
-    QString iPath;
+    const QString iPath;
     QByteArray iBytes;
     QString iContentType;
     FoilPicsImageRequest iRequest;
 };
 
-FoilPicsModel::ImageRequestTask::ImageRequestTask(QThreadPool* aPool,
-    QString aPath, QByteArray aBytes, QString aContentType,
-    FoilPrivateKey* aPrivateKey, FoilKey* aPublicKey,
+FoilPicsModel::Task::ImageRequest::ImageRequest(
+    QThreadPool* aPool,
+    const QString& aPath,
+    const QByteArray& aBytes,
+    const QString& aContentType,
+    FoilPrivateKey* aPrivateKey,
+    FoilKey* aPublicKey,
     FoilPicsImageRequest aRequest) :
-    BaseTask(aPool, aPrivateKey, aPublicKey),
+    Task(aPool, aPrivateKey, aPublicKey),
     iPath(aPath),
     iBytes(aBytes),
     iContentType(aContentType),
     iRequest(aRequest)
-{
-}
+{}
 
-FoilPicsModel::ImageRequestTask::~ImageRequestTask()
+FoilPicsModel::Task::ImageRequest::~ImageRequest()
 {
     // Make sure we have replied to the request
     iRequest.reply();
 }
 
-void FoilPicsModel::ImageRequestTask::performTask()
+void
+FoilPicsModel::Task::ImageRequest::performTask()
 {
-    FoilMsg* msg = NULL;
-    QByteArray contentTypeBytes = iContentType.toLatin1();
+    FoilMsg* msg = Q_NULLPTR;
+    const QByteArray contentTypeBytes(iContentType.toLatin1());
     const char* type = contentTypeBytes.constData();
+
     if (iBytes.isEmpty() && !isCanceled()) {
         const QByteArray path(iPath.toUtf8());
         const char* fname = path.constData();
+
         msg = decryptAndVerify(fname);
         if (msg && !isCanceled()) {
             gsize size;
@@ -1716,8 +1957,10 @@ void FoilPicsModel::ImageRequestTask::performTask()
             }
         }
     }
+
     if (!iBytes.isEmpty() && !isCanceled()) {
-        QImage image = QImage::fromData(iBytes, ModelData::format(type));
+        QImage image(QImage::fromData(iBytes, ModelData::format(type)));
+
         HDEBUG(qPrintable(iPath) << image.size());
         iRequest.reply(image);
     } else {
@@ -1728,23 +1971,24 @@ void FoilPicsModel::ImageRequestTask::performTask()
 }
 
 // ==========================================================================
-// FoilPicsModel::SetHeaderTask
+// FoilPicsModel::Task::SetHeader
 // ==========================================================================
 
-class FoilPicsModel::SetHeaderTask : public BaseTask {
+class FoilPicsModel::Task::SetHeader :
+    public Task
+{
     Q_OBJECT
 
 public:
-    SetHeaderTask(QThreadPool* aPool, FoilPrivateKey* aPrivateKey,
-        FoilKey* aPublicKey,  ModelData* aData, const char* aHeaderName,
-        QByteArray aHeaderValue);
+    SetHeader(QThreadPool*, FoilPrivateKey*, FoilKey*, ModelData*,
+        const char*, const QByteArray&);
 
-    static SetHeaderTask* createTitleTask(QThreadPool* aPool,
-        FoilPrivateKey* aPrivateKey, FoilKey* aPublicKey, ModelData* aData);
-    static SetHeaderTask* createGroupTask(QThreadPool* aPool,
-        FoilPrivateKey* aPrivateKey, FoilKey* aPublicKey, ModelData* aData);
+    static SetHeader* createTitleTask(QThreadPool*, FoilPrivateKey*, FoilKey*,
+        ModelData*);
+    static SetHeader* createGroupTask(QThreadPool*, FoilPrivateKey*, FoilKey*,
+        ModelData*);
 
-    virtual void performTask() Q_DECL_OVERRIDE;
+    void performTask() Q_DECL_OVERRIDE;
 
     QString setHeaderAndEncrypt(FoilMsg* aMsg);
 
@@ -1759,41 +2003,55 @@ public:
     bool iOk;
 };
 
-FoilPicsModel::SetHeaderTask::SetHeaderTask(QThreadPool* aPool,
-    FoilPrivateKey* aPrivateKey, FoilKey* aPublicKey, ModelData* aData,
-    const char* aHeaderName, QByteArray aHeaderValue) :
-    BaseTask(aPool, aPrivateKey, aPublicKey),
+FoilPicsModel::Task::SetHeader::SetHeader(
+    QThreadPool* aPool,
+    FoilPrivateKey* aPrivateKey,
+    FoilKey* aPublicKey,
+    ModelData* aData,
+    const char* aHeaderName,
+    const QByteArray& aHeaderValue) :
+    Task(aPool, aPrivateKey, aPublicKey),
     iData(aData),
     iPath(aData->iPath),
     iThumbFile(aData->iThumbFile),
     iHeaderName(aHeaderName),
     iHeaderValue(aHeaderValue),
     iOk(false)
-{
-}
+{}
 
-FoilPicsModel::SetHeaderTask*
-FoilPicsModel::SetHeaderTask::createTitleTask(QThreadPool* aPool,
-    FoilPrivateKey* aPrivateKey, FoilKey* aPublicKey, ModelData* aData)
+/* static */
+FoilPicsModel::Task::SetHeader*
+FoilPicsModel::Task::SetHeader::createTitleTask(
+    QThreadPool* aPool,
+    FoilPrivateKey* aPrivateKey,
+    FoilKey* aPublicKey,
+    ModelData* aData)
 {
-    return new SetHeaderTask(aPool, aPrivateKey, aPublicKey, aData,
+    return new SetHeader(aPool, aPrivateKey, aPublicKey, aData,
         HEADER_TITLE, aData->iTitle.toUtf8());
 }
 
-FoilPicsModel::SetHeaderTask*
-FoilPicsModel::SetHeaderTask::createGroupTask(QThreadPool* aPool,
-    FoilPrivateKey* aPrivateKey, FoilKey* aPublicKey, ModelData* aData)
+/* static */
+FoilPicsModel::Task::SetHeader*
+FoilPicsModel::Task::SetHeader::createGroupTask(
+    QThreadPool* aPool,
+    FoilPrivateKey* aPrivateKey,
+    FoilKey* aPublicKey,
+    ModelData* aData)
 {
-    return new SetHeaderTask(aPool, aPrivateKey, aPublicKey, aData,
+    return new SetHeader(aPool, aPrivateKey, aPublicKey, aData,
         HEADER_GROUP, aData->iGroupId);
 }
 
-QString FoilPicsModel::SetHeaderTask::setHeaderAndEncrypt(FoilMsg* aMsg)
+QString
+FoilPicsModel::Task::SetHeader::setHeaderAndEncrypt(
+    FoilMsg* aMsg)
 {
     QString destPath;
-    QString destDir(QFileInfo(iPath).dir().path());
+    const QString destDir(QFileInfo(iPath).dir().path());
     GString* dest = g_string_sized_new(destDir.size() + 9);
     FoilOutput* out = createFoilFile(destDir, dest);
+
     if (out) {
         // Allocate one more in case if the header in question is missing
         FoilMsgHeader* header = new FoilMsgHeader[aMsg->headers.count + 1];
@@ -1822,13 +2080,14 @@ QString FoilPicsModel::SetHeaderTask::setHeaderAndEncrypt(FoilMsg* aMsg)
         }
 
         FoilMsgEncryptOptions opt;
+
         memset(&opt, 0, sizeof(opt));
         opt.key_type = ENCRYPT_KEY_TYPE;
 
         FoilBytes bytes;
         if (foilmsg_encrypt(out, foil_bytes_from_data(&bytes, aMsg->data),
             aMsg->content_type, &headers, iPrivateKey, iPublicKey, &opt,
-            NULL)) {
+            Q_NULLPTR)) {
             destPath = QString(dest->str);
             HDEBUG("Wrote" << foil_output_bytes_written(out) << "bytes");
         }
@@ -1839,19 +2098,24 @@ QString FoilPicsModel::SetHeaderTask::setHeaderAndEncrypt(FoilMsg* aMsg)
     return destPath;
 }
 
-void FoilPicsModel::SetHeaderTask::performTask()
+void
+FoilPicsModel::Task::SetHeader::performTask()
 {
     FoilMsg* fileMsg = decryptAndVerify(iPath);
+
     if (fileMsg) {
         if (!isCanceled()) {
             QString thumbPath(QFileInfo(iPath).dir().filePath(iThumbFile));
             FoilMsg* thumbMsg = decryptAndVerify(thumbPath);
+
             if (thumbMsg) {
                 if (!isCanceled()) {
                     QString newFile = setHeaderAndEncrypt(fileMsg);
+
                     if (!newFile.isEmpty()) {
                         if (!isCanceled()) {
                             QString newThumb = setHeaderAndEncrypt(thumbMsg);
+
                             if (!newThumb.isEmpty()) {
                                 // All good
                                 iOk = true;
@@ -1882,34 +2146,42 @@ void FoilPicsModel::SetHeaderTask::performTask()
 // FoilPicsModel::Private
 // ==========================================================================
 
-class FoilPicsModel::Private : public QObject {
+// s(SignalName,signalName,Suffix)
+#define QUEUED_SIGNALS(s) \
+    s(Count,count,Changed) \
+    s(Busy,busy,Changed) \
+    s(KeyAvailable,keyAvailable,Changed) \
+    s(FoilState,foilState,Changed) \
+    s(MayHaveEncryptedPictures,mayHaveEncryptedPictures,Changed) \
+    s(ThumbnailSize,thumbnailSize,Changed) \
+    s(DecryptionStarted,decryptionStarted,)
+
+enum FoilPicsModelSignal {
+    #define SIGNAL_ENUM_(Name,name,Suffix) Signal##Name##Suffix,
+    QUEUED_SIGNALS(SIGNAL_ENUM_)
+    #undef SIGNAL_ENUM_
+    FoilPicsModelSignalCount
+};
+
+typedef HarbourParentSignalQueueObject<FoilPicsModel,
+    FoilPicsModelSignal, FoilPicsModelSignalCount>
+    FoilPicsModelPrivateBase;
+
+class FoilPicsModel::Private :
+    public FoilPicsModelPrivateBase
+{
     Q_OBJECT
 
+    static const SignalEmitter gSignalEmitters [];
+
 public:
-    typedef void (FoilPicsModel::*SignalEmitter)();
-    typedef uint SignalMask;
-
-    // The order of constants must match the array in emitQueuedSignals()
-    enum Signal {
-        NoSignal = -1,
-        SignalCountChanged,
-        SignalBusyChanged,
-        SignalKeyAvailableChanged,
-        SignalFoilStateChanged,
-        SignalMayHaveEncryptedPicturesChanged,
-        SignalThumbnailSizeChanged,
-        SignalDecryptionStarted,
-        SignalCount
-    };
-
-    Private(FoilPicsModel* aParent);
+    Private(FoilPicsModel*);
     ~Private();
 
-    FoilPicsModel* parentModel();
-    ModelData* dataAt(int aIndex);
-    int find(QString aImageId);
-    int compare(const ModelData* aData1, const ModelData* aData2) const;
-    static int sortProc(const void* aPtr1, const void* aPtr2, void* aThis);
+    ModelData* dataAt(int);
+    int find(const QString&);
+    int compare(const ModelData*, const ModelData*) const;
+    static int sortProc(const void*, const void*, void*);
 
     struct LessThan {
         Private* obj;
@@ -1924,8 +2196,8 @@ Q_SIGNALS:
 
 public Q_SLOTS:
     void onCheckPicsTaskDone();
-    void onGroupsDecrypted(FoilPicsGroupModel::GroupList aGroups);
-    void onDecryptPicsProgress(DecryptPicsTask::Progress::Ptr aProgress);
+    void onGroupsDecrypted(FoilPicsGroupModel::GroupList);
+    void onDecryptPicsProgress(DecryptPicsTask::Progress::Ptr);
     void onDecryptPicsTaskDone();
     void onGenerateKeyTaskDone();
     void onEncryptTaskDone();
@@ -1936,58 +2208,54 @@ public Q_SLOTS:
     void onSaveInfoDone();
     void onImageRequestDone();
     void onGroupModelChanged();
-    void onGroupRenamed(int aIndex, const FoilPicsGroupModel::Group& aGroup);
+    void onGroupRenamed(int, const FoilPicsGroupModel::Group&);
     void onStopIgnoringGroupModelChanges();
 
 public:
     static size_t maxBytesToDecrypt();
-    void queueSignal(Signal aSignal);
-    void emitQueuedSignals();
     void connectGroupModel();
     bool disconnectGroupModel();
-    bool checkPassword(QString aPassword);
-    bool changePassword(QString aOldPassword, QString aNewPassword);
-    void setKeys(FoilPrivateKey* aPrivate, FoilKey* aPublic = NULL);
-    void setFoilState(FoilState aState);
-    void insertModelData(ModelData* aModelData);
-    void destroyItemAt(int aIndex);
-    bool destroyItemAndRemoveFilesAt(int aIndex);
-    void removeAt(int aIndex);
-    void removeFiles(QList<int> aRows);
+    bool checkPassword(const QString&);
+    bool changePassword(const QString&, const QString&);
+    void setKeys(FoilPrivateKey*, FoilKey* aPublic = Q_NULLPTR);
+    void setFoilState(FoilState);
+    void insertModelData(ModelData*);
+    void destroyItemAt(int);
+    bool destroyItemAndRemoveFilesAt(int);
+    void removeAt(int);
+    void removeFiles(QList<int>);
     void clearGroupModel();
     void clearModel();
     void saveInfo();
-    void generate(int aBits, QString aPassword);
-    void lock(bool aTimeout);
-    bool unlock(QString aPassword);
-    void encryptFile(QString aFile, QVariantMap aMetaData);
-    bool encrypt(QUrl aUrl, QVariantMap aMetaData);
-    void encryptFiles(QAbstractItemModel* aModel, QList<int> aRows);
+    void generate(int, const QString&);
+    void lock(bool);
+    bool unlock(const QString&);
+    void encryptFile(const QString&, QVariantMap);
+    bool encrypt(const QUrl&, const QVariantMap&);
+    void encryptFiles(QAbstractItemModel*, const QList<int>&);
     void decryptAt(int aIndex);
     void decryptFiles(QList<int> aRows);
     void decryptAll();
-    void decryptTaskDone(DecryptTask* aTask, bool aLast);
+    void decryptTaskDone(Task::Decrypt*, bool);
     void ignoreGroupModelChange();
-    void setTitleAt(int aIndex, QString aTitle);
-    bool setGroupId(ModelData* aData, QByteArray aId);
-    void clearGroup(QByteArray aId);
+    void setTitleAt(int, const QString&);
+    bool setGroupId(ModelData*, const QByteArray&);
+    void clearGroup(const QByteArray&);
     bool sortModel();
-    void setGroupIdAt(int aIndex, QByteArray aId);
-    void setGroupIdForRows(QList<int> aRows, QByteArray aId);
-    void dataChanged(int aIndex, ModelData::Role aRole);
-    void dataChanged(QList<int> aRows, ModelData::Role aRole);
-    void imageRequest(QString aPath, FoilPicsImageRequest aRequest);
-    void headerUpdateDone(SetHeaderTask* aTask);
-    int findPath(QString aPath);
-    bool dropDecryptedData(int aDontTouch);
+    void setGroupIdAt(int, const QByteArray&);
+    void setGroupIdForRows(QList<int>, const QByteArray&);
+    void dataChanged(int, ModelData::Role);
+    void dataChanged(const QList<int>&, ModelData::Role);
+    void imageRequest(const QString&, FoilPicsImageRequest);
+    void headerUpdateDone(Task::SetHeader*);
+    int findPath(const QString&);
+    bool dropDecryptedData(int);
     bool tooMuchDataDecrypted();
     bool busy() const;
 
 public:
     const size_t iMaxBytesToDecrypt;
     bool iMayHaveEncryptedPictures;
-    SignalMask iQueuedSignals;
-    int iFirstQueuedSignal;
     FoilPicsImageProvider* iImageProvider;
     FoilPicsThumbnailProvider* iThumbnailProvider;
     QSize iThumbSize;
@@ -2000,37 +2268,43 @@ public:
     FoilKey* iPublicKey;
     QThreadPool* iThreadPool;
     CheckPicsTask* iCheckPicsTask;
-    SaveInfoTask* iSaveInfoTask;
-    GenerateKeyTask* iGenerateKeyTask;
+    Task::SaveInfo* iSaveInfoTask;
+    Task::GenerateKey* iGenerateKeyTask;
     DecryptPicsTask* iDecryptPicsTask;
-    QList<EncryptTask*> iEncryptTasks;
-    QList<ImageRequestTask*> iImageRequestTasks;
+    QList<Task::Encrypt*> iEncryptTasks;
+    QList<Task::ImageRequest*> iImageRequestTasks;
     FoilPicsGroupModel* iGroupModel;
     bool iGroupModelConnected;
     int iIgnoreGroupModelChanges;
 };
 
-FoilPicsModel::Private::Private(FoilPicsModel* aParent) :
-    QObject(aParent),
+const FoilPicsModel::Private::SignalEmitter
+FoilPicsModel::Private::gSignalEmitters [] = {
+    #define SIGNAL_EMITTER_(Name,name,Suffix) &FoilPicsModel::name##Suffix,
+    QUEUED_SIGNALS(SIGNAL_EMITTER_)
+    #undef  SIGNAL_EMITTER_
+};
+
+FoilPicsModel::Private::Private(
+    FoilPicsModel* aParent) :
+    FoilPicsModelPrivateBase(aParent, gSignalEmitters),
     iMaxBytesToDecrypt(maxBytesToDecrypt()),
     iMayHaveEncryptedPictures(false),
-    iQueuedSignals(0),
-    iFirstQueuedSignal(NoSignal),
-    iImageProvider(NULL),
-    iThumbnailProvider(NULL),
+    iImageProvider(Q_NULLPTR),
+    iThumbnailProvider(Q_NULLPTR),
     iThumbSize(32,32),
     iFoilState(FoilKeyMissing),
     iFoilPicsDir(QDir::homePath() + "/" FOIL_PICS_DIR),
     iFoilKeyDir(QDir::homePath() + "/" FOIL_KEY_DIR),
     iFoilKeyFile(iFoilKeyDir + "/" + FOIL_KEY_FILE),
-    iPrivateKey(NULL),
-    iPublicKey(NULL),
+    iPrivateKey(Q_NULLPTR),
+    iPublicKey(Q_NULLPTR),
     iThreadPool(new QThreadPool(this)),
-    iCheckPicsTask(NULL),
-    iSaveInfoTask(NULL),
-    iGenerateKeyTask(NULL),
-    iDecryptPicsTask(NULL),
-    iGroupModel(NULL), // FoilPicsModel::FoilPicsModel will create it
+    iCheckPicsTask(Q_NULLPTR),
+    iSaveInfoTask(Q_NULLPTR),
+    iGenerateKeyTask(Q_NULLPTR),
+    iDecryptPicsTask(Q_NULLPTR),
+    iGroupModel(Q_NULLPTR), // FoilPicsModel::FoilPicsModel will create it
     iGroupModelConnected(false),
     iIgnoreGroupModelChanges(0)
 {
@@ -2053,10 +2327,11 @@ FoilPicsModel::Private::Private(FoilPicsModel* aParent) :
     }
 
     // Initialize the key state
-    GError* error = NULL;
+    GError* error = Q_NULLPTR;
     const QByteArray path(iFoilKeyFile.toUtf8());
     FoilPrivateKey* key = foil_private_key_decrypt_from_file
-        (FOIL_KEY_RSA_PRIVATE, path.constData(), NULL, &error);
+        (FOIL_KEY_RSA_PRIVATE, path.constData(), Q_NULLPTR, &error);
+
     if (key) {
         HDEBUG("Key not encrypted");
         iFoilState = FoilKeyNotEncrypted;
@@ -2114,33 +2389,36 @@ FoilPicsModel::Private::~Private()
     }
 }
 
-size_t FoilPicsModel::Private::maxBytesToDecrypt()
+size_t
+FoilPicsModel::Private::maxBytesToDecrypt()
 {
     // Basically, we are willing to use up to 5MB per gigabyte of RAM
     size_t kbTotal = sysconf(_SC_PHYS_PAGES)*sysconf(_SC_PAGESIZE)/0x400;
+
     HDEBUG("We seem to have" << kbTotal << "kB of RAM");
     return 5*kbTotal;
 }
 
-inline FoilPicsModel* FoilPicsModel::Private::parentModel()
-{
-    return qobject_cast<FoilPicsModel*>(parent());
-}
-
-FoilPicsModel::ModelData* FoilPicsModel::Private::dataAt(int aIndex)
+FoilPicsModel::ModelData*
+FoilPicsModel::Private::dataAt(
+    int aIndex)
 {
     if (aIndex >= 0 && aIndex < iData.count()) {
         return iData.at(aIndex);
     } else {
-        return NULL;
+        return Q_NULLPTR;
     }
 }
 
-int FoilPicsModel::Private::find(QString aImageId)
+int
+FoilPicsModel::Private::find(
+    const QString& aImageId)
 {
     const int n = iData.count();
+
     for (int i = 0; i < n; i++) {
         ModelData* data = iData.at(i);
+
         if (data->iImageId == aImageId) {
             return i;
         }
@@ -2148,49 +2426,8 @@ int FoilPicsModel::Private::find(QString aImageId)
     return -1;
 }
 
-void FoilPicsModel::Private::queueSignal(Signal aSignal)
-{
-    if (aSignal > NoSignal && aSignal < SignalCount) {
-        const SignalMask signalBit = (SignalMask(1) << aSignal);
-        if (iQueuedSignals) {
-            iQueuedSignals |= signalBit;
-            if (iFirstQueuedSignal > aSignal) {
-                iFirstQueuedSignal = aSignal;
-            }
-        } else {
-            iQueuedSignals = signalBit;
-            iFirstQueuedSignal = aSignal;
-        }
-    }
-}
-
-void FoilPicsModel::Private::emitQueuedSignals()
-{
-    // The order must match the Signal enum:
-    static const SignalEmitter emitSignal [] = {
-        &FoilPicsModel::countChanged,           // SignalCountChanged
-        &FoilPicsModel::busyChanged,            // SignalBusyChanged
-        &FoilPicsModel::keyAvailableChanged,    // SignalKeyAvailableChanged
-        &FoilPicsModel::foilStateChanged,       // SignalFoilStateChanged
-        &FoilPicsModel::mayHaveEncryptedPicturesChanged,  // SignalMayHaveEncryptedPicturesChanged
-        &FoilPicsModel::thumbnailSizeChanged,   // SignalThumbnailSizeChanged
-        &FoilPicsModel::decryptionStarted       // SignalDecryptionStarted
-    };
-
-    Q_STATIC_ASSERT(G_N_ELEMENTS(emitSignal) == SignalCount);
-    if (iQueuedSignals) {
-        FoilPicsModel* model = parentModel();
-        for (int i = iFirstQueuedSignal; i < SignalCount && iQueuedSignals; i++) {
-            const SignalMask signalBit = (SignalMask(1) << i);
-            if (iQueuedSignals & signalBit) {
-                iQueuedSignals &= ~signalBit;
-                Q_EMIT (model->*(emitSignal[i]))();
-            }
-        }
-    }
-}
-
-bool FoilPicsModel::Private::disconnectGroupModel()
+bool
+FoilPicsModel::Private::disconnectGroupModel()
 {
     if (iGroupModelConnected) {
         iGroupModelConnected = false;
@@ -2201,7 +2438,8 @@ bool FoilPicsModel::Private::disconnectGroupModel()
     }
 }
 
-void FoilPicsModel::Private::connectGroupModel()
+void
+FoilPicsModel::Private::connectGroupModel()
 {
     if (!iGroupModelConnected) {
         static const char* modelSignals[] = {
@@ -2229,7 +2467,10 @@ void FoilPicsModel::Private::connectGroupModel()
     }
 }
 
-void FoilPicsModel::Private::setKeys(FoilPrivateKey* aPrivate, FoilKey* aPublic)
+void
+FoilPicsModel::Private::setKeys(
+    FoilPrivateKey* aPrivate,
+    FoilKey* aPublic)
 {
     if (aPrivate) {
         if (iPrivateKey) {
@@ -2245,20 +2486,22 @@ void FoilPicsModel::Private::setKeys(FoilPrivateKey* aPrivate, FoilKey* aPublic)
         queueSignal(SignalKeyAvailableChanged);
         foil_private_key_unref(iPrivateKey);
         foil_key_unref(iPublicKey);
-        iPrivateKey = NULL;
-        iPublicKey = NULL;
+        iPrivateKey = Q_NULLPTR;
+        iPublicKey = Q_NULLPTR;
     }
 }
 
-bool FoilPicsModel::Private::checkPassword(QString aPassword)
+bool
+FoilPicsModel::Private::checkPassword(
+    const QString& aPassword)
 {
-    GError* error = NULL;
-    HDEBUG(iFoilKeyFile);
+    GError* error = Q_NULLPTR;
     const QByteArray path(iFoilKeyFile.toUtf8());
+    HDEBUG(iFoilKeyFile);
 
     // First make sure that it's encrypted
     FoilPrivateKey* key = foil_private_key_decrypt_from_file
-        (FOIL_KEY_RSA_PRIVATE, path.constData(), NULL, &error);
+        (FOIL_KEY_RSA_PRIVATE, path.constData(), Q_NULLPTR, &error);
     if (key) {
         HWARN("Key not encrypted");
         foil_private_key_unref(key);
@@ -2289,21 +2532,24 @@ bool FoilPicsModel::Private::checkPassword(QString aPassword)
     return false;
 }
 
-bool FoilPicsModel::Private::changePassword(QString aOldPassword,
-    QString aNewPassword)
+bool
+FoilPicsModel::Private::changePassword(
+    const QString& aOldPassword,
+    const QString& aNewPassword)
 {
     HDEBUG(iFoilKeyFile);
     if (checkPassword(aOldPassword)) {
-        GError* error = NULL;
+        GError* error = Q_NULLPTR;
         QByteArray password(aNewPassword.toUtf8());
 
         // First write the temporary file
         QString tmpKeyFile = iFoilKeyFile + ".new";
         const QByteArray tmp(tmpKeyFile.toUtf8());
         FoilOutput* out = foil_output_file_new_open(tmp.constData());
+
         if (foil_private_key_encrypt(iPrivateKey, out,
             FOIL_KEY_EXPORT_FORMAT_DEFAULT, password.constData(),
-            NULL, &error) && foil_output_flush(out)) {
+            Q_NULLPTR, &error) && foil_output_flush(out)) {
             foil_output_unref(out);
 
             // Then rename it
@@ -2311,9 +2557,9 @@ bool FoilPicsModel::Private::changePassword(QString aOldPassword,
             QFile::remove(saveKeyFile);
             if (QFile::rename(iFoilKeyFile, saveKeyFile) &&
                 QFile::rename(tmpKeyFile, iFoilKeyFile)) {
-                BaseTask::removeFile(saveKeyFile);
+                Task::removeFile(saveKeyFile);
                 HDEBUG("Password changed");
-                Q_EMIT parentModel()->passwordChanged();
+                Q_EMIT parentObject()->passwordChanged();
                 return true;
             }
         } else {
@@ -2327,7 +2573,9 @@ bool FoilPicsModel::Private::changePassword(QString aOldPassword,
     return false;
 }
 
-void FoilPicsModel::Private::setFoilState(FoilState aState)
+void
+FoilPicsModel::Private::setFoilState(
+    FoilState aState)
 {
     if (iFoilState != aState) {
         iFoilState = aState;
@@ -2352,21 +2600,26 @@ void FoilPicsModel::Private::setFoilState(FoilState aState)
     }
 }
 
-void FoilPicsModel::Private::ignoreGroupModelChange()
+void
+FoilPicsModel::Private::ignoreGroupModelChange()
 {
     iIgnoreGroupModelChanges++;
     Q_EMIT stopIgnoringGroupModelChanges();
     HDEBUG(iIgnoreGroupModelChanges);
 }
 
-void FoilPicsModel::Private::onStopIgnoringGroupModelChanges()
+void
+FoilPicsModel::Private::onStopIgnoringGroupModelChanges()
 {
     iIgnoreGroupModelChanges--;
     HDEBUG(iIgnoreGroupModelChanges);
     HASSERT(iIgnoreGroupModelChanges >= 0);
 }
 
-int FoilPicsModel::Private::compare(const ModelData* aData1, const ModelData* aData2) const
+int
+FoilPicsModel::Private::compare(
+    const ModelData* aData1,
+    const ModelData* aData2) const
 {
     if (aData1->iGroupId != aData2->iGroupId) {
         // Different groups
@@ -2377,6 +2630,7 @@ int FoilPicsModel::Private::compare(const ModelData* aData1, const ModelData* aD
     // Most recent first (within the group)
     const qint64 msec1 = aData1->iSortTime.toMSecsSinceEpoch();
     const qint64 msec2 = aData2->iSortTime.toMSecsSinceEpoch();
+
     if (msec1 > msec2) {
         return -1;
     } else if (msec1 < msec2) {
@@ -2386,20 +2640,27 @@ int FoilPicsModel::Private::compare(const ModelData* aData1, const ModelData* aD
     // Finally compare the original file name. If those match too,
     // then image ids must be different.
     int res = aData1->iFileName.compare(aData2->iFileName);
+
     return res ? res : aData1->iImageId.compare(aData2->iImageId);
 }
 
-int FoilPicsModel::Private::sortProc(const void* aPtr1, const void* aPtr2,
+int
+FoilPicsModel::Private::sortProc(
+    const void* aPtr1,
+    const void* aPtr2,
     void* aThis)
 {
     ModelData** aDataPtr1 = (ModelData**)aPtr1;
     ModelData** aDataPtr2 = (ModelData**)aPtr2;
+
     return ((Private*)aThis)->compare(*aDataPtr1, *aDataPtr2);
 }
 
-void FoilPicsModel::Private::insertModelData(ModelData* aData)
+void
+FoilPicsModel::Private::insertModelData(
+    ModelData* aData)
 {
-    FoilPicsModel* model = parentModel();
+    FoilPicsModel* model = parentObject();
 
     // Create image providers on demand because QQmlEngine::contextForObject
     // doesn't work at initialization time
@@ -2429,6 +2690,7 @@ void FoilPicsModel::Private::insertModelData(ModelData* aData)
     ModelData::ConstIterator it = qLowerBound(iData.begin(), iData.end(),
         aData, LessThan(this));
     const int pos = it - iData.begin();
+
     model->beginInsertRows(QModelIndex(), pos, pos);
     iData.insert(pos, aData);
     HDEBUG(iData.count() << aData->iSortTime.
@@ -2443,11 +2705,14 @@ void FoilPicsModel::Private::insertModelData(ModelData* aData)
     queueSignal(SignalCountChanged);
 }
 
-void FoilPicsModel::Private::destroyItemAt(int aIndex)
+void
+FoilPicsModel::Private::destroyItemAt(
+    int aIndex)
 {
     if (aIndex >= 0 && aIndex <= iData.count()) {
-        FoilPicsModel* model = parentModel();
+        FoilPicsModel* model = parentObject();
         ModelData* data = iData.at(aIndex);
+
         HDEBUG("Removing" << qPrintable(data->iPath));
         // Providers must have been created by insertModelData
         iThumbnailProvider->releaseThumbnail(data->iImageId);
@@ -2464,25 +2729,31 @@ void FoilPicsModel::Private::destroyItemAt(int aIndex)
     }
 }
 
-bool FoilPicsModel::Private::destroyItemAndRemoveFilesAt(int aIndex)
+bool
+FoilPicsModel::Private::destroyItemAndRemoveFilesAt(
+    int aIndex)
 {
     ModelData* data = dataAt(aIndex);
+
     if (data) {
-        QString path(data->iPath);
+        const QString path(data->iPath);
         QString thumbPath;
+
         if (!data->iThumbFile.isEmpty()) {
             thumbPath = (QFileInfo(path).dir().filePath(data->iThumbFile));
             HDEBUG("Removing" << qPrintable(thumbPath));
         }
         destroyItemAt(aIndex);
-        BaseTask::removeFile(path);
-        BaseTask::removeFile(thumbPath);
+        Task::removeFile(path);
+        Task::removeFile(thumbPath);
         return true;
     }
     return false;
 }
 
-void FoilPicsModel::Private::removeAt(int aIndex)
+void
+FoilPicsModel::Private::removeAt(
+    int aIndex)
 {
     const bool wasBusy = busy();
     if (destroyItemAndRemoveFilesAt(aIndex)) {
@@ -2494,12 +2765,16 @@ void FoilPicsModel::Private::removeAt(int aIndex)
     }
 }
 
-void FoilPicsModel::Private::removeFiles(QList<int> aRows)
+void
+FoilPicsModel::Private::removeFiles(
+    QList<int> aRows)
 {
     const int n = aRows.count();
+
     if (n > 0) {
         int removed = 0;
         const bool wasBusy = busy();
+
         qSort(aRows);
         for (int i = n - 1; i >= 0; i--) {
             if (destroyItemAndRemoveFilesAt(aRows.at(i))) {
@@ -2515,18 +2790,23 @@ void FoilPicsModel::Private::removeFiles(QList<int> aRows)
     }
 }
 
-void FoilPicsModel::Private::clearGroupModel()
+void
+FoilPicsModel::Private::clearGroupModel()
 {
     const bool wasConnected = disconnectGroupModel();
+
     iGroupModel->clear();
     if (wasConnected) connectGroupModel();
 }
 
-void FoilPicsModel::Private::clearModel()
+void
+FoilPicsModel::Private::clearModel()
 {
     const int n = iData.count();
+
     if (n > 0) {
-        FoilPicsModel* model = parentModel();
+        FoilPicsModel* model = parentObject();
+
         model->beginRemoveRows(QModelIndex(), 0, n-1);
         qDeleteAll(iData);
         iData.clear();
@@ -2540,17 +2820,19 @@ void FoilPicsModel::Private::clearModel()
     }
 }
 
-void FoilPicsModel::Private::onCheckPicsTaskDone()
+void
+FoilPicsModel::Private::onCheckPicsTaskDone()
 {
     HDEBUG("Done");
     if (sender() == iCheckPicsTask) {
         const bool mayHave = iCheckPicsTask->iMayHaveEncryptedPictures;
+
         if (iMayHaveEncryptedPictures != mayHave) {
             iMayHaveEncryptedPictures = mayHave;
             queueSignal(SignalMayHaveEncryptedPicturesChanged);
         }
         iCheckPicsTask->release(this);
-        iCheckPicsTask = NULL;
+        iCheckPicsTask = Q_NULLPTR;
         if (!busy()) {
             // We know we were busy when we received this signal
             queueSignal(SignalBusyChanged);
@@ -2559,7 +2841,8 @@ void FoilPicsModel::Private::onCheckPicsTaskDone()
     }
 }
 
-void FoilPicsModel::Private::onGroupModelChanged()
+void
+FoilPicsModel::Private::onGroupModelChanged()
 {
     if (iIgnoreGroupModelChanges > 0) {
         HDEBUG("Ignoring group model change");
@@ -2575,12 +2858,16 @@ void FoilPicsModel::Private::onGroupModelChanged()
     }
 }
 
-void FoilPicsModel::Private::onGroupRenamed(int aIndex, const FoilPicsGroupModel::Group& aGroup)
+void
+FoilPicsModel::Private::onGroupRenamed(
+    int,
+    const FoilPicsGroupModel::Group& aGroup)
 {
     const QString groupId(aGroup.iId);
     HDEBUG("Group" << groupId << "renamed into" << aGroup.iName);
     const int n = iData.count();
     QList<int> changedRows;
+
     for (int i = 0; i < n; i++) {
         ModelData* data = iData.at(i);
         if (data->iGroupId == groupId) {
@@ -2592,23 +2879,25 @@ void FoilPicsModel::Private::onGroupRenamed(int aIndex, const FoilPicsGroupModel
     }
 }
 
-void FoilPicsModel::Private::saveInfo()
+void
+FoilPicsModel::Private::saveInfo()
 {
     // N.B. This method may change the busy state but doesn't queue
     // BusyChanged signal, it's done by the caller.
     if (iSaveInfoTask) iSaveInfoTask->release(this);
-    iSaveInfoTask = new SaveInfoTask(iThreadPool,
+    iSaveInfoTask = new Task::SaveInfo(iThreadPool,
         ModelInfo(iData, iGroupModel->groups()),
         iFoilPicsDir, iPrivateKey, iPublicKey);
     iSaveInfoTask->submit(this, SLOT(onSaveInfoDone()));
 }
 
-void FoilPicsModel::Private::onSaveInfoDone()
+void
+FoilPicsModel::Private::onSaveInfoDone()
 {
     HDEBUG("Done");
     if (sender() == iSaveInfoTask) {
         iSaveInfoTask->release(this);
-        iSaveInfoTask = NULL;
+        iSaveInfoTask = Q_NULLPTR;
         if (!busy()) {
             // We know we were busy when we received this signal
             queueSignal(SignalBusyChanged);
@@ -2617,11 +2906,15 @@ void FoilPicsModel::Private::onSaveInfoDone()
     }
 }
 
-void FoilPicsModel::Private::generate(int aBits, QString aPassword)
+void
+FoilPicsModel::Private::generate(
+    int aBits,
+    const QString& aPassword)
 {
     const bool wasBusy = busy();
+
     if (iGenerateKeyTask) iGenerateKeyTask->release(this);
-    iGenerateKeyTask = new GenerateKeyTask(iThreadPool, iFoilKeyFile,
+    iGenerateKeyTask = new Task::GenerateKey(iThreadPool, iFoilKeyFile,
         aBits, aPassword);
     iGenerateKeyTask->submit(this, SLOT(onGenerateKeyTaskDone()));
     setFoilState(FoilGeneratingKey);
@@ -2632,7 +2925,8 @@ void FoilPicsModel::Private::generate(int aBits, QString aPassword)
     emitQueuedSignals();
 }
 
-void FoilPicsModel::Private::onGenerateKeyTaskDone()
+void
+FoilPicsModel::Private::onGenerateKeyTaskDone()
 {
     HDEBUG("Got a new key");
     HASSERT(sender() == iGenerateKeyTask);
@@ -2640,31 +2934,35 @@ void FoilPicsModel::Private::onGenerateKeyTaskDone()
         setKeys(iGenerateKeyTask->iPrivateKey, iGenerateKeyTask->iPublicKey);
         setFoilState(FoilPicsReady);
     } else {
-        setKeys(NULL);
+        setKeys(Q_NULLPTR);
         setFoilState(FoilKeyError);
     }
     iGenerateKeyTask->release(this);
-    iGenerateKeyTask = NULL;
+    iGenerateKeyTask = Q_NULLPTR;
     if (!busy()) {
         // We know we were busy when we received this signal
         queueSignal(SignalBusyChanged);
     }
-    parentModel()->keyGenerated();
+    parentObject()->keyGenerated();
     emitQueuedSignals();
 }
 
-void FoilPicsModel::Private::lock(bool aTimeout)
+void
+FoilPicsModel::Private::lock(
+    bool aTimeout)
 {
     // Cancel whatever we are doing
     const bool wasBusy = busy();
+
     if (iSaveInfoTask) {
         iSaveInfoTask->release(this);
-        iSaveInfoTask = NULL;
+        iSaveInfoTask = Q_NULLPTR;
     }
     if (iDecryptPicsTask) {
         iDecryptPicsTask->release(this);
-        iDecryptPicsTask = NULL;
+        iDecryptPicsTask = Q_NULLPTR;
     }
+
     int i;
     for (i = 0; i < iEncryptTasks.count(); i++) {
         iEncryptTasks.at(i)->release(this);
@@ -2672,13 +2970,15 @@ void FoilPicsModel::Private::lock(bool aTimeout)
     for (i = 0; i < iImageRequestTasks.count(); i++) {
         iImageRequestTasks.at(i)->release(this);
     }
+
     iEncryptTasks.clear();
     iImageRequestTasks.clear();
     // Disconnect the signals before clearing the model
     disconnectGroupModel();
     // Destroy decrypted pictures
     if (!iData.isEmpty()) {
-        FoilPicsModel* model = parentModel();
+        FoilPicsModel* model = parentObject();
+
         model->beginRemoveRows(QModelIndex(), 0, iData.count()-1);
         qDeleteAll(iData);
         iData.clear();
@@ -2691,7 +2991,7 @@ void FoilPicsModel::Private::lock(bool aTimeout)
     }
     if (iPrivateKey) {
         // Throw the keys away
-        setKeys(NULL);
+        setKeys(Q_NULLPTR);
         setFoilState(aTimeout ? FoilLockedTimedOut : FoilLocked);
         HDEBUG("Locked");
     } else {
@@ -2699,16 +2999,20 @@ void FoilPicsModel::Private::lock(bool aTimeout)
     }
 }
 
-bool FoilPicsModel::Private::unlock(QString aPassword)
+bool
+FoilPicsModel::Private::unlock(
+    const QString& aPassword)
 {
-    GError* error = NULL;
-    HDEBUG(iFoilKeyFile);
+    GError* error = Q_NULLPTR;
     const QByteArray path(iFoilKeyFile.toUtf8());
     bool ok = false;
+
+    HDEBUG(path.constData());
 
     // First make sure that it's encrypted
     FoilPrivateKey* key = foil_private_key_decrypt_from_file
         (FOIL_KEY_RSA_PRIVATE, path.constData(), NULL, &error);
+
     if (key) {
         HWARN("Key not encrypted");
         setFoilState(FoilKeyNotEncrypted);
@@ -2717,6 +3021,7 @@ bool FoilPicsModel::Private::unlock(QString aPassword)
         if (error->code == FOIL_ERROR_KEY_ENCRYPTED) {
             // Then try to decrypt it
             const QByteArray password(aPassword.toUtf8());
+
             g_clear_error(&error);
             key = foil_private_key_decrypt_from_file
                 (FOIL_KEY_RSA_PRIVATE, path.constData(),
@@ -2760,28 +3065,38 @@ bool FoilPicsModel::Private::unlock(QString aPassword)
     return ok;
 }
 
-void FoilPicsModel::Private::encryptFile(QString aFile, QVariantMap aMetaData)
+void
+FoilPicsModel::Private::encryptFile(
+    const QString& aFile,
+    QVariantMap aMetaData)
 {
     // Missing coordinates are sometimes represented as all zeros
     const double latitude = aMetaData.value(MetaLatitude).toDouble();
     const double longitude = aMetaData.value(MetaLongitude).toDouble();
     const double altitude = aMetaData.value(MetaAltitude).toDouble();
+
     if (latitude == 0.0 && longitude == 0.0 && altitude == 0.0) {
         // Bogus coordinates, don't store them
         aMetaData.remove(MetaLatitude);
         aMetaData.remove(MetaLongitude);
         aMetaData.remove(MetaAltitude);
     }
-    EncryptTask* task = new EncryptTask(iThreadPool, aFile, iFoilPicsDir,
+
+    Task::Encrypt* task = new Task::Encrypt(iThreadPool, aFile, iFoilPicsDir,
         iPrivateKey, iPublicKey, iThumbSize, aMetaData);
+
     iEncryptTasks.append(task);
     task->submit(this, SLOT(onEncryptTaskDone()));
 }
 
-bool FoilPicsModel::Private::encrypt(QUrl aUrl, QVariantMap aMetaData)
+bool
+FoilPicsModel::Private::encrypt(
+    const QUrl& aUrl,
+    const QVariantMap& aMetaData)
 {
     if (iPrivateKey && aUrl.isLocalFile()) {
         const bool wasBusy = busy();
+
         encryptFile(aUrl.toLocalFile(), aMetaData);
         if (!wasBusy) {
             // We know we are busy now
@@ -2792,12 +3107,16 @@ bool FoilPicsModel::Private::encrypt(QUrl aUrl, QVariantMap aMetaData)
     return false;
 }
 
-void FoilPicsModel::Private::encryptFiles(QAbstractItemModel* aModel, QList<int> aRows)
+void
+FoilPicsModel::Private::encryptFiles(
+    QAbstractItemModel* aModel,
+    const QList<int>& aRows)
 {
     HASSERT(aModel);
     if (iPrivateKey && !aRows.isEmpty()) {
         // URL is absolutely required
-        FoilPicsRole urlRole(aModel, MetaUrl);
+        const FoilPicsRole urlRole(aModel, MetaUrl);
+
         if (urlRole.isValid()) {
             int submitted = 0;
             const bool wasBusy = busy();
@@ -2812,17 +3131,21 @@ void FoilPicsModel::Private::encryptFiles(QAbstractItemModel* aModel, QList<int>
                 &cameraManufacturerRole, &cameraModelRole, &latitudeRole,
                 &longitudeRole, &altitudeRole
             };
+
             // Start from the end of the list, in an attempt to disturb
             // the model less
             for (int i = aRows.count()-1; i >= 0; i--) {
                 const int row = aRows.at(i);
                 QUrl url(urlRole.valueAt(row).toUrl());
+
                 if (url.isLocalFile()) {
                     // Pull metadata out of the model
                     QVariantMap metadata;
+
                     for (uint k = 0; k < G_N_ELEMENTS(roles); k++) {
                         const FoilPicsRole* role = roles[k];
                         QVariant value(role->valueAt(row));
+
                         if (value.isValid()) {
                             metadata.insert(role->name(), value);
                         }
@@ -2842,33 +3165,42 @@ void FoilPicsModel::Private::encryptFiles(QAbstractItemModel* aModel, QList<int>
     }
 }
 
-void FoilPicsModel::Private::onEncryptTaskDone()
+void
+FoilPicsModel::Private::onEncryptTaskDone()
 {
-    EncryptTask* task = qobject_cast<EncryptTask*>(sender());
+    Task::Encrypt* task = qobject_cast<Task::Encrypt*>(sender());
+
     HVERIFY(iEncryptTasks.removeAll(task));
     HDEBUG("Encrypted" << qPrintable(task->iSourceFile));
     if (task->iData) {
+        // Steal model data from the task
         insertModelData(task->iData);
-        task->iData = NULL;
+        task->iData = Q_NULLPTR;
         saveInfo();
     }
+
     const QUrl mediaUrl(QUrl::fromLocalFile(task->iSourceFile));
+
     task->release(this);
     if (!busy()) {
         // We know we were busy when we received this signal
         queueSignal(SignalBusyChanged);
     }
-    Q_EMIT parentModel()->mediaDeleted(mediaUrl);
+    Q_EMIT parentObject()->mediaDeleted(mediaUrl);
     emitQueuedSignals();
 }
 
-void FoilPicsModel::Private::decryptAt(int aIndex)
+void
+FoilPicsModel::Private::decryptAt(
+    int aIndex)
 {
     ModelData* data = dataAt(aIndex);
+
     if (data && !data->iDecryptTask) {
         const bool wasBusy = busy();
+
         HDEBUG("About to decrypt" << qPrintable(data->iPath));
-        data->iDecryptTask = new DecryptTask(iThreadPool, data,
+        data->iDecryptTask = new Task::Decrypt(iThreadPool, data,
             iPrivateKey, iPublicKey);
         data->iDecryptTask->submit(this, SLOT(onDecryptTaskDone()));
         if (!wasBusy) {
@@ -2879,13 +3211,17 @@ void FoilPicsModel::Private::decryptAt(int aIndex)
     }
 }
 
-void FoilPicsModel::Private::decryptTaskDone(DecryptTask* aTask, bool aLast)
+void
+FoilPicsModel::Private::decryptTaskDone(
+    Task::Decrypt* aTask,
+    bool aLast)
 {
     if (aTask) {
-        DecryptTask* task = qobject_cast<DecryptTask*>(sender());
+        Task::Decrypt* task = qobject_cast<Task::Decrypt*>(sender());
         ModelData* data = task->iData;
-        data->iDecryptTask = NULL;
-        task->iData = NULL;
+
+        data->iDecryptTask = Q_NULLPTR;
+        task->iData = Q_NULLPTR;
         task->release(this);
         const bool wasConnected = disconnectGroupModel();
         destroyItemAt(iData.indexOf(data));
@@ -2901,23 +3237,28 @@ void FoilPicsModel::Private::decryptTaskDone(DecryptTask* aTask, bool aLast)
     }
 }
 
-void FoilPicsModel::Private::onDecryptTaskDone()
+void
+FoilPicsModel::Private::onDecryptTaskDone()
 {
-    decryptTaskDone(qobject_cast<DecryptTask*>(sender()), true);
+    decryptTaskDone(qobject_cast<Task::Decrypt*>(sender()), true);
 }
 
-void FoilPicsModel::Private::decryptFiles(QList<int> aRows)
+void
+FoilPicsModel::Private::decryptFiles(
+    QList<int> aRows)
 {
     if (!iData.isEmpty() && !aRows.isEmpty()) {
         const bool wasBusy = busy();
+        ModelData* data;
+
         HDEBUG("Decrypting" << aRows.count() << "picture(s)");
+
         // Start from the last picture
         qSort(aRows);
-        ModelData* data;
         for (int i = aRows.count() - 1; i > 0; i--) {
             data = dataAt(aRows.at(i));
             if (data && !data->iDecryptTask) {
-                data->iDecryptTask = new DecryptTask(iThreadPool, data,
+                data->iDecryptTask = new Task::Decrypt(iThreadPool, data,
                     iPrivateKey, iPublicKey);
                 data->iDecryptTask->submit(this, SLOT(onDecryptAllProgress()));
             }
@@ -2925,7 +3266,7 @@ void FoilPicsModel::Private::decryptFiles(QList<int> aRows)
         // The last onDecryptTaskDone will reset the image info
         data = dataAt(aRows.first());
         if (data && !data->iDecryptTask) {
-            data->iDecryptTask = new DecryptTask(iThreadPool, data,
+            data->iDecryptTask = new Task::Decrypt(iThreadPool, data,
                 iPrivateKey, iPublicKey);
             data->iDecryptTask->submit(this, SLOT(onDecryptTaskDone()));
         }
@@ -2936,17 +3277,19 @@ void FoilPicsModel::Private::decryptFiles(QList<int> aRows)
     }
 }
 
-void FoilPicsModel::Private::decryptAll()
+void
+FoilPicsModel::Private::decryptAll()
 {
     if (!iData.isEmpty()) {
+        ModelData* data;
         const bool wasBusy = busy();
+
         HDEBUG("Decrypting all" << iData.count() << "picture(s)");
         // Start from the last picture
-        ModelData* data;
         for (int i = iData.count() - 1; i > 0; i--) {
             data = iData.at(i);
             if (!data->iDecryptTask) {
-                data->iDecryptTask = new DecryptTask(iThreadPool, data,
+                data->iDecryptTask = new Task::Decrypt(iThreadPool, data,
                     iPrivateKey, iPublicKey);
                 data->iDecryptTask->submit(this, SLOT(onDecryptAllProgress()));
             }
@@ -2954,7 +3297,7 @@ void FoilPicsModel::Private::decryptAll()
         // The last onDecryptTaskDone will reset the image info
         data = iData.first();
         if (!data->iDecryptTask) {
-            data->iDecryptTask = new DecryptTask(iThreadPool, data,
+            data->iDecryptTask = new Task::Decrypt(iThreadPool, data,
                 iPrivateKey, iPublicKey);
             data->iDecryptTask->submit(this, SLOT(onDecryptTaskDone()));
         }
@@ -2965,36 +3308,44 @@ void FoilPicsModel::Private::decryptAll()
     }
 }
 
-void FoilPicsModel::Private::onDecryptAllProgress()
+void
+FoilPicsModel::Private::onDecryptAllProgress()
 {
-    decryptTaskDone(qobject_cast<DecryptTask*>(sender()), false);
+    decryptTaskDone(qobject_cast<Task::Decrypt*>(sender()), false);
 }
 
-void FoilPicsModel::Private::onGroupsDecrypted(FoilPicsGroupModel::GroupList aGroups)
+void
+FoilPicsModel::Private::onGroupsDecrypted(
+    FoilPicsGroupModel::GroupList aGroups)
 {
-    HDEBUG(aGroups.count() << "group(s)");
     const bool wasConnected = disconnectGroupModel();
+
+    HDEBUG(aGroups.count() << "group(s)");
     iGroupModel->setGroups(aGroups);
     if (wasConnected) connectGroupModel();
 }
 
-void FoilPicsModel::Private::onDecryptPicsProgress(DecryptPicsTask::Progress::Ptr aProgress)
+void
+FoilPicsModel::Private::onDecryptPicsProgress(
+    DecryptPicsTask::Progress::Ptr aProgress)
 {
     if (aProgress && aProgress->iTask == iDecryptPicsTask) {
         // Transfer ownership of this ModelData to the model
         insertModelData(aProgress->iModelData);
-        aProgress->iModelData = NULL;
+        aProgress->iModelData = Q_NULLPTR;
     }
     emitQueuedSignals();
 }
 
-void FoilPicsModel::Private::onDecryptPicsTaskDone()
+void
+FoilPicsModel::Private::onDecryptPicsTaskDone()
 {
     HDEBUG(iData.count() << "picture(s) decrypted");
     if (sender() == iDecryptPicsTask) {
-        bool infoUpdated = iDecryptPicsTask->iSaveInfo;
+        const bool infoUpdated = iDecryptPicsTask->iSaveInfo;
+
         iDecryptPicsTask->release(this);
-        iDecryptPicsTask = NULL;
+        iDecryptPicsTask = Q_NULLPTR;
         if (iFoilState == FoilDecrypting) {
             setFoilState(FoilPicsReady);
         }
@@ -3007,11 +3358,16 @@ void FoilPicsModel::Private::onDecryptPicsTaskDone()
     emitQueuedSignals();
 }
 
-void FoilPicsModel::Private::setTitleAt(int aIndex, QString aTitle)
+void
+FoilPicsModel::Private::setTitleAt(
+    int aIndex,
+    const QString& aTitle)
 {
     ModelData* data = dataAt(aIndex);
+
     if (data) {
         QString title(aTitle.isEmpty() ? data->iDefaultTitle : aTitle);
+
         if (data->iTitle != title) {
             data->iTitle = title;
             data->updateVariantMap(ModelData::TitleRole);
@@ -3019,12 +3375,13 @@ void FoilPicsModel::Private::setTitleAt(int aIndex, QString aTitle)
 
             HDEBUG("Settings title at" << aIndex << "to" << title);
             const bool wasBusy = busy();
+
             if (data->iSetTitleTask) {
                 HDEBUG("Dropping previous task");
                 data->iSetTitleTask->release(this);
-                data->iSetTitleTask = NULL;
+                data->iSetTitleTask = Q_NULLPTR;
             }
-            data->iSetTitleTask = SetHeaderTask::createTitleTask(iThreadPool,
+            data->iSetTitleTask = Task::SetHeader::createTitleTask(iThreadPool,
                 iPrivateKey, iPublicKey, data);
             data->iSetTitleTask->submit(this, SLOT(onSetTitleTaskDone()));
             if (!wasBusy) {
@@ -3035,10 +3392,12 @@ void FoilPicsModel::Private::setTitleAt(int aIndex, QString aTitle)
     }
 }
 
-bool FoilPicsModel::Private::sortModel()
+bool
+FoilPicsModel::Private::sortModel()
 {
-    FoilPicsModel* model = parentModel();
+    FoilPicsModel* model = parentObject();
     ModelData::List data = iData;
+
     qSort(data.begin(), data.end(), LessThan(this));
     if (data != iData) {
         HDEBUG("list has changed");
@@ -3052,7 +3411,10 @@ bool FoilPicsModel::Private::sortModel()
     }
 }
 
-bool FoilPicsModel::Private::setGroupId(ModelData* aData, QByteArray aId)
+bool
+FoilPicsModel::Private::setGroupId(
+    ModelData* aData,
+    const QByteArray& aId)
 {
     if (aData->iGroupId != aId) {
         aData->iGroupId = aId;
@@ -3060,9 +3422,9 @@ bool FoilPicsModel::Private::setGroupId(ModelData* aData, QByteArray aId)
         // Update the encrypted file
         if (aData->iSetGroupTask) {
             aData->iSetGroupTask->release(this);
-            aData->iSetGroupTask = NULL;
+            aData->iSetGroupTask = Q_NULLPTR;
         }
-        aData->iSetGroupTask = SetHeaderTask::createGroupTask(iThreadPool,
+        aData->iSetGroupTask = Task::SetHeader::createGroupTask(iThreadPool,
             iPrivateKey, iPublicKey, aData);
         aData->iSetGroupTask->submit(this, SLOT(onSetGroupTaskDone()));
         return true;
@@ -3070,20 +3432,25 @@ bool FoilPicsModel::Private::setGroupId(ModelData* aData, QByteArray aId)
     return false;
 }
 
-void FoilPicsModel::Private::clearGroup(QByteArray aId)
+void
+FoilPicsModel::Private::clearGroup(
+    const QByteArray& aId)
 {
     if (!aId.isEmpty()) {
         const bool wasBusy = busy();
         const int n = iData.count();
         QList<int> changedRows;
+
         for (int i = 0; i < n; i++) {
             ModelData* data = iData.at(i);
+
             if (data->iGroupId == aId) {
                 HDEBUG(i << QString::fromLatin1(aId));
                 setGroupId(data, QByteArray());
                 changedRows.append(i);
             }
         }
+
         if (!changedRows.isEmpty()) {
             if (!sortModel()) {
                 // The order hasn't changed => the model wasn't reset
@@ -3097,13 +3464,18 @@ void FoilPicsModel::Private::clearGroup(QByteArray aId)
     }
 }
 
-void FoilPicsModel::Private::setGroupIdAt(int aIndex, QByteArray aId)
+void
+FoilPicsModel::Private::setGroupIdAt(
+    int aIndex,
+    const QByteArray& aId)
 {
     // This could be pretty destructive in the sense that it can
     // move the item quite far away from its current position.
     ModelData* data = dataAt(aIndex);
+
     if (data) {
         const bool wasBusy = busy();
+
         if (setGroupId(data, aId)) {
             HDEBUG(aIndex << QString::fromLatin1(aId));
             if (!sortModel()) {
@@ -3118,13 +3490,19 @@ void FoilPicsModel::Private::setGroupIdAt(int aIndex, QByteArray aId)
     }
 }
 
-void FoilPicsModel::Private::setGroupIdForRows(QList<int> aRows, QByteArray aId)
+void
+FoilPicsModel::Private::setGroupIdForRows(
+    QList<int> aRows,
+    const QByteArray& aId)
 {
     if (!aRows.isEmpty()) {
         const bool wasBusy = busy();
+
         qSort(aRows);
+
         QList<int> updatedRows;
         const int n = aRows.count();
+
         for (int i = 0; i < n; i++) {
             const int row = aRows.at(i);
             ModelData* data = dataAt(row);
@@ -3132,6 +3510,7 @@ void FoilPicsModel::Private::setGroupIdForRows(QList<int> aRows, QByteArray aId)
                 updatedRows.append(row);
             }
         }
+
         if (!updatedRows.isEmpty()) {
             if (!sortModel()) {
                 // The order hasn't changed => the model wasn't reset
@@ -3145,13 +3524,15 @@ void FoilPicsModel::Private::setGroupIdForRows(QList<int> aRows, QByteArray aId)
     }
 }
 
-void FoilPicsModel::Private::headerUpdateDone(SetHeaderTask* task)
+void
+FoilPicsModel::Private::headerUpdateDone(
+    Task::SetHeader* task)
 {
     // task->iData must be valid because if ModelData were deleted
     // it would cancel the task in the destructor and we wouldn't
     // receive this signal
     ModelData* data = task->iData;
-    task->iData = NULL;
+    task->iData = Q_NULLPTR;
 
     if (task->iOk) {
         data->iThumbFile = task->iNewThumbFile;
@@ -3179,45 +3560,60 @@ void FoilPicsModel::Private::headerUpdateDone(SetHeaderTask* task)
     saveInfo();
 }
 
-void FoilPicsModel::Private::onSetTitleTaskDone()
+void
+FoilPicsModel::Private::onSetTitleTaskDone()
 {
     // task->iData must be valid, see comment in headerUpdateDone
-    SetHeaderTask* task = qobject_cast<SetHeaderTask*>(sender());
+    Task::SetHeader* task = qobject_cast<Task::SetHeader*>(sender());
+
     HDEBUG(QString::fromUtf8(task->iHeaderValue));
-    task->iData->iSetTitleTask = NULL;
+    task->iData->iSetTitleTask = Q_NULLPTR;
     headerUpdateDone(task);
 }
 
-void FoilPicsModel::Private::onSetGroupTaskDone()
+void
+FoilPicsModel::Private::onSetGroupTaskDone()
 {
     // task->iData must be valid, see comment in headerUpdateDone
-    SetHeaderTask* task = qobject_cast<SetHeaderTask*>(sender());
+    Task::SetHeader* task = qobject_cast<Task::SetHeader*>(sender());
+
     HDEBUG(QString::fromUtf8(task->iHeaderValue));
-    task->iData->iSetGroupTask = NULL;
+    task->iData->iSetGroupTask = Q_NULLPTR;
     headerUpdateDone(task);
 }
 
-void FoilPicsModel::Private::dataChanged(int aIndex, ModelData::Role aRole)
+void
+FoilPicsModel::Private::dataChanged(
+    int aIndex,
+    ModelData::Role aRole)
 {
     if (aIndex >= 0 && aIndex < iData.count()) {
         QVector<int> roles;
+
         roles.append(aRole);
-        FoilPicsModel* model = parentModel();
-        QModelIndex modelIndex(model->index(aIndex));
+        FoilPicsModel* model = parentObject();
+        const QModelIndex modelIndex(model->index(aIndex));
+
         Q_EMIT model->dataChanged(modelIndex, modelIndex, roles);
     }
 }
 
-void FoilPicsModel::Private::dataChanged(QList<int> aRows, ModelData::Role aRole)
+void
+FoilPicsModel::Private::dataChanged(
+    const QList<int>& aRows,
+    ModelData::Role aRole)
 {
     if (!aRows.isEmpty()) {
         QVector<int> roles;
         roles.append(aRole);
-        FoilPicsModel* model = parentModel();
+
+        FoilPicsModel* model = parentObject();
         const int n = aRows.count();
+
         for (int i = 0; i < n; i++) {
             // TODO: coalesce signals for sequential rows
             const int row = aRows.at(i);
+
             if (row >= 0 && row < iData.count()) {
                 QModelIndex modelIndex(model->index(row));
                 Q_EMIT model->dataChanged(modelIndex, modelIndex, roles);
@@ -3233,17 +3629,19 @@ void FoilPicsModel::Private::dataChanged(QList<int> aRows, ModelData::Role aRole
 //    own thread, which queues "imageRequest" signal to FoilPicsModel and
 //    blocks until FoilPicsImageRequest is replied to.
 // 2. FoilPicsModel receives the signal on the UI thread and queues
-//    ImageRequestTask. It's done even if the decrypted data is cached
+//    ImageRequest task. It's done even if the decrypted data is cached
 //    because creating the image from data may take too long for the UI
 //    thread.
-// 3. ImageRequestTask gets executed on yet another worker thread and
+// 3. ImageRequest task gets executed on yet another worker thread and
 //    when it's done, it replies to FoilPicsImageRequest which unblocks
 //    QQuickPixmapReader thread and queues the "done" signal to FoilPicsModel.
 //
 // The "done" signal is finally handled by onImageRequestDone() on the UI
 // thread. If caches the freshly decrypted data.
 //
-void FoilPicsModel::Private::imageRequest(QString aPath,
+void
+FoilPicsModel::Private::imageRequest(
+    const QString& aPath,
     FoilPicsImageRequest aRequest)
 {
     const bool wasBusy = busy();
@@ -3252,16 +3650,20 @@ void FoilPicsModel::Private::imageRequest(QString aPath,
 
     // Check if the decrypted data is cached
     const int index = findPath(aPath);
+
     if (index >= 0) {
-        ModelData* data = iData.at(index);
+        const ModelData* data = iData.at(index);
+
         if (!data->iBytes.isEmpty()) {
             bytes = data->iBytes;
             contentType = data->iContentType;
         }
     }
+
     HDEBUG("Requesting" << qPrintable(aPath));
-    ImageRequestTask* task = new ImageRequestTask(iThreadPool, aPath,
+    Task::ImageRequest* task = new Task::ImageRequest(iThreadPool, aPath,
         bytes, contentType, iPrivateKey, iPublicKey, aRequest);
+
     iImageRequestTasks.append(task);
     task->submit(this, SLOT(onImageRequestDone()));
     if (!wasBusy) {
@@ -3270,15 +3672,19 @@ void FoilPicsModel::Private::imageRequest(QString aPath,
     }
 }
 
-void FoilPicsModel::Private::onImageRequestDone()
+void
+FoilPicsModel::Private::onImageRequestDone()
 {
-    ImageRequestTask* task = qobject_cast<ImageRequestTask*>(sender());
+    Task::ImageRequest* task = qobject_cast<Task::ImageRequest*>(sender());
+
     HVERIFY(iImageRequestTasks.removeAll(task));
     if (!task->iBytes.isEmpty()) {
         // Cache the decrypted data
         int index = findPath(task->iPath);
+
         if (index >= 0) {
             ModelData* data = iData.at(index);
+
             data->iBytes = task->iBytes;
             HDEBUG(qPrintable(data->iPath) << data->iBytes.count() << "bytes");
             while (tooMuchDataDecrypted() && dropDecryptedData(index));
@@ -3292,7 +3698,9 @@ void FoilPicsModel::Private::onImageRequestDone()
     emitQueuedSignals();
 }
 
-int FoilPicsModel::Private::findPath(QString aPath)
+int
+FoilPicsModel::Private::findPath(
+    const QString& aPath)
 {
     const int n = iData.count();
     for (int i = 0; i < n; i++) {
@@ -3303,11 +3711,14 @@ int FoilPicsModel::Private::findPath(QString aPath)
     return -1;
 }
 
-bool FoilPicsModel::Private::dropDecryptedData(int aDontTouch)
+bool
+FoilPicsModel::Private::dropDecryptedData(
+    int aDontTouch)
 {
     int indexToDrop = -1;
     int maxDistance = -1;
     const int n = iData.count();
+
     // Find the index furthest away from the one we don't touch
     for (int i = 0; i < n; i++) {
         if (i != aDontTouch && !iData.at(i)->iBytes.isEmpty()) {
@@ -3321,6 +3732,7 @@ bool FoilPicsModel::Private::dropDecryptedData(int aDontTouch)
             }
         }
     }
+
     if (indexToDrop >= 0) {
         ModelData* data = iData.at(indexToDrop);
         HDEBUG("Dropping"<< qPrintable(data->iPath) << "at" << indexToDrop );
@@ -3331,11 +3743,13 @@ bool FoilPicsModel::Private::dropDecryptedData(int aDontTouch)
     }
 }
 
-bool FoilPicsModel::Private::tooMuchDataDecrypted()
+bool
+FoilPicsModel::Private::tooMuchDataDecrypted()
 {
     int count = 0;
     size_t totalSize = 0;
     const int n = iData.count();
+
     for (int i = 0; i < n; i++) {
         ModelData* data = iData.at(i);
         if (!data->iBytes.isEmpty()) {
@@ -3349,7 +3763,8 @@ bool FoilPicsModel::Private::tooMuchDataDecrypted()
     return false;
 }
 
-bool FoilPicsModel::Private::busy() const
+bool
+FoilPicsModel::Private::busy() const
 {
     if (iCheckPicsTask ||
         iSaveInfoTask ||
@@ -3361,8 +3776,10 @@ bool FoilPicsModel::Private::busy() const
     } else {
         // Hmm... This is not very scalable
         const int n = iData.count();
+
         for (int i = 0; i < n; i++) {
-            ModelData* data = iData.at(i);
+            const ModelData* data = iData.at(i);
+
             if (data->iDecryptTask ||
                 data->iSetTitleTask ||
                 data->iSetGroupTask) {
@@ -3377,7 +3794,8 @@ bool FoilPicsModel::Private::busy() const
 // FoilPicsModel
 // ==========================================================================
 
-FoilPicsModel::FoilPicsModel(QObject* aParent) :
+FoilPicsModel::FoilPicsModel(
+    QObject* aParent) :
     QAbstractListModel(aParent),
     iPrivate(new Private(this))
 {
@@ -3387,65 +3805,82 @@ FoilPicsModel::FoilPicsModel(QObject* aParent) :
     iPrivate->iGroupModel = new FoilPicsGroupModel(this);
 }
 
-bool FoilPicsModel::busy() const
+bool
+FoilPicsModel::busy() const
 {
     return iPrivate->busy();
 }
 
-bool FoilPicsModel::keyAvailable() const
+bool
+FoilPicsModel::keyAvailable() const
 {
-    return iPrivate->iPrivateKey != NULL;
+    return iPrivate->iPrivateKey != Q_NULLPTR;
 }
 
-FoilPicsModel::FoilState FoilPicsModel::foilState() const
+FoilPicsModel::FoilState
+FoilPicsModel::foilState() const
 {
     return iPrivate->iFoilState;
 }
 
-bool FoilPicsModel::mayHaveEncryptedPictures() const
+bool
+FoilPicsModel::mayHaveEncryptedPictures() const
 {
     return iPrivate->iMayHaveEncryptedPictures;
 }
 
-QSize FoilPicsModel::thumbnailSize() const
+QSize
+FoilPicsModel::thumbnailSize() const
 {
     return iPrivate->iThumbSize;
 }
 
-int FoilPicsModel::groupIdRole()
+int
+FoilPicsModel::groupIdRole()
 {
     return ModelData::GroupIdRole;
 }
 
-QAbstractItemModel* FoilPicsModel::groupModel()
+QAbstractItemModel*
+FoilPicsModel::groupModel()
 {
     return iPrivate->iGroupModel;
 }
 
-void FoilPicsModel::clearGroup(QByteArray aId)
+void
+FoilPicsModel::clearGroup(
+    QByteArray aId)
 {
-    HDEBUG(QString(aId));
+    HDEBUG(QString::fromLatin1(aId));
     iPrivate->clearGroup(aId);
     iPrivate->emitQueuedSignals();
 }
 
-QHash<int,QByteArray> FoilPicsModel::roleNames() const
+QHash<int,QByteArray>
+FoilPicsModel::roleNames() const
 {
     QHash<int,QByteArray> roles;
-#define ROLE(X,x) roles.insert(ModelData::X##Role, #x);
-FOILPICS_ROLES(ROLE)
-#undef ROLE
+
+    #define ROLE(X,x) roles.insert(ModelData::X##Role, #x);
+    FOILPICS_ROLES(ROLE)
+    #undef ROLE
     return roles;
 }
 
-int FoilPicsModel::rowCount(const QModelIndex& aParent) const
+int
+FoilPicsModel::rowCount(
+    const QModelIndex& aParent) const
 {
     return iPrivate->iData.count();
 }
 
-QVariant FoilPicsModel::data(const QModelIndex& aIndex, int aRole) const
+QVariant
+FoilPicsModel::data(
+    const QModelIndex& aIndex,
+    int aRole) const
 {
-    ModelData* data = iPrivate->dataAt(aIndex.row());
+    const ModelData* data = iPrivate->dataAt(aIndex.row());
+
     if (data) {
         if (aRole == ModelData::GroupNameRole) {
             return iPrivate->iGroupModel->groupName(data->iGroupId);
@@ -3456,7 +3891,9 @@ QVariant FoilPicsModel::data(const QModelIndex& aIndex, int aRole) const
     return QVariant();
 }
 
-void FoilPicsModel::setThumbnailSize(QSize aSize)
+void
+FoilPicsModel::setThumbnailSize(
+    QSize aSize)
 {
     if (iPrivate->iThumbSize != aSize) {
         iPrivate->iThumbSize = aSize;
@@ -3466,26 +3903,33 @@ void FoilPicsModel::setThumbnailSize(QSize aSize)
     }
 }
 
-void FoilPicsModel::removeAt(int aIndex)
+void
+FoilPicsModel::removeAt(
+    int aIndex)
 {
     HDEBUG(aIndex);
     iPrivate->removeAt(aIndex);
     iPrivate->emitQueuedSignals();
 }
 
-void FoilPicsModel::removeFiles(QList<int> aRows)
+void
+FoilPicsModel::removeFiles(
+    QList<int> aRows)
 {
     HDEBUG(aRows);
     iPrivate->removeFiles(aRows);
     iPrivate->emitQueuedSignals();
 }
 
-QVariantMap FoilPicsModel::get(int aIndex) const
+QVariantMap
+FoilPicsModel::get(int aIndex) const
 {
+    const ModelData* data = iPrivate->dataAt(aIndex);
+
     HDEBUG(aIndex);
-    ModelData* data = iPrivate->dataAt(aIndex);
     if (data) {
         QVariantMap map(data->toVariantMap());
+
         map.insert(ModelData::RoleNameGroupName,
             iPrivate->iGroupModel->groupName(data->iGroupId));
         return map;
@@ -3493,80 +3937,111 @@ QVariantMap FoilPicsModel::get(int aIndex) const
     return QVariantMap();
 }
 
-void FoilPicsModel::decryptFiles(QList<int> aRows)
+void
+FoilPicsModel::decryptFiles(
+    QList<int> aRows)
 {
     HDEBUG(aRows);
     iPrivate->decryptFiles(aRows);
     iPrivate->emitQueuedSignals();
 }
 
-void FoilPicsModel::decryptAt(int aIndex)
+void
+FoilPicsModel::decryptAt(
+    int aIndex)
 {
     HDEBUG(aIndex);
     iPrivate->decryptAt(aIndex);
     iPrivate->emitQueuedSignals();
 }
 
-void FoilPicsModel::decryptAll()
+void
+FoilPicsModel::decryptAll()
 {
     HDEBUG("Decrypting all");
     iPrivate->decryptAll();
     iPrivate->emitQueuedSignals();
 }
 
-bool FoilPicsModel::encryptFile(QUrl aUrl, QVariantMap aMetaData)
+bool
+FoilPicsModel::encryptFile(
+    QUrl aUrl,
+    QVariantMap aMetaData)
 {
     const bool ok = iPrivate->encrypt(aUrl, aMetaData);
     iPrivate->emitQueuedSignals();
     return ok;
 }
 
-void FoilPicsModel::encryptFiles(QObject* aModel, QList<int> aList)
+void
+FoilPicsModel::encryptFiles(
+    QObject* aModel,
+    QList<int> aList)
 {
     iPrivate->encryptFiles(qobject_cast<QAbstractItemModel*>(aModel), aList);
     iPrivate->emitQueuedSignals();
 }
 
-void FoilPicsModel::lock(bool aTimeout)
+void
+FoilPicsModel::lock(
+    bool aTimeout)
 {
     iPrivate->lock(aTimeout);
     iPrivate->emitQueuedSignals();
 }
 
-bool FoilPicsModel::unlock(QString aPassword)
+bool
+FoilPicsModel::unlock(
+    QString aPassword)
 {
     const bool ok = iPrivate->unlock(aPassword);
+
     iPrivate->emitQueuedSignals();
     return ok;
 }
 
-bool FoilPicsModel::checkPassword(QString aPassword)
+bool
+FoilPicsModel::checkPassword(
+    QString aPassword)
 {
     return iPrivate->checkPassword(aPassword);
 }
 
-bool FoilPicsModel::changePassword(QString aOld, QString aNew)
+bool
+FoilPicsModel::changePassword(
+    QString aOld,
+    QString aNew)
 {
-    bool ok = iPrivate->changePassword(aOld, aNew);
+    const bool ok = iPrivate->changePassword(aOld, aNew);
+
     iPrivate->emitQueuedSignals();
     return ok;
 }
 
-void FoilPicsModel::generateKey(int aBits, QString aPassword)
+void
+FoilPicsModel::generateKey(
+    int aBits,
+    QString aPassword)
 {
     iPrivate->generate(aBits, aPassword);
     iPrivate->emitQueuedSignals();
 }
 
-void FoilPicsModel::imageRequest(QString aPath, FoilPicsImageRequest aRequest)
+void
+FoilPicsModel::imageRequest(
+    QString aPath,
+    FoilPicsImageRequest aRequest)
 {
     iPrivate->imageRequest(aPath, aRequest);
     iPrivate->emitQueuedSignals();
 }
 
-int FoilPicsModel::groupIndexAt(int aIndex) const
+int
+FoilPicsModel::groupIndexAt(
+    int aIndex) const
 {
-    ModelData* data = iPrivate->dataAt(aIndex);
+    const ModelData* data = iPrivate->dataAt(aIndex);
+
     if (data) {
         return iPrivate->iGroupModel->indexOfGroup(data->iGroupId);
     } else {
@@ -3574,9 +4049,13 @@ int FoilPicsModel::groupIndexAt(int aIndex) const
     }
 }
 
-void FoilPicsModel::setGroupId(QString aImageId, QString aId)
+void
+FoilPicsModel::setGroupId(
+    QString aImageId,
+    QString aId)
 {
-    int i = iPrivate->find(aImageId);
+    const int i = iPrivate->find(aImageId);
+
     if (i >= 0) {
         iPrivate->setGroupIdAt(i, aId.toLatin1());
         iPrivate->emitQueuedSignals();
@@ -3585,20 +4064,29 @@ void FoilPicsModel::setGroupId(QString aImageId, QString aId)
     }
 }
 
-void FoilPicsModel::setGroupIdAt(int aIndex, QString aId)
+void
+FoilPicsModel::setGroupIdAt(
+    int aIndex,
+    QString aId)
 {
     iPrivate->setGroupIdAt(aIndex, aId.toLatin1());
     iPrivate->emitQueuedSignals();
 }
 
-void FoilPicsModel::setGroupIdForRows(QList<int> aRows, QString aId)
+void
+FoilPicsModel::setGroupIdForRows(
+    QList<int> aRows,
+    QString aId)
 {
     HDEBUG(aRows << aId);
     iPrivate->setGroupIdForRows(aRows, aId.toLatin1());
     iPrivate->emitQueuedSignals();
 }
 
-void FoilPicsModel::setTitleAt(int aIndex, QString aTitle)
+void
+FoilPicsModel::setTitleAt(
+    int aIndex,
+    QString aTitle)
 {
     iPrivate->setTitleAt(aIndex, aTitle);
     iPrivate->emitQueuedSignals();

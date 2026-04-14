@@ -147,6 +147,7 @@ INSTALLS += foil_ui_images
 HEADERS += \
     $${HARBOUR_LIB_INCLUDE}/HarbourBase45.h \
     $${HARBOUR_LIB_INCLUDE}/HarbourDebug.h \
+    $${HARBOUR_LIB_INCLUDE}/HarbourParentSignalQueueObject.h \
     $${HARBOUR_LIB_INCLUDE}/HarbourProcessState.h \
     $${HARBOUR_LIB_INCLUDE}/HarbourSystemInfo.h \
     $${HARBOUR_LIB_INCLUDE}/HarbourSystemState.h \

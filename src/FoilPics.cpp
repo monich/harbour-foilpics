@@ -1,6 +1,6 @@
 /*
+ * Copyright (C) 2017-2026 Slava Monich <slava@monich.com>
  * Copyright (C) 2017-2022 Jolla Ltd.
- * Copyright (C) 2017-2022 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -8,43 +8,52 @@
  * modification, are permitted provided that the following conditions
  * are met:
  *
- *   1. Redistributions of source code must retain the above copyright
- *      notice, this list of conditions and the following disclaimer.
- *   2. Redistributions in binary form must reproduce the above copyright
- *      notice, this list of conditions and the following disclaimer
- *      in the documentation and/or other materials provided with the
- *      distribution.
- *   3. Neither the names of the copyright holders nor the names of its
- *      contributors may be used to endorse or promote products derived
- *      from this software without specific prior written permission.
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer
+ *     in the documentation and/or other materials provided with the
+ *     distribution.
+ *
+ *  3. Neither the names of the copyright holders nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
  * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
  * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
  * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * The views and conclusions contained in the software and documentation
+ * are those of the authors and should not be interpreted as representing
+ * any official policies, either expressed or implied.
  */
 
 #include "FoilPics.h"
+
 #include "FoilPicsRole.h"
 
 #include "HarbourBase45.h"
 #include "HarbourDebug.h"
 
-#include <QFile>
+#include <QtCore/QAbstractItemModel>
+#include <QtCore/QFile>
+#include <QtCore/QFileSystemWatcher>
+#include <QtCore/QLocale>
 
-#include <QAbstractItemModel>
-#include <QDBusConnection>
-#include <QDBusPendingCall>
-#include <QDBusServiceWatcher>
-#include <QDBusAbstractInterface>
-#include <QDBusConnectionInterface>
+#include <QtDBus/QDBusConnection>
+#include <QtDBus/QDBusPendingCall>
+#include <QtDBus/QDBusServiceWatcher>
+#include <QtDBus/QDBusAbstractInterface>
+#include <QtDBus/QDBusConnectionInterface>
 
 #define TRACKER_BUS QDBusConnection::sessionBus()
 #define TRACKER_SERVICE "org.freedesktop.Tracker1"
@@ -59,7 +68,8 @@
 // FoilPics::TrackerProxy
 // ==========================================================================
 
-class FoilPics::TrackerProxy: public QDBusAbstractInterface
+class FoilPics::TrackerProxy:
+    public QDBusAbstractInterface
 {
     Q_OBJECT
 
@@ -77,10 +87,13 @@ public Q_SLOTS: // METHODS
 // FoilPics::Private
 // ==========================================================================
 
-class FoilPics::Private : public QObject {
+class FoilPics::Private :
+    public QObject
+{
     Q_OBJECT
+
 public:
-    Private(FoilPics* aParent);
+    Private(FoilPics*);
 
     static bool foilAuthInstalled();
     static bool foilNotesInstalled();
@@ -102,9 +115,10 @@ public:
     QString iThumbnailQml;
 };
 
-FoilPics::Private::Private(FoilPics* aParent) :
+FoilPics::Private::Private(
+    FoilPics* aParent) :
     QObject(aParent),
-    iTrackerProxy(NULL),
+    iTrackerProxy(Q_NULLPTR),
     iFileWatcher(new QFileSystemWatcher(this))
 {
     connect(iFileWatcher, SIGNAL(directoryChanged(QString)),
@@ -129,78 +143,92 @@ FoilPics::Private::Private(FoilPics* aParent) :
     }
 }
 
-inline FoilPics* FoilPics::Private::owner() const
+inline
+FoilPics*
+FoilPics::Private::owner() const
 {
     return qobject_cast<FoilPics*>(parent());
 }
 
-bool FoilPics::Private::foilAuthInstalled()
+/* static */
+bool
+FoilPics::Private::foilAuthInstalled()
 {
     const bool installed = QFile::exists(FOILAUTH_PATH);
     HDEBUG("FoilAuth is" << (installed ? "installed" : "not installed"));
     return installed;
 }
 
-bool FoilPics::Private::foilNotesInstalled()
+/* static */
+bool
+FoilPics::Private::foilNotesInstalled()
 {
     const bool installed = QFile::exists(FOILNOTES_PATH);
     HDEBUG("FoilNotes is" << (installed ? "installed" : "not installed"));
     return installed;
 }
 
-bool FoilPics::Private::otherFoilAppsInstalled()
+/* static */
+bool
+FoilPics::Private::otherFoilAppsInstalled()
 {
     return foilAuthInstalled() || foilNotesInstalled();
 }
 
-void FoilPics::Private::checkFoilAppsInstalled()
+void
+FoilPics::Private::checkFoilAppsInstalled()
 {
     const bool haveOtherFoilApps = otherFoilAppsInstalled();
+
     if (iOtherFoilAppsInstalled != haveOtherFoilApps) {
         iOtherFoilAppsInstalled = haveOtherFoilApps;
         Q_EMIT owner()->otherFoilAppsInstalledChanged();
     }
 }
 
-void FoilPics::Private::onTrackerRegistered()
+void
+FoilPics::Private::onTrackerRegistered()
 {
     HDEBUG("Tracker is here");
     delete iTrackerProxy;
     iTrackerProxy = new TrackerProxy(this);
 }
 
-void FoilPics::Private::onTrackerUnregistered()
+void
+FoilPics::Private::onTrackerUnregistered()
 {
     HDEBUG("Tracker gone");
     delete iTrackerProxy;
-    iTrackerProxy = NULL;
+    iTrackerProxy = Q_NULLPTR;
 }
 
 // ==========================================================================
 // FoilPics::Private
 // ==========================================================================
 
-FoilPics::FoilPics(QObject* aParent) :
+FoilPics::FoilPics(
+    QObject* aParent) :
     QObject(aParent),
     iPrivate(new Private(this))
+{}
+
+// Callback for qmlRegisterSingletonType<FoilPics>
+QObject*
+FoilPics::createSingleton(
+    QQmlEngine*,
+    QJSEngine*)
 {
+    return new FoilPics();
 }
 
-FoilPics::~FoilPics()
-{
-}
-
-QObject* FoilPics::createSingleton(QQmlEngine*, QJSEngine*)
-{
-    return new FoilPics;
-}
-
-bool FoilPics::otherFoilAppsInstalled() const
+bool
+FoilPics::otherFoilAppsInstalled() const
 {
     return iPrivate->iOtherFoilAppsInstalled;
 }
 
-const QString FoilPics::documentGalleryItemQml() const
+QString
+FoilPics::documentGalleryItemQml() const
 {
     if (iPrivate->iDocumentGalleryItemQml.isEmpty()) {
         // import Sailfish.Silica 1.0;import QtDocGallery 5.0;DocumentGalleryItem{
@@ -216,6 +244,7 @@ const QString FoilPics::documentGalleryItemQml() const
             "SEDA9DIE4TF4IECK C9EC1$CIE4SF4BEC5$CODCCEC*$E1ECNWEZKEDJE3Q5GPC"
             "F$DVKENZ96VC7UD3Q5PVDBWENWE6VCIE4$F4-3ED3DNWE6VCIE4QF4:VD-ED$$E"
             "FZC% B";
+
         iPrivate->iDocumentGalleryItemQml = HarbourBase45::fromBase45
             (QString::fromLatin1(base45));
         HDEBUG(iPrivate->iDocumentGalleryItemQml);
@@ -223,7 +252,8 @@ const QString FoilPics::documentGalleryItemQml() const
     return iPrivate->iDocumentGalleryItemQml;
 }
 
-const QString FoilPics::documentGalleryModelQml() const
+QString
+FoilPics::documentGalleryModelQml() const
 {
     if (iPrivate->iDocumentGalleryModelQml.isEmpty()) {
         // import Sailfish.Silica 1.0;import QtDocGallery 5.0;DocumentGalleryModel{
@@ -243,6 +273,7 @@ const QString FoilPics::documentGalleryModelQml() const
             "KWE%$E-M7XED7WE$JE319 VD5$C9FF3WE5LE7QE-ED98DXED7WECLEV9E/3E5$C"
             "RWEWF7R.CTVDC7AAWEXE4K/E0WD*ZCYOACEC2VCYKEC7AAWEBPEV$DPQENOC1/D"
             "53D7WE8UCKWE%$E+%F";
+
         iPrivate->iDocumentGalleryModelQml = HarbourBase45::fromBase45
             (QString::fromLatin1(base45));
         HDEBUG(iPrivate->iDocumentGalleryModelQml);
@@ -250,7 +281,8 @@ const QString FoilPics::documentGalleryModelQml() const
     return iPrivate->iDocumentGalleryModelQml;
 }
 
-const QString FoilPics::thumbnailQml() const
+QString
+FoilPics::thumbnailQml() const
 {
     if (iPrivate->iThumbnailQml.isEmpty()) {
         // import org.nemomobile.thumbnailer 1.0;Thumbnail{
@@ -269,6 +301,7 @@ const QString FoilPics::thumbnailQml() const
             "JUD$T9Y3F*KE04E-EDUEFZKE2EC-3E4WDO440LEI9E5LE3EFZEDSUE5$C0LEHKE"
             "3WENWENPE8UA1%E/JC7ECJUD3Z80LE%JEV9E ED*KERWEUF78UA1%E/JC7ECJUD"
             "9-9/KEAECT7A ED*KERWE M7:.D59D4LE/%5XEDVUDE9EZKEG/DZ2";
+
         iPrivate->iThumbnailQml = HarbourBase45::fromBase45
             (QString::fromLatin1(base45));
         HDEBUG(iPrivate->iThumbnailQml);
@@ -276,26 +309,32 @@ const QString FoilPics::thumbnailQml() const
     return iPrivate->iThumbnailQml;
 }
 
-QString FoilPics::formatFileSize(qlonglong aBytes)
+QString
+FoilPics::formatFileSize(
+    qlonglong aBytes)
 {
-    const qlonglong kB = Q_INT64_C(1024);
-    const qlonglong MB = kB*1024;
-    const qlonglong GB = MB*1024;
-    const qlonglong TB = GB*1024;
+    static const qlonglong kB = Q_INT64_C(1024);
+    static const qlonglong MB = kB*1024;
+    static const qlonglong GB = MB*1024;
+    static const qlonglong TB = GB*1024;
+
     if (aBytes < 0) {
         return QString::number(aBytes);
     } else if (aBytes < kB) {
         return qtTrId("foilpics-file_size-bytes").arg(aBytes);
     } else if (aBytes < 1000*kB) {
         const int precision = (aBytes < 10*kB) ? 2 : 1;
+
         return qtTrId("foilpics-file_size-kilobytes").
             arg(iPrivate->iLocale.toString((float)aBytes/kB, 'f', precision));
     } else if (aBytes < 1000*MB) {
         const int precision = (aBytes < 10*MB) ? 2 : 1;
+
         return qtTrId("foilpics-file_size-megabytes").
             arg(iPrivate->iLocale.toString((float)aBytes/MB, 'f', precision));
     } else if (aBytes < 1000*GB) {
         const int precision = (aBytes < 10*GB) ? 2 : 1;
+
         return qtTrId("foilpics-file_size-gigabytes").
             arg(iPrivate->iLocale.toString((float)aBytes/GB, 'f', precision));
     } else {
@@ -304,10 +343,13 @@ QString FoilPics::formatFileSize(qlonglong aBytes)
     }
 }
 
-void FoilPics::mediaDeleted(QUrl aUrl)
+void
+FoilPics::mediaDeleted(
+    QUrl aUrl)
 {
     if (iPrivate->iTrackerProxy) {
         QString url(aUrl.toString());
+
         HDEBUG(url);
         // Black magic
         iPrivate->iTrackerProxy->SparqlUpdate("DELETE {\n"
@@ -325,10 +367,13 @@ void FoilPics::mediaDeleted(QUrl aUrl)
     }
 }
 
-bool FoilPics::deleteLocalFile(QUrl aUrl)
+bool
+FoilPics::deleteLocalFile(
+    QUrl aUrl)
 {
     if (aUrl.isLocalFile()) {
-        QString path(aUrl.toLocalFile());
+        const QString path(aUrl.toLocalFile());
+
         if (QFile::remove(path)) {
             HDEBUG(path);
             mediaDeleted(aUrl);
@@ -341,24 +386,32 @@ bool FoilPics::deleteLocalFile(QUrl aUrl)
     return false;
 }
 
-void FoilPics::deleteLocalFilesFromModel(QObject* aModel,
-    QString aRole, QList<int> aRows)
+void
+FoilPics::deleteLocalFilesFromModel(
+    QObject* aModel,
+    QString aRole,
+    QList<int> aRows)
 {
-    HDEBUG(aRows);
     const int n = aRows.count();
+
+    HDEBUG(aRows);
     if (n > 0) {
         QAbstractItemModel* model = qobject_cast<QAbstractItemModel*>(aModel);
+
         HASSERT(model);
         if (model) {
             const int role = FoilPicsRole::find(model, aRole);
+
             if (role >= 0) {
                 int i;
                 const int column = 0;
                 const int rowCount = model->rowCount();
                 QList<QUrl> urls;
+
                 urls.reserve(n);
                 for (i = 0; i < n; i++) {
                     const int row = aRows.at(i);
+
                     if (row >= 0 && row < rowCount) {
                         QModelIndex index(model->index(row, column));
                         QUrl url(model->data(index, role).toUrl());
@@ -368,7 +421,9 @@ void FoilPics::deleteLocalFilesFromModel(QObject* aModel,
                         }
                     }
                 }
+
                 const int urlCount = urls.count();
+
                 for (i = 0; i < urlCount; i++) {
                     deleteLocalFile(urls.at(i));
                 }
@@ -377,7 +432,9 @@ void FoilPics::deleteLocalFilesFromModel(QObject* aModel,
     }
 }
 
-bool FoilPics::deleteFile(QString aPath)
+bool
+FoilPics::deleteFile(
+    QString aPath)
 {
     if (QFile::remove(aPath)) {
         HDEBUG(aPath);

@@ -1,6 +1,6 @@
 /*
+ * Copyright (C) 2017-2026 Slava Monich <slava@monich.com>
  * Copyright (C) 2017-2021 Jolla Ltd.
- * Copyright (C) 2017-2021 Slava Monich <slava@monich.com>
  *
  * You may use this file under the terms of the BSD license as follows:
  *
@@ -8,15 +8,17 @@
  * modification, are permitted provided that the following conditions
  * are met:
  *
- *   1. Redistributions of source code must retain the above copyright
- *      notice, this list of conditions and the following disclaimer.
- *   2. Redistributions in binary form must reproduce the above copyright
- *      notice, this list of conditions and the following disclaimer
- *      in the documentation and/or other materials provided with the
- *      distribution.
- *   3. Neither the names of the copyright holders nor the names of its
- *      contributors may be used to endorse or promote products derived
- *      from this software without specific prior written permission.
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer
+ *     in the documentation and/or other materials provided with the
+ *     distribution.
+ *
+ *  3. Neither the names of the copyright holders nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -29,24 +31,31 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * The views and conclusions contained in the software and documentation
+ * are those of the authors and should not be interpreted as representing
+ * any official policies, either expressed or implied.
  */
 
 #include "FoilPicsImageProvider.h"
+
 #include "FoilPicsImageRequest.h"
+
 #include "HarbourDebug.h"
 
-#include <QQmlContext>
-#include <QQmlEngine>
-#include <QWaitCondition>
-
-#include <QtGui/QOpenGLContext>
+#include <QtCore/QWaitCondition>
 #include <QtGui/QOffscreenSurface>
+#include <QtGui/QOpenGLContext>
+#include <QtQml/QQmlContext>
+#include <QtQml/QQmlEngine>
 
 // ==========================================================================
 // FoilPicsImageProvider
 // ==========================================================================
 
-FoilPicsImageProvider::FoilPicsImageProvider(QObject* aObject, QQmlEngine* aEngine) :
+FoilPicsImageProvider::FoilPicsImageProvider(
+    QObject* aObject,
+    QQmlEngine* aEngine) :
     QQuickImageProvider(Image, ForceAsynchronousImageLoading),
     iMaxSize(3264),
     iId(QString().sprintf("foilpicsimage-%p", this)),
@@ -55,6 +64,7 @@ FoilPicsImageProvider::FoilPicsImageProvider(QObject* aObject, QQmlEngine* aEngi
     iEngine(aEngine)
 {
     QOpenGLContext ctx;
+
     if (ctx.create()) {
         GLint maxSize = 0;
         QOffscreenSurface surface;
@@ -69,6 +79,7 @@ FoilPicsImageProvider::FoilPicsImageProvider(QObject* aObject, QQmlEngine* aEngi
         ctx.doneCurrent();
         surface.destroy();
     }
+
     HDEBUG(iPrefix << iMaxSize);
     HASSERT(iEngine);
     qRegisterMetaType<FoilPicsImageRequest>("FoilPicsImageRequest");
@@ -77,23 +88,24 @@ FoilPicsImageProvider::FoilPicsImageProvider(QObject* aObject, QQmlEngine* aEngi
     }
 }
 
-FoilPicsImageProvider::~FoilPicsImageProvider()
-{
-}
-
-FoilPicsImageProvider* FoilPicsImageProvider::createForObject(QObject* aObject)
+FoilPicsImageProvider*
+FoilPicsImageProvider::createForObject(
+    QObject* aObject)
 {
     QQmlContext* context = QQmlEngine::contextForObject(aObject);
+
     if (context) {
         QQmlEngine* engine = context->engine();
+
         if (engine) {
             return new FoilPicsImageProvider(aObject, engine);
         }
     }
-    return NULL;
+    return Q_NULLPTR;
 }
 
-void FoilPicsImageProvider::release()
+void
+FoilPicsImageProvider::release()
 {
     if (iEngine) {
         iEngine->removeImageProvider(iId);
@@ -102,21 +114,31 @@ void FoilPicsImageProvider::release()
     }
 }
 
-QString FoilPicsImageProvider::addImage(QString aId, QString aPath)
+QString
+FoilPicsImageProvider::addImage(
+    QString aId,
+    QString aPath)
 {
     QMutexLocker locker(&iMutex);
+
     iPathMap.insert(aId, aPath);
     return iPrefix + aId;
 }
 
-void FoilPicsImageProvider::releaseImage(QString aId)
+void
+FoilPicsImageProvider::releaseImage(
+    QString aId)
 {
     QMutexLocker locker(&iMutex);
+
     iPathMap.remove(aId);
 }
 
-QImage FoilPicsImageProvider::requestImage(const QString& aId, QSize* aSize,
-    const QSize& aRequested)
+QImage
+FoilPicsImageProvider::requestImage(
+    const QString& aId,
+    QSize* aSize,
+    const QSize&)
 {
     QImage image;
     FoilPicsImageRequest req;
@@ -132,8 +154,10 @@ QImage FoilPicsImageProvider::requestImage(const QString& aId, QSize* aSize,
             HDEBUG("Waiting for" << aId << "=>" << qPrintable(path));
             image = req.wait();
         }
+
         const int width = image.width();
         const int height = image.height();
+
         if (width > height) {
             if (width > iMaxSize) {
                 HDEBUG(aId << image.size() << "(scaling)");
@@ -153,5 +177,6 @@ QImage FoilPicsImageProvider::requestImage(const QString& aId, QSize* aSize,
     } else {
         HWARN(aId << "oops!");
     }
+
     return image;
 }

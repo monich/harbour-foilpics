@@ -1,91 +1,106 @@
 /*
+ * Copyright (C) 2018-2026 Slava Monich <slava@monich.com>
  * Copyright (C) 2018-2019 Jolla Ltd.
- * Copyright (C) 2018-2019 Slava Monich <slava@monich.com>
  *
- * You may use this file under the terms of BSD license as follows:
+ * You may use this file under the terms of the BSD license as follows:
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  *
- *   1. Redistributions of source code must retain the above copyright
- *      notice, this list of conditions and the following disclaimer.
- *   2. Redistributions in binary form must reproduce the above copyright
- *      notice, this list of conditions and the following disclaimer in
- *      the documentation and/or other materials provided with the
- *      distribution.
- *   3. Neither the names of the copyright holders nor the names of its
- *      contributors may be used to endorse or promote products derived
- *      from this software without specific prior written permission.
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer
+ *     in the documentation and/or other materials provided with the
+ *     distribution.
+ *
+ *  3. Neither the names of the copyright holders nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
  * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
  * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
  * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * The views and conclusions contained in the software and documentation
+ * are those of the authors and should not be interpreted as representing
+ * any official policies, either expressed or implied.
  */
 
 #include "FoilPicsSelection.h"
+
 #include "FoilPicsRole.h"
+
 #include "HarbourDebug.h"
+#include "HarbourParentSignalQueueObject.h"
+
+#include <QtCore/QAbstractItemModel>
 
 // ==========================================================================
 // FoilPicsSelection::Private
 // ==========================================================================
 
-class FoilPicsSelection::Private : public QObject {
+// s(SignalName,signalName)
+#define QUEUED_SIGNALS(s) \
+    s(Model,model) \
+    s(Role,role) \
+    s(DuplicatesAllowed,duplicatesAllowed) \
+    s(SelectionCount,selectionCount) \
+    s(BusyCount,busyCount)
+
+enum FoilPicsSelectionSignal {
+    #define SIGNAL_ENUM_(Name,name) Signal##Name##Changed,
+    QUEUED_SIGNALS(SIGNAL_ENUM_)
+    #undef SIGNAL_ENUM_
+    FoilPicsSelectionSignalCount
+};
+
+typedef HarbourParentSignalQueueObject<FoilPicsSelection,
+    FoilPicsSelectionSignal, FoilPicsSelectionSignalCount>
+    FoilPicsSelectionPrivateBase;
+
+class FoilPicsSelection::Private :
+    public FoilPicsSelectionPrivateBase
+{
     Q_OBJECT
 
+    static const SignalEmitter gSignalEmitters [];
+
 public:
-    typedef void (FoilPicsSelection::*SignalEmitter)();
-    typedef uint SignalMask;
+    Private(FoilPicsSelection*);
 
-    // The order of constants must match the array in emitQueuedSignals()
-    enum Signal {
-        NoSignal = -1,
-        SignalModelChanged,
-        SignalRoleChanged,
-        SignalDuplicatesAllowedChanged,
-        SignalSelectionCountChanged,
-        SignalBusyCountChanged,
-        SignalCount
-    };
-
-    Private(FoilPicsSelection* aParent);
-
-    FoilPicsSelection* parentObject() const;
-    void queueSignal(Signal aSignal);
-    void emitQueuedSignals();
-    void emitSelectionChanged(QStringList aChanged);
-    void emitBusyChanged(QStringList aChanged);
-    QString keyAt(int aIndex);
-    void updateRows(int aFrom);
-    void setKeyRole(QString aRole);
-    void setModel(QAbstractItemModel* aModel);
+    void emitSelectionChanged(const QStringList&);
+    void emitBusyChanged(const QStringList&);
+    QString keyAt(int);
+    void updateRows(int);
+    void setKeyRole(const QString&);
+    void setModel(QAbstractItemModel*);
     void refreshModelAndEmitSignals();
     void selectAll();
     void clearSelection();
-    void makeBusy(QList<int> aList);
+    void makeBusy(const QList<int>&);
 
 public Q_SLOTS:
-    void onModelDestroyed(QObject* aModel);
+    void onModelDestroyed();
     void onModelReset();
-    void onModelRowsInserted(const QModelIndex& aParent, int aStart, int aEnd);
-    void onModelRowsRemoved(const QModelIndex& aParent, int aStart, int aEnd);
-    void onModelRowsMoved(const QModelIndex& aSourceParent, int aSourceStart,
-        int aSourceEnd, const QModelIndex& aDestParent, int aDest);
-    void onModelDataChanged(const QModelIndex& aTopLeft,
-        const QModelIndex& aBottomRight, const QVector<int>& aRoles);
+    void onModelRowsInserted(const QModelIndex&, int, int);
+    void onModelRowsRemoved(const QModelIndex&, int, int);
+    void onModelRowsMoved(const QModelIndex&, int, int,
+        const QModelIndex&, int);
+    void onModelDataChanged(const QModelIndex&, const QModelIndex&,
+        const QVector<int>&);
 
 public:
-    SignalMask iQueuedSignals;
-    int iFirstQueuedSignal;
     QStringList iKeyList;
     QHash<QString,int> iKeys;
     QSet<QString> iSelected;
@@ -97,70 +112,34 @@ public:
     int iColumn;
 };
 
-FoilPicsSelection::Private::Private(FoilPicsSelection* aParent) :
-    QObject(aParent),
-    iQueuedSignals(0),
-    iFirstQueuedSignal(NoSignal),
-    iModel(NULL),
+const FoilPicsSelection::Private::SignalEmitter
+FoilPicsSelection::Private::gSignalEmitters [] = {
+    #define SIGNAL_EMITTER_(Name,name) &FoilPicsSelection::name##Changed,
+    QUEUED_SIGNALS(SIGNAL_EMITTER_)
+    #undef  SIGNAL_EMITTER_
+};
+
+FoilPicsSelection::Private::Private(
+    FoilPicsSelection* aParent) :
+    FoilPicsSelectionPrivateBase(aParent, gSignalEmitters),
+    iModel(Q_NULLPTR),
     iDuplicatesAllowed(true),
     iKeyRole(-1),
     iColumn(0)
-{
-}
+{}
 
-FoilPicsSelection* FoilPicsSelection::Private::parentObject() const
-{
-    return qobject_cast<FoilPicsSelection*>(parent());
-}
-
-void FoilPicsSelection::Private::queueSignal(Signal aSignal)
-{
-    if (aSignal > NoSignal && aSignal < SignalCount) {
-        const SignalMask signalBit = (SignalMask(1) << aSignal);
-        if (iQueuedSignals) {
-            iQueuedSignals |= signalBit;
-            if (iFirstQueuedSignal > aSignal) {
-                iFirstQueuedSignal = aSignal;
-            }
-        } else {
-            iQueuedSignals = signalBit;
-            iFirstQueuedSignal = aSignal;
-        }
-    }
-}
-
-void FoilPicsSelection::Private::emitQueuedSignals()
-{
-    // The order must match the Signal enum:
-    static const SignalEmitter emitSignal [] = {
-        &FoilPicsSelection::modelChanged,             // SignalModelChanged
-        &FoilPicsSelection::roleChanged,              // SignalRoleChanged
-        &FoilPicsSelection::duplicatesAllowedChanged, // SignalDuplicatesAllowedChanged
-        &FoilPicsSelection::selectionCountChanged,    // SignalSelectionCountChanged
-        &FoilPicsSelection::busyCountChanged          // SignalBusyCountChanged
-    };
-
-    Q_STATIC_ASSERT(sizeof(emitSignal)/sizeof(emitSignal[0]) == SignalCount);
-    if (iQueuedSignals) {
-        FoilPicsSelection* obj = parentObject();
-        for (int i = iFirstQueuedSignal; i < SignalCount && iQueuedSignals; i++) {
-            const SignalMask signalBit = (SignalMask(1) << i);
-            if (iQueuedSignals & signalBit) {
-                iQueuedSignals &= ~signalBit;
-                Q_EMIT (obj->*(emitSignal[i]))();
-            }
-        }
-    }
-}
-
-void FoilPicsSelection::Private::emitSelectionChanged(QStringList aChanged)
+void
+FoilPicsSelection::Private::emitSelectionChanged(
+    const QStringList& aChanged)
 {
     if (!aChanged.isEmpty()) {
         FoilPicsSelection* obj = parentObject();
+
         if (iSelected.isEmpty()) {
             Q_EMIT obj->selectionCleared();
         } else {
             const int k = aChanged.count();
+
             for (int j = 0; j < k; j++) {
                 Q_EMIT obj->selectionChanged(aChanged.at(j));
             }
@@ -168,21 +147,27 @@ void FoilPicsSelection::Private::emitSelectionChanged(QStringList aChanged)
     }
 }
 
-void FoilPicsSelection::Private::emitBusyChanged(QStringList aChanged)
+void
+FoilPicsSelection::Private::emitBusyChanged(
+    const QStringList& aChanged)
 {
     if (!aChanged.isEmpty()) {
         FoilPicsSelection* obj = parentObject();
         const int k = aChanged.count();
+
         for (int j = 0; j < k; j++) {
             Q_EMIT obj->busyChanged(aChanged.at(j));
         }
     }
 }
 
-QString FoilPicsSelection::Private::keyAt(int aIndex)
+QString
+FoilPicsSelection::Private::keyAt(
+    int aIndex)
 {
     if (iModel && aIndex >= 0 && aIndex < iModel->rowCount()) {
         QVariant var(iModel->data(iModel->index(aIndex, iColumn), iKeyRole));
+
         if (var.isValid()) {
             return var.toString();
         }
@@ -190,12 +175,16 @@ QString FoilPicsSelection::Private::keyAt(int aIndex)
     return QString();
 }
 
-void FoilPicsSelection::Private::updateRows(int aFrom)
+void
+FoilPicsSelection::Private::updateRows(
+    int aFrom)
 {
     const int n = iModel->rowCount();
+
     HASSERT(iKeyList.count() == n);
     for (int i = aFrom; i < n; i++) {
-        const QString key = iKeyList.at(i);
+        const QString key(iKeyList.at(i));
+
         if (!key.isEmpty()) {
             HDEBUG(key << i);
             iKeys.insert(key, i);
@@ -203,7 +192,9 @@ void FoilPicsSelection::Private::updateRows(int aFrom)
     }
 }
 
-void FoilPicsSelection::Private::setKeyRole(QString aRole)
+void
+FoilPicsSelection::Private::setKeyRole(
+    const QString& aRole)
 {
     if (iKeyRoleName != aRole) {
         iKeyRoleName = aRole;
@@ -213,7 +204,9 @@ void FoilPicsSelection::Private::setKeyRole(QString aRole)
     }
 }
 
-void FoilPicsSelection::Private::setModel(QAbstractItemModel* aModel)
+void
+FoilPicsSelection::Private::setModel(
+    QAbstractItemModel* aModel)
 {
     if (iModel != aModel) {
         if (iModel) {
@@ -223,7 +216,7 @@ void FoilPicsSelection::Private::setModel(QAbstractItemModel* aModel)
         if (iModel) {
             connect(iModel,
                 SIGNAL(destroyed(QObject*)),
-                SLOT(onModelDestroyed(QObject*)));
+                SLOT(onModelDestroyed()));
             connect(iModel,
                 SIGNAL(modelReset()),
                 SLOT(onModelReset()));
@@ -245,10 +238,12 @@ void FoilPicsSelection::Private::setModel(QAbstractItemModel* aModel)
     }
 }
 
-void FoilPicsSelection::Private::refreshModelAndEmitSignals()
+void
+FoilPicsSelection::Private::refreshModelAndEmitSignals()
 {
     QStringList selectionChanged;
     QStringList busyChanged;
+
     iKeyList.clear();
     iKeys.clear();
     iKeyRole = FoilPicsRole::find(iModel, iKeyRoleName);
@@ -262,9 +257,11 @@ void FoilPicsSelection::Private::refreshModelAndEmitSignals()
                 iKeys.insert(key, i);
             }
         }
+
         // Remove stale entries
         const QStringList selected(iSelected.values());
         const int k = selected.count();
+
         for (int j = k - 1; j >= 0; j--) {
             const QString key(selected.at(j));
             if (!iKeys.contains(key)) {
@@ -274,10 +271,13 @@ void FoilPicsSelection::Private::refreshModelAndEmitSignals()
                 queueSignal(SignalSelectionCountChanged);
             }
         }
+
         const QStringList busy(iBusy.values());
         const int m = busy.count();
+
         for (int l = m - 1; l >= 0; l--) {
             const QString key(busy.at(l));
+
             if (!iKeys.contains(key)) {
                 HDEBUG("busy" << key << "is gone");
                 iBusy.remove(key);
@@ -297,18 +297,22 @@ void FoilPicsSelection::Private::refreshModelAndEmitSignals()
             queueSignal(SignalBusyCountChanged);
         }
     }
+
     HDEBUG(iKeys);
     emitSelectionChanged(selectionChanged);
     emitBusyChanged(busyChanged);
     emitQueuedSignals();
 }
 
-void FoilPicsSelection::Private::selectAll()
+void
+FoilPicsSelection::Private::selectAll()
 {
     QStringList changed;
     const int n = iKeyList.count();
+
     for (int i = 0; i < n; i++) {
         const QString key(iKeyList.at(i));
+
         if (!iSelected.contains(key)) {
             iSelected.insert(key);
             changed.append(key);
@@ -320,7 +324,8 @@ void FoilPicsSelection::Private::selectAll()
     emitQueuedSignals();
 }
 
-void FoilPicsSelection::Private::clearSelection()
+void
+FoilPicsSelection::Private::clearSelection()
 {
     if (!iSelected.isEmpty()) {
         iSelected.clear();
@@ -331,15 +336,20 @@ void FoilPicsSelection::Private::clearSelection()
     }
 }
 
-void FoilPicsSelection::Private::makeBusy(QList<int> aList)
+void
+FoilPicsSelection::Private::makeBusy(
+    const QList<int>& aList)
 {
     const int n = aList.count();
     const int count = iKeyList.count();
     QStringList busyChanged, selectionChanged;
+
     for (int i = 0; i < n; i++) {
         const int pos = aList.at(i);
+
         if (pos >= 0 && pos < count) {
             const QString key = iKeyList.at(pos);
+
             if (!iBusy.contains(key)) {
                 iBusy.insert(key);
                 busyChanged.append(key);
@@ -359,22 +369,27 @@ void FoilPicsSelection::Private::makeBusy(QList<int> aList)
     emitQueuedSignals();
 }
 
-void FoilPicsSelection::Private::onModelDestroyed(QObject* aModel)
+void
+FoilPicsSelection::Private::onModelDestroyed()
 {
     HDEBUG("");
-    iModel = NULL;
+    iModel = Q_NULLPTR;
     queueSignal(SignalModelChanged);
     refreshModelAndEmitSignals();
 }
 
-void FoilPicsSelection::Private::onModelReset()
+void
+FoilPicsSelection::Private::onModelReset()
 {
     HDEBUG("");
     refreshModelAndEmitSignals();
 }
 
-void FoilPicsSelection::Private::onModelRowsInserted(const QModelIndex& aParent,
-    int aStart, int aEnd)
+void
+FoilPicsSelection::Private::onModelRowsInserted(
+    const QModelIndex&,
+    int aStart,
+    int aEnd)
 {
     HDEBUG(aStart << aEnd);
     if (iKeyRole < 0) {
@@ -385,6 +400,7 @@ void FoilPicsSelection::Private::onModelRowsInserted(const QModelIndex& aParent,
         // Insert the new rows
         for (int i = aStart; i <= aEnd; i++) {
             const QString key(keyAt(i));
+
             iKeyList.insert(i, key);
             if (!key.isEmpty()) {
                 HDEBUG(key << i);
@@ -397,24 +413,34 @@ void FoilPicsSelection::Private::onModelRowsInserted(const QModelIndex& aParent,
     updateRows(aEnd + 1);
 }
 
-void FoilPicsSelection::Private::onModelRowsMoved(const QModelIndex& aSourceParent,
-    int aSourceStart, int aSourceEnd, const QModelIndex& aDestParent, int aDest)
+void
+FoilPicsSelection::Private::onModelRowsMoved(
+    const QModelIndex&,
+    int aSourceStart,
+    int aSourceEnd,
+    const QModelIndex&,
+    int aDest)
 {
     HDEBUG(aSourceStart << aSourceEnd << "->" << aDest);
     updateRows(qMin(aSourceStart, aDest));
-    HASSERT(!iQueuedSignals); // No signals are expected
+    HASSERT(!haveQueuedSignals()); // No signals are expected
 }
 
-void FoilPicsSelection::Private::onModelRowsRemoved(const QModelIndex& aParent,
-    int aStart, int aEnd)
+void
+FoilPicsSelection::Private::onModelRowsRemoved(
+    const QModelIndex&,
+    int aStart,
+    int aEnd)
 {
+    QStringList removed;
+
     HDEBUG(aStart << aEnd);
     HASSERT(aEnd < iKeyList.count());
 
     // Create the full list of removed keys
-    QStringList removed;
     for (int i = qMin(aEnd, iKeyList.count() - 1); i >= aStart; i--) {
         const QString key(iKeyList.takeAt(i));
+
         HDEBUG(key << i);
         if (!removed.contains(key)) {
             removed.append(key);
@@ -429,6 +455,7 @@ void FoilPicsSelection::Private::onModelRowsRemoved(const QModelIndex& aParent,
         for (int j = removed.count() - 1; j >= 0; j--) {
             const QString key(removed.at(j));
             const int pos = iKeyList.indexOf(key);
+
             if (pos >= 0) {
                 // Update the index
                 HDEBUG(key << "is still there at" << pos);
@@ -441,8 +468,10 @@ void FoilPicsSelection::Private::onModelRowsRemoved(const QModelIndex& aParent,
 
     // Remove the stale rows from the map
     QStringList selectionChanged, busyChanged;
+
     for (int j = removed.count() - 1; j >= 0; j--) {
         const QString key(removed.at(j));
+
         iKeys.remove(key);
         if (iSelected.contains(key)) {
             HDEBUG(key << "was selected");
@@ -465,8 +494,11 @@ void FoilPicsSelection::Private::onModelRowsRemoved(const QModelIndex& aParent,
     emitQueuedSignals();
 }
 
-void FoilPicsSelection::Private::onModelDataChanged(const QModelIndex& aTopLeft,
-    const QModelIndex& aBottomRight, const QVector<int>& aRoles)
+void
+FoilPicsSelection::Private::onModelDataChanged(
+    const QModelIndex& aTopLeft,
+    const QModelIndex& aBottomRight,
+    const QVector<int>& aRoles)
 {
     // This happens very rarely, if ever
     HDEBUG(aTopLeft.row() << aBottomRight.row() << aRoles);
@@ -477,7 +509,8 @@ void FoilPicsSelection::Private::onModelDataChanged(const QModelIndex& aTopLeft,
 // FoilPicsSelection
 // ==========================================================================
 
-FoilPicsSelection::FoilPicsSelection(QObject* aParent) :
+FoilPicsSelection::FoilPicsSelection(
+    QObject* aParent) :
     QObject(aParent),
     iPrivate(new Private(this))
 {
@@ -489,42 +522,53 @@ FoilPicsSelection::~FoilPicsSelection()
     HDEBUG("destroyed");
 }
 
-int FoilPicsSelection::selectionCount() const
+int
+FoilPicsSelection::selectionCount() const
 {
     return iPrivate->iSelected.count();
 }
 
-int FoilPicsSelection::busyCount() const
+int
+FoilPicsSelection::busyCount() const
 {
     return iPrivate->iBusy.count();
 }
 
-QAbstractItemModel* FoilPicsSelection::model() const
+QAbstractItemModel*
+FoilPicsSelection::model() const
 {
     return iPrivate->iModel;
 }
 
-void FoilPicsSelection::setModel(QObject* aModel)
+void
+FoilPicsSelection::setModel(
+    QObject* aModel)
 {
     iPrivate->setModel(qobject_cast<QAbstractItemModel*>(aModel));
 }
 
-QString FoilPicsSelection::role() const
+QString
+FoilPicsSelection::role() const
 {
     return iPrivate->iKeyRoleName;
 }
 
-void FoilPicsSelection::setRole(QString aRole)
+void
+FoilPicsSelection::setRole(
+    QString aRole)
 {
     iPrivate->setKeyRole(aRole);
 }
 
-bool FoilPicsSelection::duplicatesAllowed() const
+bool
+FoilPicsSelection::duplicatesAllowed() const
 {
     return iPrivate->iDuplicatesAllowed;
 }
 
-void FoilPicsSelection::setDuplicatesAllowed(bool aValue)
+void
+FoilPicsSelection::setDuplicatesAllowed(
+    bool aValue)
 {
     if (iPrivate->iDuplicatesAllowed != aValue) {
         iPrivate->iDuplicatesAllowed = aValue;
@@ -533,17 +577,23 @@ void FoilPicsSelection::setDuplicatesAllowed(bool aValue)
     }
 }
 
-bool FoilPicsSelection::busy(QString aValue) const
+bool
+FoilPicsSelection::busy(
+    QString aValue) const
 {
     return iPrivate->iBusy.contains(aValue);
 }
 
-bool FoilPicsSelection::selected(QString aValue) const
+bool
+FoilPicsSelection::selected(
+    QString aValue) const
 {
     return iPrivate->iSelected.contains(aValue);
 }
 
-void FoilPicsSelection::select(QString aValue)
+void
+FoilPicsSelection::select(
+    QString aValue)
 {
     if (iPrivate->iKeys.contains(aValue) &&
         !iPrivate->iSelected.contains(aValue) &&
@@ -560,7 +610,9 @@ void FoilPicsSelection::select(QString aValue)
     }
 }
 
-void FoilPicsSelection::unselect(QString aValue)
+void
+FoilPicsSelection::unselect(
+    QString aValue)
 {
     if (iPrivate->iSelected.remove(aValue)) {
         HDEBUG("-" << aValue << selectionCount());
@@ -571,7 +623,9 @@ void FoilPicsSelection::unselect(QString aValue)
     }
 }
 
-void FoilPicsSelection::toggleSelection(QString aValue)
+void
+FoilPicsSelection::toggleSelection(
+    QString aValue)
 {
     if (iPrivate->iKeys.contains(aValue)) {
         if (iPrivate->iSelected.remove(aValue)) {
@@ -591,22 +645,27 @@ void FoilPicsSelection::toggleSelection(QString aValue)
     }
 }
 
-void FoilPicsSelection::clearSelection()
+void
+FoilPicsSelection::clearSelection()
 {
     iPrivate->clearSelection();
 }
 
-void FoilPicsSelection::selectAll()
+void
+FoilPicsSelection::selectAll()
 {
     iPrivate->selectAll();
 }
 
-QList<int> FoilPicsSelection::getSelectedRows()
+QList<int>
+FoilPicsSelection::getSelectedRows()
 {
     QList<int> selection;
     const QStringList keys = iPrivate->iSelected.values();
     const int n = keys.count();
+
     if (n > 0) {
+        selection.reserve(n);
         for (int i = 0; i < n; i++) {
             selection.append(iPrivate->iKeys.value(keys.at(i)));
         }
@@ -616,7 +675,9 @@ QList<int> FoilPicsSelection::getSelectedRows()
     return selection;
 }
 
-void FoilPicsSelection::makeBusy(QList<int> aList)
+void
+FoilPicsSelection::makeBusy(
+    QList<int> aList)
 {
     return iPrivate->makeBusy(aList);
 }
