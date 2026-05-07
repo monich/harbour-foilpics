@@ -51,13 +51,14 @@ SilicaListView {
         pageStack.pop()
         var item = requestedGroup.currentItem
         if (item) {
+            var imageId = foilModel.imageIdAt(index)
             var remorse = decryptRemorseComponent.createObject(null)
             remorse.z = item.z + 1
             remorse.execute(remorseContainerComponent.createObject(item),
                 //: Decrypting image in 5 seconds
                 //% "Decrypting"
                 qsTrId("foilpics-encrypted_grid-remorse-decrypting"),
-                function() { foilModel.decryptAt(index) })
+                function() { foilModel.decrypt(imageId, index) })
         }
     }
 
@@ -66,13 +67,14 @@ SilicaListView {
         pageStack.pop()
         var item = requestedGroup.currentItem
         if (item) {
+            var imageId = foilModel.imageIdAt(index)
             var remorse = decryptRemorseComponent.createObject(null)
             remorse.z = item.z + 1
             remorse.execute(remorseContainerComponent.createObject(item),
                 //: Deleting image in 5 seconds
                 //% "Deleting"
                 qsTrId("foilpics-image_grid_view-remorse-deleting"),
-                function() { foilModel.removeAt(index) })
+                function() { foilModel.remove(imageId, index) })
         }
     }
 

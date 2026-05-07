@@ -2184,7 +2184,7 @@ public:
     ~Private();
 
     ModelData* dataAt(int);
-    int find(const QString&);
+    int find(const QString&, int);
     int compare(const ModelData*, const ModelData*) const;
     static int sortProc(const void*, const void*, void*);
 
@@ -2426,17 +2426,28 @@ FoilPicsModel::Private::dataAt(
 
 int
 FoilPicsModel::Private::find(
-    const QString& aImageId)
+    const QString& aImageId,
+    int aIndexHint)
 {
+    // The index hint provides likely location of the image in the list.
+    // It may be wrong e.g. if something was deleted or inserted before
+    // the element we are looking for (e.g. while the remorse timer was
+    // running)
     const int n = iData.count();
+    int i;
 
-    for (int i = 0; i < n; i++) {
-        ModelData* data = iData.at(i);
-
-        if (data->iImageId == aImageId) {
+    for (i = qMin(n - 1, aIndexHint); i >=0; i--) {
+        if (iData.at(i)->iImageId == aImageId) {
             return i;
         }
     }
+
+    for (i = qMax(0, aIndexHint + 1); i < n; i++) {
+        if (iData.at(i)->iImageId == aImageId) {
+            return i;
+        }
+    }
+
     return -1;
 }
 
@@ -3889,12 +3900,19 @@ FoilPicsModel::setThumbnailSize(
 }
 
 void
-FoilPicsModel::removeAt(
-    int aIndex)
+FoilPicsModel::remove(
+    QString aImageId,
+    int aIndexHint)
 {
-    HDEBUG(aIndex);
-    iPrivate->removeAt(aIndex);
-    iPrivate->emitQueuedSignals();
+    const int i = iPrivate->find(aImageId, aIndexHint);
+
+    if (i >= 0) {
+        HDEBUG(aImageId << "at" << i);
+        iPrivate->removeAt(i);
+        iPrivate->emitQueuedSignals();
+    } else {
+        HWARN("Invalid image id" << aImageId);
+    }
 }
 
 void
@@ -3904,6 +3922,15 @@ FoilPicsModel::removeFiles(
     HDEBUG(aRows);
     iPrivate->removeFiles(aRows);
     iPrivate->emitQueuedSignals();
+}
+
+QString
+FoilPicsModel::imageIdAt(
+    int aIndex) const
+{
+    const ModelData* data = iPrivate->dataAt(aIndex);
+
+    return data ? data->iImageId : QString();
 }
 
 QVariantMap
@@ -3932,12 +3959,19 @@ FoilPicsModel::decryptFiles(
 }
 
 void
-FoilPicsModel::decryptAt(
-    int aIndex)
+FoilPicsModel::decrypt(
+    QString aImageId,
+    int aIndexHint)
 {
-    HDEBUG(aIndex);
-    iPrivate->decryptAt(aIndex);
-    iPrivate->emitQueuedSignals();
+    const int i = iPrivate->find(aImageId, aIndexHint);
+
+    if (i >= 0) {
+        HDEBUG(aImageId << "at" << i);
+        iPrivate->decryptAt(i);
+        iPrivate->emitQueuedSignals();
+    } else {
+        HWARN("Invalid image id" << aImageId);
+    }
 }
 
 void
@@ -4039,7 +4073,7 @@ FoilPicsModel::setGroupId(
     QString aImageId,
     QString aId)
 {
-    const int i = iPrivate->find(aImageId);
+    const int i = iPrivate->find(aImageId, -1);
 
     if (i >= 0) {
         iPrivate->setGroupIdAt(i, aId.toLatin1());

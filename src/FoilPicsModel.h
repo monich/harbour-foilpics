@@ -107,15 +107,16 @@ public:
     Q_INVOKABLE bool encryptFile(QUrl, QVariantMap);
     Q_INVOKABLE void encryptFiles(QObject*, QList<int>);
     Q_INVOKABLE void decryptFiles(QList<int>);
-    Q_INVOKABLE void decryptAt(int);
+    Q_INVOKABLE void decrypt(QString, int);
     Q_INVOKABLE void decryptAll();
-    Q_INVOKABLE void removeAt(int aIndex);
+    Q_INVOKABLE void remove(QString, int);
     Q_INVOKABLE void removeFiles(QList<int>);
     Q_INVOKABLE void setTitleAt(int, QString);
     Q_INVOKABLE void setGroupId(QString, QString);
     Q_INVOKABLE void setGroupIdAt(int, QString);
     Q_INVOKABLE void setGroupIdForRows(QList<int>, QString);
     Q_INVOKABLE int groupIndexAt(int) const;
+    Q_INVOKABLE QString imageIdAt(int) const;
     Q_INVOKABLE QVariantMap get(int) const;
 
     // Keys for metadata passed to encryptFile:
