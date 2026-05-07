@@ -1,34 +1,40 @@
 /*
+ * Copyright (C) 2017-2026 Slava Monich <slava@monich.com>
  * Copyright (C) 2017-2022 Jolla Ltd.
- * Copyright (C) 2017-2022 Slava Monich <slava@monich.com>
  *
- * You may use this file under the terms of BSD license as follows:
+ * You may use this file under the terms of the BSD license as follows:
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  *
- *   1. Redistributions of source code must retain the above copyright
- *      notice, this list of conditions and the following disclaimer.
- *   2. Redistributions in binary form must reproduce the above copyright
- *      notice, this list of conditions and the following disclaimer
- *      in the documentation and/or other materials provided with the
- *      distribution.
- *   3. Neither the names of the copyright holders nor the names of its
- *      contributors may be used to endorse or promote products derived
- *      from this software without specific prior written permission.
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer
+ *     in the documentation and/or other materials provided with the
+ *     distribution.
+ *
+ *  3. Neither the names of the copyright holders nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
  * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
  * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
  * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * The views and conclusions contained in the software and documentation
+ * are those of the authors and should not be interpreted as representing
+ * any official policies, either expressed or implied.
  */
 
 #include "FoilPicsModel.h"
@@ -132,6 +138,41 @@ const QString FoilPicsModel::MetaAltitude("altitude");       // double
     role(GroupName, groupName)
 
 // ==========================================================================
+// FoilPicsModel::Task (definition)
+// ==========================================================================
+
+class FoilPicsModel::Task :
+    public HarbourTask
+{
+    Q_OBJECT
+
+public:
+    class Encrypt;
+    class Decrypt;
+    class GenerateKey;
+    class ImageRequest;
+    class SaveInfo;
+    class SetHeader;
+
+    Task(QThreadPool*, FoilPrivateKey*, FoilKey*);
+    ~Task() Q_DECL_OVERRIDE;
+
+    FoilMsg* decryptAndVerify(const QString&) const;
+    FoilMsg* decryptAndVerify(const char*) const;
+    QString writeThumb(const QImage&, const FoilMsgHeaders*,
+        const char*, const QImage&, const QString&) const;
+
+    static bool removeFile(const QString&);
+    static QImage toImage(const FoilMsg*);
+    static FoilOutput* createFoilFile(const QString&, GString*);
+    static bool getHeader(FoilMsgHeader*, const FoilMsgHeaders*, const char*);
+
+public:
+    FoilPrivateKey* iPrivateKey;
+    FoilKey* iPublicKey;
+};
+
+// ==========================================================================
 // FoilPicsModel::ModelData
 // ==========================================================================
 
@@ -206,9 +247,9 @@ public:
     double* iLatitude;
     double* iLongitude;
     double* iAltitude;
-    HarbourTask* iDecryptTask;
-    HarbourTask* iSetTitleTask;
-    HarbourTask* iSetGroupTask;
+    HarbourTask::AutoReleasePointer<> iDecryptTask;
+    HarbourTask::AutoReleasePointer<Task::SetHeader> iSetTitleTask;
+    HarbourTask::AutoReleasePointer<Task::SetHeader> iSetGroupTask;
     mutable QVariantMap iVariantMap;
 };
 
@@ -248,10 +289,7 @@ FoilPicsModel::ModelData::ModelData(
     iImageDate(aImageDate),
     iLatitude(toDouble(aLatitude)),
     iLongitude(toDouble(aLongitude)),
-    iAltitude(toDouble(aAltitude)),
-    iDecryptTask(Q_NULLPTR),
-    iSetTitleTask(Q_NULLPTR),
-    iSetGroupTask(Q_NULLPTR)
+    iAltitude(toDouble(aAltitude))
 {
     QFileInfo fileInfo(aOriginalPath);
     iOriginalPath = fileInfo.absoluteFilePath();
@@ -265,20 +303,18 @@ FoilPicsModel::ModelData::ModelData(
     // General image id from the digest
     gsize digestSize;
     const uchar* digest = (uchar*)g_bytes_get_data(aDigest, &digestSize);
-    GString* buf = g_string_sized_new(digestSize*2);
-    for (guint i = 0; i < digestSize; i++) {
-        g_string_append_printf(buf, "%02X", digest[i]);
-    }
-    iImageId = QLatin1String(buf->str);
-    HDEBUG(iFileName << buf->str << iOrientation);
-    g_string_free(buf, TRUE);
+    char* hex = gutil_bin2hex(digest, digestSize, TRUE);
+
+    iImageId = QLatin1String(hex);
+    HDEBUG(iFileName << hex << iOrientation);
+    g_free(hex);
 }
 
 FoilPicsModel::ModelData::~ModelData()
 {
-    if (iDecryptTask) iDecryptTask->release();
-    if (iSetTitleTask) iSetTitleTask->release();
-    if (iSetGroupTask) iSetGroupTask->release();
+    iDecryptTask.reset();
+    iSetTitleTask.reset();
+    iSetGroupTask.reset();
     delete iLatitude;
     delete iLongitude;
     delete iAltitude;
@@ -748,37 +784,6 @@ FoilPicsModel::ModelInfo::save(
 // ==========================================================================
 // FoilPicsModel::Task
 // ==========================================================================
-
-class FoilPicsModel::Task :
-    public HarbourTask
-{
-    Q_OBJECT
-
-public:
-    class Encrypt;
-    class Decrypt;
-    class GenerateKey;
-    class ImageRequest;
-    class SaveInfo;
-    class SetHeader;
-
-    Task(QThreadPool*, FoilPrivateKey*, FoilKey*);
-    ~Task() Q_DECL_OVERRIDE;
-
-    FoilMsg* decryptAndVerify(const QString&) const;
-    FoilMsg* decryptAndVerify(const char*) const;
-    QString writeThumb(const QImage&, const FoilMsgHeaders*,
-        const char*, const QImage&, const QString&) const;
-
-    static bool removeFile(const QString&);
-    static QImage toImage(const FoilMsg*);
-    static FoilOutput* createFoilFile(const QString&, GString*);
-    static bool getHeader(FoilMsgHeader*, const FoilMsgHeaders*, const char*);
-
-public:
-    FoilPrivateKey* iPrivateKey;
-    FoilKey* iPublicKey;
-};
 
 FoilPicsModel::Task::Task(
     QThreadPool* aPool,
@@ -2191,6 +2196,22 @@ public:
         LessThan(Private* aThis) : obj(aThis) {}
     };
 
+    template <typename Iterator>
+    static inline void releaseTasks(Iterator ptr, Iterator end)
+    {
+        while (ptr != end) {
+            (*ptr)->release();
+            ++ptr;
+        }
+    }
+
+    template <typename Container>
+    static inline void releaseTasks(Container& c)
+    {
+        releaseTasks(c.begin(), c.end());
+        c.clear();
+    }
+
 Q_SIGNALS:
     void stopIgnoringGroupModelChanges();
 
@@ -2267,10 +2288,10 @@ public:
     FoilPrivateKey* iPrivateKey;
     FoilKey* iPublicKey;
     QThreadPool* iThreadPool;
-    CheckPicsTask* iCheckPicsTask;
-    Task::SaveInfo* iSaveInfoTask;
-    Task::GenerateKey* iGenerateKeyTask;
-    DecryptPicsTask* iDecryptPicsTask;
+    HarbourTask::AutoReleasePointer<CheckPicsTask> iCheckPicsTask;
+    HarbourTask::AutoReleasePointer<Task::SaveInfo> iSaveInfoTask;
+    HarbourTask::AutoReleasePointer<Task::GenerateKey> iGenerateKeyTask;
+    HarbourTask::AutoReleasePointer<DecryptPicsTask> iDecryptPicsTask;
     QList<Task::Encrypt*> iEncryptTasks;
     QList<Task::ImageRequest*> iImageRequestTasks;
     FoilPicsGroupModel* iGroupModel;
@@ -2352,7 +2373,7 @@ FoilPicsModel::Private::Private(
         g_error_free(error);
     }
 
-    iCheckPicsTask = new CheckPicsTask(iThreadPool, iFoilPicsDir);
+    iCheckPicsTask.reset(new CheckPicsTask(iThreadPool, iFoilPicsDir));
     iCheckPicsTask->submit(this, SLOT(onCheckPicsTaskDone()));
 
     // A trick to stop one queued group model change:
@@ -2366,19 +2387,12 @@ FoilPicsModel::Private::~Private()
 {
     foil_private_key_unref(iPrivateKey);
     foil_key_unref(iPublicKey);
-    if (iCheckPicsTask) iCheckPicsTask->release(this);
-    if (iSaveInfoTask) iSaveInfoTask->release(this);
-    if (iGenerateKeyTask) iGenerateKeyTask->release(this);
-    if (iDecryptPicsTask) iDecryptPicsTask->release(this);
-    int i;
-    for (i = 0; i < iEncryptTasks.count(); i++) {
-        iEncryptTasks.at(i)->release(this);
-    }
-    iEncryptTasks.clear();
-    for (i = 0; i < iImageRequestTasks.count(); i++) {
-        iImageRequestTasks.at(i)->release(this);
-    }
-    iImageRequestTasks.clear();
+    iCheckPicsTask.reset();
+    iSaveInfoTask.reset();
+    iGenerateKeyTask.reset();
+    iDecryptPicsTask.reset();
+    releaseTasks(iEncryptTasks);
+    releaseTasks(iImageRequestTasks);
     iThreadPool->waitForDone();
     qDeleteAll(iData);
     if (iImageProvider) {
@@ -2824,21 +2838,20 @@ void
 FoilPicsModel::Private::onCheckPicsTaskDone()
 {
     HDEBUG("Done");
-    if (sender() == iCheckPicsTask) {
-        const bool mayHave = iCheckPicsTask->iMayHaveEncryptedPictures;
+    HASSERT(sender() == iCheckPicsTask.data());
 
-        if (iMayHaveEncryptedPictures != mayHave) {
-            iMayHaveEncryptedPictures = mayHave;
-            queueSignal(SignalMayHaveEncryptedPicturesChanged);
-        }
-        iCheckPicsTask->release(this);
-        iCheckPicsTask = Q_NULLPTR;
-        if (!busy()) {
-            // We know we were busy when we received this signal
-            queueSignal(SignalBusyChanged);
-        }
-        emitQueuedSignals();
+    const bool mayHave = iCheckPicsTask->iMayHaveEncryptedPictures;
+
+    if (iMayHaveEncryptedPictures != mayHave) {
+        iMayHaveEncryptedPictures = mayHave;
+        queueSignal(SignalMayHaveEncryptedPicturesChanged);
     }
+    iCheckPicsTask.reset();
+    if (!busy()) {
+        // We know we were busy when we received this signal
+        queueSignal(SignalBusyChanged);
+    }
+    emitQueuedSignals();
 }
 
 void
@@ -2884,10 +2897,9 @@ FoilPicsModel::Private::saveInfo()
 {
     // N.B. This method may change the busy state but doesn't queue
     // BusyChanged signal, it's done by the caller.
-    if (iSaveInfoTask) iSaveInfoTask->release(this);
-    iSaveInfoTask = new Task::SaveInfo(iThreadPool,
+    iSaveInfoTask.reset(new Task::SaveInfo(iThreadPool,
         ModelInfo(iData, iGroupModel->groups()),
-        iFoilPicsDir, iPrivateKey, iPublicKey);
+        iFoilPicsDir, iPrivateKey, iPublicKey));
     iSaveInfoTask->submit(this, SLOT(onSaveInfoDone()));
 }
 
@@ -2895,15 +2907,13 @@ void
 FoilPicsModel::Private::onSaveInfoDone()
 {
     HDEBUG("Done");
-    if (sender() == iSaveInfoTask) {
-        iSaveInfoTask->release(this);
-        iSaveInfoTask = Q_NULLPTR;
-        if (!busy()) {
-            // We know we were busy when we received this signal
-            queueSignal(SignalBusyChanged);
-        }
-        emitQueuedSignals();
+    HASSERT(sender() == iSaveInfoTask.data());
+    iSaveInfoTask.reset();
+    if (!busy()) {
+        // We know we were busy when we received this signal
+        queueSignal(SignalBusyChanged);
     }
+    emitQueuedSignals();
 }
 
 void
@@ -2913,9 +2923,8 @@ FoilPicsModel::Private::generate(
 {
     const bool wasBusy = busy();
 
-    if (iGenerateKeyTask) iGenerateKeyTask->release(this);
-    iGenerateKeyTask = new Task::GenerateKey(iThreadPool, iFoilKeyFile,
-        aBits, aPassword);
+    iGenerateKeyTask.reset(new Task::GenerateKey(iThreadPool, iFoilKeyFile,
+        aBits, aPassword));
     iGenerateKeyTask->submit(this, SLOT(onGenerateKeyTaskDone()));
     setFoilState(FoilGeneratingKey);
     if (!wasBusy) {
@@ -2929,7 +2938,7 @@ void
 FoilPicsModel::Private::onGenerateKeyTaskDone()
 {
     HDEBUG("Got a new key");
-    HASSERT(sender() == iGenerateKeyTask);
+    HASSERT(sender() == iGenerateKeyTask.data());
     if (iGenerateKeyTask->iPrivateKey) {
         setKeys(iGenerateKeyTask->iPrivateKey, iGenerateKeyTask->iPublicKey);
         setFoilState(FoilPicsReady);
@@ -2937,8 +2946,7 @@ FoilPicsModel::Private::onGenerateKeyTaskDone()
         setKeys(Q_NULLPTR);
         setFoilState(FoilKeyError);
     }
-    iGenerateKeyTask->release(this);
-    iGenerateKeyTask = Q_NULLPTR;
+    iGenerateKeyTask.reset();
     if (!busy()) {
         // We know we were busy when we received this signal
         queueSignal(SignalBusyChanged);
@@ -2954,25 +2962,12 @@ FoilPicsModel::Private::lock(
     // Cancel whatever we are doing
     const bool wasBusy = busy();
 
-    if (iSaveInfoTask) {
-        iSaveInfoTask->release(this);
-        iSaveInfoTask = Q_NULLPTR;
-    }
-    if (iDecryptPicsTask) {
-        iDecryptPicsTask->release(this);
-        iDecryptPicsTask = Q_NULLPTR;
-    }
-
-    int i;
-    for (i = 0; i < iEncryptTasks.count(); i++) {
-        iEncryptTasks.at(i)->release(this);
-    }
-    for (i = 0; i < iImageRequestTasks.count(); i++) {
-        iImageRequestTasks.at(i)->release(this);
-    }
-
-    iEncryptTasks.clear();
-    iImageRequestTasks.clear();
+    iCheckPicsTask.reset();
+    iSaveInfoTask.reset();
+    iGenerateKeyTask.reset();
+    iDecryptPicsTask.reset();
+    releaseTasks(iEncryptTasks);
+    releaseTasks(iImageRequestTasks);
     // Disconnect the signals before clearing the model
     disconnectGroupModel();
     // Destroy decrypted pictures
@@ -3030,16 +3025,15 @@ FoilPicsModel::Private::unlock(
                 HDEBUG("Password accepted, thank you!");
                 setKeys(key);
                 // Now that we know the key, decrypt the pictures
-                if (iDecryptPicsTask) iDecryptPicsTask->release(this);
-                iDecryptPicsTask = new DecryptPicsTask(iThreadPool,
-                    iFoilPicsDir, iPrivateKey, iPublicKey, iThumbSize);
+                iDecryptPicsTask.reset(new DecryptPicsTask(iThreadPool,
+                    iFoilPicsDir, iPrivateKey, iPublicKey, iThumbSize));
                 clearModel();
                 clearGroupModel();
-                connect(iDecryptPicsTask,
+                connect(iDecryptPicsTask.data(),
                     SIGNAL(groupsDecrypted(FoilPicsGroupModel::GroupList)),
                     SLOT(onGroupsDecrypted(FoilPicsGroupModel::GroupList)),
                     Qt::QueuedConnection);
-                connect(iDecryptPicsTask,
+                connect(iDecryptPicsTask.data(),
                     SIGNAL(progress(DecryptPicsTask::Progress::Ptr)),
                     SLOT(onDecryptPicsProgress(DecryptPicsTask::Progress::Ptr)),
                     Qt::QueuedConnection);
@@ -3181,7 +3175,7 @@ FoilPicsModel::Private::onEncryptTaskDone()
 
     const QUrl mediaUrl(QUrl::fromLocalFile(task->iSourceFile));
 
-    task->release(this);
+    task->release();
     if (!busy()) {
         // We know we were busy when we received this signal
         queueSignal(SignalBusyChanged);
@@ -3200,8 +3194,8 @@ FoilPicsModel::Private::decryptAt(
         const bool wasBusy = busy();
 
         HDEBUG("About to decrypt" << qPrintable(data->iPath));
-        data->iDecryptTask = new Task::Decrypt(iThreadPool, data,
-            iPrivateKey, iPublicKey);
+        data->iDecryptTask.reset(new Task::Decrypt(iThreadPool, data,
+            iPrivateKey, iPublicKey));
         data->iDecryptTask->submit(this, SLOT(onDecryptTaskDone()));
         if (!wasBusy) {
             // We know we are busy now
@@ -3220,12 +3214,14 @@ FoilPicsModel::Private::decryptTaskDone(
         Task::Decrypt* task = qobject_cast<Task::Decrypt*>(sender());
         ModelData* data = task->iData;
 
-        data->iDecryptTask = Q_NULLPTR;
         task->iData = Q_NULLPTR;
-        task->release(this);
+        data->iDecryptTask.reset();
+
         const bool wasConnected = disconnectGroupModel();
+
         destroyItemAt(iData.indexOf(data));
         if (wasConnected) connectGroupModel();
+
         if (aLast) {
             saveInfo();
         }
@@ -3258,16 +3254,16 @@ FoilPicsModel::Private::decryptFiles(
         for (int i = aRows.count() - 1; i > 0; i--) {
             data = dataAt(aRows.at(i));
             if (data && !data->iDecryptTask) {
-                data->iDecryptTask = new Task::Decrypt(iThreadPool, data,
-                    iPrivateKey, iPublicKey);
+                data->iDecryptTask.reset(new Task::Decrypt(iThreadPool, data,
+                    iPrivateKey, iPublicKey));
                 data->iDecryptTask->submit(this, SLOT(onDecryptAllProgress()));
             }
         }
         // The last onDecryptTaskDone will reset the image info
         data = dataAt(aRows.first());
-        if (data && !data->iDecryptTask) {
-            data->iDecryptTask = new Task::Decrypt(iThreadPool, data,
-                iPrivateKey, iPublicKey);
+        if (data) {
+            data->iDecryptTask.reset(new Task::Decrypt(iThreadPool, data,
+                iPrivateKey, iPublicKey));
             data->iDecryptTask->submit(this, SLOT(onDecryptTaskDone()));
         }
         if (busy() != wasBusy) {
@@ -3289,18 +3285,16 @@ FoilPicsModel::Private::decryptAll()
         for (int i = iData.count() - 1; i > 0; i--) {
             data = iData.at(i);
             if (!data->iDecryptTask) {
-                data->iDecryptTask = new Task::Decrypt(iThreadPool, data,
-                    iPrivateKey, iPublicKey);
+                data->iDecryptTask.reset(new Task::Decrypt(iThreadPool, data,
+                    iPrivateKey, iPublicKey));
                 data->iDecryptTask->submit(this, SLOT(onDecryptAllProgress()));
             }
         }
         // The last onDecryptTaskDone will reset the image info
         data = iData.first();
-        if (!data->iDecryptTask) {
-            data->iDecryptTask = new Task::Decrypt(iThreadPool, data,
-                iPrivateKey, iPublicKey);
-            data->iDecryptTask->submit(this, SLOT(onDecryptTaskDone()));
-        }
+        data->iDecryptTask.reset(new Task::Decrypt(iThreadPool, data,
+            iPrivateKey, iPublicKey));
+        data->iDecryptTask->submit(this, SLOT(onDecryptTaskDone()));
         if (busy() != wasBusy) {
             queueSignal(SignalBusyChanged);
         }
@@ -3329,7 +3323,7 @@ void
 FoilPicsModel::Private::onDecryptPicsProgress(
     DecryptPicsTask::Progress::Ptr aProgress)
 {
-    if (aProgress && aProgress->iTask == iDecryptPicsTask) {
+    if (aProgress && aProgress->iTask == iDecryptPicsTask.data()) {
         // Transfer ownership of this ModelData to the model
         insertModelData(aProgress->iModelData);
         aProgress->iModelData = Q_NULLPTR;
@@ -3341,19 +3335,18 @@ void
 FoilPicsModel::Private::onDecryptPicsTaskDone()
 {
     HDEBUG(iData.count() << "picture(s) decrypted");
-    if (sender() == iDecryptPicsTask) {
-        const bool infoUpdated = iDecryptPicsTask->iSaveInfo;
+    HASSERT(sender() == iDecryptPicsTask.data());
 
-        iDecryptPicsTask->release(this);
-        iDecryptPicsTask = Q_NULLPTR;
-        if (iFoilState == FoilDecrypting) {
-            setFoilState(FoilPicsReady);
-        }
-        if (infoUpdated) saveInfo();
-        if (!busy()) {
-            // We know we were busy when we received this signal
-            queueSignal(SignalBusyChanged);
-        }
+    const bool infoUpdated = iDecryptPicsTask->iSaveInfo;
+
+    iDecryptPicsTask.reset();
+    if (iFoilState == FoilDecrypting) {
+        setFoilState(FoilPicsReady);
+    }
+    if (infoUpdated) saveInfo();
+    if (!busy()) {
+        // We know we were busy when we received this signal
+        queueSignal(SignalBusyChanged);
     }
     emitQueuedSignals();
 }
@@ -3376,13 +3369,8 @@ FoilPicsModel::Private::setTitleAt(
             HDEBUG("Settings title at" << aIndex << "to" << title);
             const bool wasBusy = busy();
 
-            if (data->iSetTitleTask) {
-                HDEBUG("Dropping previous task");
-                data->iSetTitleTask->release(this);
-                data->iSetTitleTask = Q_NULLPTR;
-            }
-            data->iSetTitleTask = Task::SetHeader::createTitleTask(iThreadPool,
-                iPrivateKey, iPublicKey, data);
+            data->iSetTitleTask.reset(Task::SetHeader::createTitleTask(iThreadPool,
+                iPrivateKey, iPublicKey, data));
             data->iSetTitleTask->submit(this, SLOT(onSetTitleTaskDone()));
             if (!wasBusy) {
                 // We know we are busy now
@@ -3420,12 +3408,8 @@ FoilPicsModel::Private::setGroupId(
         aData->iGroupId = aId;
         aData->updateVariantMap(ModelData::GroupIdRole);
         // Update the encrypted file
-        if (aData->iSetGroupTask) {
-            aData->iSetGroupTask->release(this);
-            aData->iSetGroupTask = Q_NULLPTR;
-        }
-        aData->iSetGroupTask = Task::SetHeader::createGroupTask(iThreadPool,
-            iPrivateKey, iPublicKey, aData);
+        aData->iSetGroupTask.reset(Task::SetHeader::createGroupTask(iThreadPool,
+            iPrivateKey, iPublicKey, aData));
         aData->iSetGroupTask->submit(this, SLOT(onSetGroupTaskDone()));
         return true;
     }
@@ -3555,7 +3539,6 @@ FoilPicsModel::Private::headerUpdateDone(
     // There's no need to queue BusyChanged because we were busy when we
     // received this signal and we are still going to be busy after we
     // call saveInfo()
-    task->release(this);
     emitQueuedSignals();
     saveInfo();
 }
@@ -3564,22 +3547,24 @@ void
 FoilPicsModel::Private::onSetTitleTaskDone()
 {
     // task->iData must be valid, see comment in headerUpdateDone
-    Task::SetHeader* task = qobject_cast<Task::SetHeader*>(sender());
+    ModelData* data = qobject_cast<Task::SetHeader*>(sender())->iData;
+    HarbourTask::AutoReleasePointer<Task::SetHeader> task;
 
+    data->iSetTitleTask.swap(task);
     HDEBUG(QString::fromUtf8(task->iHeaderValue));
-    task->iData->iSetTitleTask = Q_NULLPTR;
-    headerUpdateDone(task);
+    headerUpdateDone(task.data());
 }
 
 void
 FoilPicsModel::Private::onSetGroupTaskDone()
 {
     // task->iData must be valid, see comment in headerUpdateDone
-    Task::SetHeader* task = qobject_cast<Task::SetHeader*>(sender());
+    ModelData* data = qobject_cast<Task::SetHeader*>(sender())->iData;
+    HarbourTask::AutoReleasePointer<Task::SetHeader> task;
 
+    data->iSetGroupTask.swap(task);
     HDEBUG(QString::fromUtf8(task->iHeaderValue));
-    task->iData->iSetGroupTask = Q_NULLPTR;
-    headerUpdateDone(task);
+    headerUpdateDone(task.data());
 }
 
 void
@@ -3690,7 +3675,7 @@ FoilPicsModel::Private::onImageRequestDone()
             while (tooMuchDataDecrypted() && dropDecryptedData(index));
         }
     }
-    task->release(this);
+    task->release();
     if (!busy()) {
         // We know we were busy when we received this signal
         queueSignal(SignalBusyChanged);
