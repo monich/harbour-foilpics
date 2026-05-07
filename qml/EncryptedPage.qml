@@ -17,14 +17,14 @@ Page {
     // nextPage is either
     // a) our attached page; or
     // b) the page we pushed to the stack
-    readonly property Page nextPage: pageStack.nextPage(thisPage)
-    readonly property bool isCurrentPage: status === PageStatus.Active || status === PageStatus.Activating ||
-        (nextPage && parent && nextPage.parent !== parent.attachedContainer)
-    readonly property real screenHeight: isPortrait ? Screen.height : Screen.width
+    readonly property Page _nextPage: pageStack.nextPage(thisPage)
+    readonly property bool _isCurrentPage: status === PageStatus.Active || status === PageStatus.Activating ||
+        (!!_nextPage && !!parent && _nextPage.parent !== parent.attachedContainer)
+    readonly property real _landscapeWidth: Screen.height - (('topCutout' in Screen) ? Screen.topCutout.height : 0)
 
     // Otherwise width is changing with a delay, which may cause weird layout
     // adjustments when on-screen keyboard is visible
-    onIsLandscapeChanged: width = isLandscape ? Screen.height : Screen.width
+    onIsLandscapeChanged: width = isLandscape ? _landscapeWidth : Screen.width
 
     function getFoilUi() {
         if (!foilUi) {
@@ -304,7 +304,7 @@ Page {
             active: opacity > 0
             opacity: (foilModel.foilState === FoilPicsModel.FoilPicsReady &&
                       !generatingKeyTimer.running && !decryptingTimer.running) ? 1 : 0
-            readonly property bool isCurrentItem: thisPage.isCurrentPage
+            readonly property bool isCurrentItem: thisPage._isCurrentPage
             sourceComponent: Component {
                 EncryptedPicsView {
                     mainPage: thisPage
@@ -329,7 +329,7 @@ Page {
                 //: Left swipe hint text
                 //% "Swipe left to access the picture gallery"
                 text: qsTrId("foilpics-hint-swipe_left_to_gallery")
-                property bool hintCanBeEnabled: thisPage.isCurrentPage &&
+                property bool hintCanBeEnabled: thisPage._isCurrentPage &&
                     foilModel.foilState === FoilPicsModel.FoilPicsReady &&
                     hints.leftSwipeToGallery < MaximumHintCount
                 hintEnabled: hintCanBeEnabled && !hintDelayTimer.running
