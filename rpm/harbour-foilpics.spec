@@ -1,6 +1,6 @@
 Name:           harbour-foilpics
 Summary:        Encrypted pictures
-Version:        1.1.5
+Version:        1.1.6
 Release:        1
 License:        BSD
 Group:          Applications/File
@@ -23,7 +23,7 @@ BuildRequires:  qt5-qttools-linguist
 
 %{!?qtc_qmake5:%define qtc_qmake5 %qmake5}
 %{!?qtc_make:%define qtc_make make}
-%{?qtc_builddir:%define _builddir %qtc_builddir}
+%define _binary_payload w6.xzdio
 
 %description
 Picture encryption application.
