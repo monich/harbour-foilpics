@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="it">
+<TS version="2.1" language="it_IT">
 <context>
     <name></name>
     <message id="foilpics-app_name">
@@ -124,7 +124,7 @@
     <message id="foilpics-hint-swipe_right_to_encrypted">
         <source>Encrypted pictures are moved there to the left</source>
         <extracomment>Right swipe hint text</extracomment>
-        <translation>Le immagini cifrate saranno spostate alla sinistra</translation>
+        <translation>Le immagini cifrate saranno spostate a sinistra</translation>
     </message>
     <message id="foilpics-hint-swipe_left_to_decrypted">
         <source>Decrypted pictures are moved back to the gallery</source>
@@ -328,7 +328,7 @@
     <message id="foilpics-confirm_password_page-text_field_placeholder-new_password">
         <source>New password again</source>
         <extracomment>Placeholder for the password confirmation prompt</extracomment>
-        <translation>Inserisci di nuovo la nuova password</translation>
+        <translation>Inserisci un&apos;altra volta la nuova password</translation>
     </message>
     <message id="foilpics-confirm_password_page-text_field_label-new_password">
         <source>New password</source>
