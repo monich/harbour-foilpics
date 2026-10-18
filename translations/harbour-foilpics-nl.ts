@@ -11,7 +11,7 @@
     <message id="foilpics-menu-share">
         <source>Share</source>
         <extracomment>Generic menu item</extracomment>
-        <translation type="unfinished">Delen</translation>
+        <translation>Delen</translation>
     </message>
     <message id="foilpics-menu-details">
         <source>Image details</source>
@@ -41,12 +41,12 @@
     <message id="foilpics-menu-copy">
         <source>Copy to clipboard</source>
         <extracomment>Context menu item</extracomment>
-        <translation type="unfinished">Kopiëren naar klembord</translation>
+        <translation>Kopiëren naar klembord</translation>
     </message>
     <message id="foilpics-menu-move">
         <source>Move</source>
         <extracomment>Generic menu item</extracomment>
-        <translation type="unfinished">Verplaatsen</translation>
+        <translation>Verplaatsen</translation>
     </message>
     <message id="foilpics-pulley_menu-generate_key">
         <source>Generate a new key</source>
@@ -61,12 +61,12 @@
     <message id="foilpics-pulley_menu-lock">
         <source>Lock</source>
         <extracomment>Pulley menu item</extracomment>
-        <translation type="unfinished">Op slot doen</translation>
+        <translation>Vergrendelen</translation>
     </message>
     <message id="foilpics-pulley_menu-select_photos">
         <source>Select photos</source>
         <extracomment>Pulley menu item</extracomment>
-        <translation>Foto’s selecteren</translation>
+        <translation>Selecteer foto’s</translation>
     </message>
     <message id="foilpics-pulley_menu-select_all">
         <source>Select all</source>
@@ -76,7 +76,7 @@
     <message id="foilpics-pulley_menu-select_none">
         <source>Select none</source>
         <extracomment>Pulley menu item</extracomment>
-        <translation>Niets selecteren</translation>
+        <translation>Alles deselecteren</translation>
     </message>
     <message id="foilpics-remorse-deleting_selected" numerus="yes">
         <source>Deleting %0 selected pictures</source>
@@ -119,17 +119,17 @@
     <message id="foilpics-hint-swipe_left_to_gallery">
         <source>Swipe left to access the picture gallery</source>
         <extracomment>Left swipe hint text</extracomment>
-        <translation>Veeg naar links om toegang te krijgen tot de galerij</translation>
+        <translation>Veeg naar links voor de fotogalerij</translation>
     </message>
     <message id="foilpics-hint-swipe_right_to_encrypted">
         <source>Encrypted pictures are moved there to the left</source>
         <extracomment>Right swipe hint text</extracomment>
-        <translation>Versleutelde foto’s worden daar naar links verplaatst</translation>
+        <translation>Versleutelde foto’s worden naar links verplaatst</translation>
     </message>
     <message id="foilpics-hint-swipe_left_to_decrypted">
         <source>Decrypted pictures are moved back to the gallery</source>
         <extracomment>Left swipe hint text</extracomment>
-        <translation>Ontsleutelde foto’s worden terug naar de galerij verplaatst</translation>
+        <translation>Ontsleutelde foto’s worden terug naar rechts verplaatst</translation>
     </message>
     <message id="foilpics-generate_key_warning-title">
         <source>Warning</source>
@@ -139,22 +139,22 @@
     <message id="foilpics-generate_key_warning-text">
         <source>You seem to have some encrypted files in the storage folder. Once you have generated a new key, you are going to lose access to those files. If you have forgotten your password, then keep in mind that most likely it&apos;s computationally easier to brute-force your password and recover the old key than to crack the new key.</source>
         <extracomment>Warning shown prior to generating the new key</extracomment>
-        <translation>Je hebt een aantal versleutelde bestanden in de opslagmap. Wanneer je een nieuwe sleutel genereert, verlies je de toegang tot deze bestanden. Als je je wachtwoord vergeten bent, onthou dan dat het waarschijnlijk eenvoudiger is je wachtwoord te breken met brute kracht en zo de oude sleutel te herstellen, dan de nieuwe sleutel te kraken.</translation>
+        <translation>Het lijkt erop dat je een aantal versleutelde bestanden in de opslagmap hebt staan. Zodra je een nieuwe sleutel hebt gegenereerd, verlies je de toegang tot alle bestanden die met de oude sleutel versleuteld waren. Als je je wachtwoord bent vergeten, denk er dan aan dat het computationeel waarschijnlijk makkelijker is om je oude wachtwoord met brute kracht te kraken en de oude sleutel terug te krijgen, dan bestanden waarvoor de sleutel verdwenen is te ontsleutelen.</translation>
     </message>
     <message id="foilpics-generate_key_page-title">
         <source>You are about to generate a new key</source>
         <extracomment>Prompt label</extracomment>
-        <translation>Je staat op het punt een nieuwe sleutel te genereren</translation>
+        <translation>Je gaat een nieuwe sleutel genereren</translation>
     </message>
     <message id="foilpics-generating_key_view-generating_new_key">
         <source>Generating new key...</source>
         <extracomment>Progress view label</extracomment>
-        <translation>Nieuwe sleutel genereren…</translation>
+        <translation>Nieuwe sleutel wordt gegenereerd…</translation>
     </message>
     <message id="foilpics-generate_key_view-label-key_needed">
         <source>You need to generate the key and select the password before you can encrypt your pictures</source>
         <extracomment>Prompt label</extracomment>
-        <translation>Vooraleer je je foto’s kan versleutelen, moet je de sleutel aanmaken en het wachtwoord selecteren</translation>
+        <translation>Je moet de sleutel genereren en het wachtwoord selecteren voordat je je foto’s kunt versleutelen</translation>
     </message>
     <message id="foilpics-generate_key_view-label-key_size">
         <source>Key size</source>
@@ -165,8 +165,8 @@
         <source>Type at least %0 character(s)</source>
         <extracomment>Password field label</extracomment>
         <translation>
-            <numerusform>Voer minstens %0 teken in</numerusform>
-            <numerusform>Voer minstens %0 tekens in</numerusform>
+            <numerusform>Typ minstens %0 teken</numerusform>
+            <numerusform>Typ minstens %0 tekens</numerusform>
         </translation>
     </message>
     <message id="foilpics-generate_key_view-button-generate_key">
@@ -187,7 +187,7 @@
     <message id="foilpics-enter_password_view-label-enter_password_short">
         <source>Please enter your password</source>
         <extracomment>Password prompt label (short)</extracomment>
-        <translation type="unfinished">Voer je wachtwoord in</translation>
+        <translation>Voer je wachtwoord in</translation>
     </message>
     <message id="foilpics-enter_password_view-button-unlocking">
         <source>Unlocking...</source>
@@ -207,7 +207,7 @@
     <message id="foilpics-change_password_page-text_field_label-current_password">
         <source>Current password</source>
         <extracomment>Placeholder and label for the current password prompt</extracomment>
-        <translation>Huidig wachtwoord</translation>
+        <translation>Huidige wachtwoord</translation>
     </message>
     <message id="foilpics-change_password_page-text_field_label-new_password">
         <source>New password</source>
@@ -252,7 +252,7 @@
     <message id="foilpics-gallery_view-placeholder-no_pictures">
         <source>The photo gallery seems to be empty</source>
         <extracomment>Placeholder text</extracomment>
-        <translation>De galerij lijkt leeg te zijn</translation>
+        <translation>De fotogalerij lijkt leeg te zijn</translation>
     </message>
     <message id="foilpics-gallery_view-remorse-encrypting_selected" numerus="yes">
         <source>Encrypting %0 selected pictures</source>
@@ -295,17 +295,17 @@
     <message id="foilpics-encrypted_grid-placeholder-no_pictures_hint">
         <source>Why not to encrypt something?</source>
         <extracomment>Placeholder text with a hint</extracomment>
-        <translation>Waarom versleutel je niet eens iets?</translation>
+        <translation>Misschien zou je iets kunnen versleutelen?</translation>
     </message>
     <message id="foilpics-encrypted_grid-placeholder-no_pictures">
         <source>You don&apos;t have any encrypted pictures</source>
         <extracomment>Placeholder text</extracomment>
-        <translation>Geen versleutelde foto’s</translation>
+        <translation>Je hebt geen versleutelde foto’s</translation>
     </message>
     <message id="foilpics-encrypted_grid-remorse-decrypting">
         <source>Decrypting</source>
         <extracomment>Decrypting image in 5 seconds</extracomment>
-        <translation>Wordt ontsleuteld</translation>
+        <translation>Bezig met ontsleutelen</translation>
     </message>
     <message id="foilpics-encrypted_pics_view-remorse-decrypting_selected" numerus="yes">
         <source>Decrypting %0 selected pictures</source>
@@ -318,17 +318,17 @@
     <message id="foilpics-confirm_password_page-info_label">
         <source>Please type in your new password one more time</source>
         <extracomment>Password confirmation label</extracomment>
-        <translation>Voer je nieuwe wachtwoord nogmaals in</translation>
+        <translation>Typ je nieuwe wachtwoord nog één keer in</translation>
     </message>
     <message id="foilpics-confirm_password_page-description">
         <source>Make sure you don&apos;t forget your password. It&apos;s impossible to either recover it or to access the encrypted pictures without knowing it. Better take it seriously.</source>
         <extracomment>Password confirmation description</extracomment>
-        <translation>Zorg dat je je wachtwoord niet vergeet. Het is onmogelijk het te herstellen of toegang te krijgen tot de versleutelde foto’s als je het niet meer weet. Je neemt het dus best serieus.</translation>
+        <translation>Zorg dat je je nieuwe wachtwoord niet vergeet. Het is onmogelijk het te herstellen of toegang te krijgen tot de versleutelde foto’s als je het niet meer weet. Neem het dus maar serieus.</translation>
     </message>
     <message id="foilpics-confirm_password_page-text_field_placeholder-new_password">
         <source>New password again</source>
         <extracomment>Placeholder for the password confirmation prompt</extracomment>
-        <translation>Nieuw wachtwoord (opnieuw)</translation>
+        <translation>Nog een keer het nieuwe wachtwoord</translation>
     </message>
     <message id="foilpics-confirm_password_page-text_field_label-new_password">
         <source>New password</source>
@@ -353,7 +353,7 @@
     <message id="foilpics-details-original_path-label">
         <source>Original file</source>
         <extracomment>Details label</extracomment>
-        <translation type="unfinished">Origineel bestand</translation>
+        <translation>Oorspronkelijk bestand</translation>
     </message>
     <message id="foilpics-details-file_size-label">
         <source>File size</source>
@@ -363,17 +363,17 @@
     <message id="foilpics-details-original_file_size-label">
         <source>Original file size</source>
         <extracomment>Details label</extracomment>
-        <translation>Oorspronkelijke bestandsgrootte</translation>
+        <translation>Grootte van oorspronkelijk bestand</translation>
     </message>
     <message id="foilpics-details-encrypted_file_size-label">
         <source>Encrypted file size</source>
         <extracomment>Details label</extracomment>
-        <translation>Versleutelde bestandsgrootte</translation>
+        <translation>Grootte van versleuteld bestand</translation>
     </message>
     <message id="foilpics-details-mime_type-label">
         <source>Type</source>
         <extracomment>Details label</extracomment>
-        <translation>Type</translation>
+        <translation>Soort</translation>
     </message>
     <message id="foilpics-details-width-label">
         <source>Width</source>
@@ -413,7 +413,7 @@
     <message id="foilpics-details-section_header-editable">
         <source>Editable details</source>
         <extracomment>Section header for editable details</extracomment>
-        <translation>Bewerkbare details</translation>
+        <translation>Bewerkbare informatie</translation>
     </message>
     <message id="foilpics-details-image_title-label">
         <source>Title</source>
@@ -463,47 +463,47 @@
     <message id="foilpics-foil_apps_warning">
         <source>Note that all Foil apps use the same encryption key and password.</source>
         <extracomment>Warning text, small size label below the password prompt</extracomment>
-        <translation>Merk op dat alle Foil-apps dezelfde coderingssleutel en wachtwoord gebruiken.</translation>
+        <translation>Merk op dat alle Foil-apps de versleutelingssleutel en het wachtwoord delen.</translation>
     </message>
     <message id="jail-explanation">
         <source>This application is not designed to function in a sandbox. Try installing the latest version from &lt;b&gt;&lt;a href=&apos;%1&apos;&gt;OpenRepos&lt;/a&gt;&lt;/b&gt; or &lt;b&gt;&lt;a href=&apos;%2&apos;&gt;GitHub&lt;/a&gt;&lt;/b&gt;, it may implement some sort of a workaround. No guarantee, though.</source>
         <extracomment>Label text explaining the sandbox situation</extracomment>
-        <translation type="unfinished">Deze applicatie is niet ontworpen om in een sandbox te functioneren. Probeer de nieuwste versie te installeren vanaf &lt;b&gt;&lt;a href=&apos;%1&apos;&gt;OpenRepos&lt;/a&gt;&lt;/b&gt; of &lt;b&gt;&lt;a href=&apos;%2&apos;&gt;GitHub&lt;/a&gt;&lt;/b&gt;, het kan een soort van tijdelijke oplossing implementeren. Geen garantie echter.</translation>
+        <translation>Deze applicatie is niet ontworpen om in een zandbak te werken. Installeer de nieuwste versie van &lt;b&gt;&lt;a href=&apos;%1&apos;&gt;OpenRepos&lt;/a&gt;&lt;/b&gt; of &lt;b&gt;&lt;a href=&apos;%2&apos;&gt;GitHub&lt;/a&gt;&lt;/b&gt;, die heeft waarschijnlijk, maar niet helemaal zeker, wel een oplossing.</translation>
     </message>
     <message id="jail-terminal_hint">
         <source>If you have developer mode enabled, you may also try running &lt;b&gt;%1&lt;/b&gt; from the terminal. Sorry for the inconvenience!</source>
         <extracomment>Hint suggesting to run the app from the terminal</extracomment>
-        <translation type="unfinished">Als u de ontwikkelaarsmodus heeft ingeschakeld, kunt u ook proberen &lt;b&gt;%1&lt;/b&gt; uit te voeren vanaf de terminal. Excuses voor het ongemak!</translation>
+        <translation>Als je de ontwikkelaarsmodus ingeschakeld hebt, kun je ook proberen &lt;b&gt;%1&lt;/b&gt; uit te voeren in de terminal. Sorry voor het ongemak!</translation>
     </message>
     <message id="foilpics-settings_page-header-version">
         <source>Version %1</source>
         <extracomment>Settings page header description (app version)</extracomment>
-        <translation type="unfinished">Versie %1</translation>
+        <translation>Versie %1</translation>
     </message>
     <message id="foilpics-settings_page-autolock-text">
         <source>Automatic locking</source>
         <extracomment>Text switch label</extracomment>
-        <translation type="unfinished">Automatisch vergrendelen</translation>
+        <translation>Automatisch vergrendelen</translation>
     </message>
     <message id="foilpics-settings_page-autolock-description">
         <source>Require to enter Foil password after unlocking the screen.</source>
         <extracomment>Text switch description</extracomment>
-        <translation type="unfinished">Vereisen om Foil wachtwoord in te voeren nadat het scherm is ontgrendeld.</translation>
+        <translation>Vereis het Foil-wachtwoord wanneer het scherm ontgrendeld wordt.</translation>
     </message>
     <message id="foilpics-settings_page-autolock_delay-label">
         <source>Locking delay</source>
         <extracomment>Slider label</extracomment>
-        <translation type="unfinished">Vergrendelingsvertraging</translation>
+        <translation>Vertraging voor vergrendeling</translation>
     </message>
     <message id="foilpics-settings_page-autolock_delay-value-no_delay">
         <source>No delay</source>
         <extracomment>Slider value (no delay)</extracomment>
-        <translation type="unfinished">Zonder vertraging</translation>
+        <translation>Geen vertraging</translation>
     </message>
     <message id="foilpics-settings_page-autolock_delay-value-min" numerus="yes">
         <source>%1 min</source>
         <extracomment>Slider value</extracomment>
-        <translation type="unfinished">
+        <translation>
             <numerusform>%1 min</numerusform>
             <numerusform>%1 min</numerusform>
         </translation>
@@ -511,7 +511,7 @@
     <message id="foilpics-settings_page-autolock_delay-value-sec" numerus="yes">
         <source>%1 sec</source>
         <extracomment>Slider value</extracomment>
-        <translation type="unfinished">
+        <translation>
             <numerusform>%1 sec</numerusform>
             <numerusform>%1 sec</numerusform>
         </translation>
