@@ -1,6 +1,6 @@
 Name:           harbour-foilpics
 Summary:        Encrypted pictures
-Version:        1.1.7
+Version:        1.1.8
 Release:        1
 License:        BSD
 Group:          Applications/File
@@ -52,7 +52,6 @@ Url:
 %qtc_make %{?_smp_mflags}
 
 %install
-rm -rf %{buildroot}
 %qmake5_install -f Makefile.app
 
 desktop-file-install --delete-original \
@@ -60,7 +59,6 @@ desktop-file-install --delete-original \
    %{buildroot}%{_datadir}/applications/*.desktop
 
 %files
-%defattr(-,root,root,-)
 %{_bindir}/%{name}
 %{_datadir}/%{name}
 %{_datadir}/applications/%{name}.desktop
